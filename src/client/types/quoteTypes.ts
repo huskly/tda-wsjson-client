@@ -37,7 +37,8 @@ export type QuotesResponse = {
 };
 
 export type QuotesResponseItem = {
-  symbol: string;
+  symbol?: string;
+  symbolIndex?: number;
   path: string;
   last: any;
   ask: any;
@@ -46,10 +47,9 @@ export type QuotesResponseItem = {
   bidSize: any;
 };
 
-function parsePatchQuotesDataMessage(
-  { patches }: RawPayloadResponseQuotesPatch,
-  symbols: string[]
-): QuotesResponse | null {
+function parsePatchQuotesDataMessage({
+  patches,
+}: RawPayloadResponseQuotesPatch): QuotesResponse | null {
   const quotes = patches.flatMap(({ path, value }) => {
     if (path) {
       const last =
@@ -58,20 +58,9 @@ function parsePatchQuotesDataMessage(
       const askSize = path.endsWith("/ASK_SIZE") ? value : null;
       const bid = path.endsWith("/BID") ? value : null;
       const bidSize = path.endsWith("/BID_SIZE") ? value : null;
-      const symbolIndex = path.split("/")[2];
-      const symbol = symbols[+symbolIndex];
-      if (!isEmpty(compact([last, ask, bid, askSize, bidSize, symbol]))) {
-        return [
-          {
-            last,
-            ask,
-            bid,
-            askSize,
-            bidSize,
-            path,
-            symbol,
-          } as QuotesResponseItem,
-        ];
+      const symbolIndex = +path.split("/")[2];
+      if (!isEmpty(compact([last, ask, bid, askSize, bidSize, symbolIndex]))) {
+        return [{ last, ask, bid, askSize, bidSize, path, symbolIndex }];
       } else {
         // no relevant data to return, omit
         return [];
@@ -91,7 +80,8 @@ function parsePatchQuotesDataMessage(
       );
     }
   });
-  return { quotes: compact(quotes) };
+  const finalQuotes = compact(quotes);
+  return !isEmpty(finalQuotes) ? { quotes: finalQuotes } : null;
 }
 
 function parseSnapshotDataMessage({
@@ -108,18 +98,14 @@ function parseSnapshotDataMessage({
   return { quotes };
 }
 
-export function parseQuotesResponse(
-  { payload: [{ header, body }] }: RawPayloadResponse,
-  symbols: string[]
-): QuotesResponse | null {
+export function parseQuotesResponse({
+  payload: [{ header, body }],
+}: RawPayloadResponse): QuotesResponse | null {
   switch (header.type) {
     case "snapshot":
       return parseSnapshotDataMessage(body as RawPayloadResponseQuotesSnapshot);
     case "patch":
-      return parsePatchQuotesDataMessage(
-        body as RawPayloadResponseQuotesPatch,
-        symbols
-      );
+      return parsePatchQuotesDataMessage(body as RawPayloadResponseQuotesPatch);
     default:
       return null;
   }

@@ -105,6 +105,22 @@ export type LoginResponse = {
   }[];
 };
 
+export function isSuccessfulLogin(message: LoginResponse): boolean {
+  return isSuccessfulLoginResponse(message?.payload?.[0]?.body);
+}
+
+export function isSuccessfulLoginResponse(
+  responseBody: LoginResponseBody | null | undefined
+): boolean {
+  return responseBody?.authenticationStatus === "OK";
+}
+
+export function isPayloadResponse(
+  response: WsJsonRawMessage
+): response is RawPayloadResponse {
+  return "payload" in response;
+}
+
 export type RawHeartbeatResponse = { heartbeat: number };
 
 export type RawPayloadResponse = { payload: RawPayloadResponseItem[] };

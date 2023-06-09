@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepublish": "tsc -p config/tsconfig.json",
-    "build": "tsc -p config/tsconfig.json",
+    "prepublish": "tsc -p tsconfig.json",
+    "build": "tsc -p tsconfig.json",
     "check_prettier": "prettier --check .",
     "test": "yarn run jest",
     "ci": "yarn check_prettier && yarn build && yarn test"
@@ -40,6 +40,7 @@
   "author": "felipe lima",
   "license": "MIT",
   "devDependencies": {
-    "@types/ws": "^8.5.5"
+    "@types/ws": "^8.5.5",
+    "dotenv": "^16.1.4"
   }
 }
