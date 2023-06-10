@@ -41,7 +41,7 @@ class TestApp {
 async function run() {
   const accessToken = process.env.ACCESS_TOKEN as string;
   const client = new WsJsonClient(accessToken);
-  await client.connect();
+  await client.authenticate();
   const app = new TestApp(client);
   await Promise.all([
     // app.chart("UBER"),

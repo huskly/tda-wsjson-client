@@ -43,18 +43,19 @@ enum ChannelState {
 }
 
 export default class WsJsonClient {
-  private socket: WebSocket | null = null;
   private buffer = new BufferedIterator<ParsedWebSocketResponse>();
   private iterator = new MulticastIterator(this.buffer);
   private state = ChannelState.DISCONNECTED;
 
   constructor(
     private readonly accessToken: string,
-    private readonly wsUrl = "wss://services.thinkorswim.com/Services/WsJson",
+    private readonly socket = new WebSocket(
+      "wss://services.thinkorswim.com/Services/WsJson"
+    ),
     private readonly responseParser = new ResponseParser()
   ) {}
 
-  connect(): Promise<LoginResponseBody | null> {
+  authenticate(): Promise<LoginResponseBody | null> {
     const { state } = this;
     switch (state) {
       case ChannelState.DISCONNECTED:
@@ -65,20 +66,21 @@ export default class WsJsonClient {
       case ChannelState.CONNECTING: // no-op
         return Promise.reject("Already connecting");
       case ChannelState.CONNECTED: // no-op
-        return Promise.resolve(null);
+        return Promise.reject("Already connected");
       case ChannelState.ERROR:
         return Promise.reject("Illegal state, ws connection failed previously");
     }
   }
 
   private doConnect(): Promise<LoginResponseBody> {
-    const { wsUrl } = this;
+    const { socket } = this;
     return new Promise((resolve, reject) => {
-      this.socket = new WebSocket(wsUrl);
-      this.socket.onopen = () => this.sendMessage(newConnectionRequest());
-      this.socket.onclose = () => debugLog("connection closed");
-      this.socket.onmessage = ({ data }) =>
-        this.onMessage(data, resolve, reject);
+      if (socket.readyState === WebSocket.OPEN) {
+        this.sendMessage(newConnectionRequest());
+      }
+      socket.onopen = () => this.sendMessage(newConnectionRequest());
+      socket.onclose = () => debugLog("connection closed");
+      socket.onmessage = ({ data }) => this.onMessage(data, resolve, reject);
     });
   }
 
@@ -167,7 +169,6 @@ export default class WsJsonClient {
 
   disconnect() {
     this.socket?.close();
-    this.socket = null;
     this.state = ChannelState.DISCONNECTED;
     // This ensures that listeners will resolve the promise cleanly from any `for await` loops
     this.buffer.end();

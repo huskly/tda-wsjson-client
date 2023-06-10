@@ -1,7 +1,6 @@
 import React, { FormEvent, useCallback, useState } from "react";
 import "./App.css";
 import WsJsonClient from "tda-wsjson-client/wsJsonClient";
-import { isSuccessfulLoginResponse } from "tda-wsjson-client/messageTypeHelpers";
 
 function App() {
   const [accessToken, setAccessToken] = useState<string>();
@@ -12,14 +11,9 @@ function App() {
     if (accessToken) {
       const client = new WsJsonClient(accessToken);
       try {
-        const loginResponse = await client.connect();
-        const successful = isSuccessfulLoginResponse(loginResponse);
-        if (successful) {
-          setConnected(successful);
-          setClient(client);
-        } else {
-          alert("Login failed");
-        }
+        await client.connect();
+        setConnected(true);
+        setClient(client);
       } catch (e) {
         console.error(e);
         alert("Login failed");
