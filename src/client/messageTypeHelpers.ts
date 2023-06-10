@@ -1,19 +1,17 @@
 import {
   ConnectionResponse,
   LoginResponse,
-  LoginResponseBody,
+  ParsedWebSocketResponse,
   RawPayloadResponse,
   WsJsonRawMessage,
 } from "./tdaWsJsonTypes";
+import { ChartResponse } from "./types/chartTypes";
+import { QuotesResponse } from "./types/quoteTypes";
+import { PositionsResponse } from "./types/positionsTypes";
+import { RawPayloadResponseUserProperties } from "./types/userPropertiesTypes";
 
-export function isSuccessfulLogin(message: LoginResponse): boolean {
-  return isSuccessfulLoginResponse(message?.payload?.[0]?.body);
-}
-
-export function isSuccessfulLoginResponse(
-  responseBody: LoginResponseBody | null | undefined
-): boolean {
-  return responseBody?.authenticationStatus === "OK";
+export function isSuccessful({ payload }: LoginResponse): boolean {
+  return payload?.[0]?.body?.authenticationStatus === "OK";
 }
 
 export function isPayloadResponse(
@@ -35,4 +33,28 @@ export function isLoginResponse(
   const [{ header }] = message.payload;
   const { service } = header;
   return service === "login";
+}
+
+export function isChartResponse(
+  response: ParsedWebSocketResponse
+): response is ChartResponse {
+  return "candles" in response;
+}
+
+export function isQuotesResponse(
+  response: ParsedWebSocketResponse
+): response is QuotesResponse {
+  return "quotes" in response;
+}
+
+export function isPositionsResponse(
+  response: ParsedWebSocketResponse
+): response is PositionsResponse {
+  return "positions" in response;
+}
+
+export function isUserPropertiesResponse(
+  response: ParsedWebSocketResponse
+): response is RawPayloadResponseUserProperties {
+  return "defaultAccountCode" in response;
 }

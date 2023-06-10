@@ -1,4 +1,4 @@
-# TDA WsJson API client
+# TD Ameritrade WsJson API client
 
 This is a node and browser API client for the (undocumented) TDAmeritrade WebSocket API.
 
@@ -24,11 +24,10 @@ yarn start
 
 ```typescript
 import WsJsonClient from "tda-wsjson-client/wsJsonClient";
-import {isSuccessfulLoginResponse} from "tda-wsjson-client/messageTypeHelpers";
 
 const client = new WsJsonClient(accessToken);
 const loginResponse = await client.connect();
-const successful = isSuccessfulLoginResponse(loginResponse);
+console.log(loginResponse);
 const chartRequest = {
   symbol: "UBER",
   timeAggregation: "DAY",

@@ -1,25 +1,53 @@
 import WsJsonClient from "./client/wsJsonClient";
 import "dotenv/config";
-import { isSuccessfulLoginResponse } from "./client/messageTypeHelpers";
 
-async function run() {
-  const accessToken = process.env.ACCESS_TOKEN as string;
-  const client = new WsJsonClient(accessToken);
-  const loginResponse = await client.connect();
-  if (isSuccessfulLoginResponse(loginResponse)) {
+class TestApp {
+  constructor(private readonly client: WsJsonClient) {}
+
+  async chart(symbol: string) {
+    console.log(" --- chart() requesting chart data ---");
     const chartRequest = {
-      symbol: "UBER",
+      symbol,
       timeAggregation: "DAY",
       range: "YEAR2",
       includeExtendedHours: true,
     };
-    console.log("requesting chart data");
-    for await (const event of client.chart(chartRequest)) {
-      console.log(event);
+    for await (const event of this.client.chart(chartRequest)) {
+      console.log("chart() : " + JSON.stringify(event));
     }
-  } else {
-    console.log("login failed");
   }
+
+  async accountNumber(): Promise<string> {
+    console.log(" --- accountNumber() requesting account number ---");
+    const userProperties = await this.client.userProperties();
+    return userProperties.defaultAccountCode;
+  }
+
+  async accountPositions(accountNumber: string) {
+    console.log(" --- accountPositions() requesting account positions ---");
+    for await (const event of this.client.accountPositions(accountNumber)) {
+      console.log("accountPositions() : " + JSON.stringify(event));
+    }
+  }
+
+  async quotes(symbols: string[]) {
+    console.log(" --- quotes() requesting quotes ---");
+    for await (const quote of this.client.quotes(symbols)) {
+      console.log("quotes() : " + JSON.stringify(quote));
+    }
+  }
+}
+
+async function run() {
+  const accessToken = process.env.ACCESS_TOKEN as string;
+  const client = new WsJsonClient(accessToken);
+  await client.connect();
+  const app = new TestApp(client);
+  await Promise.all([
+    // app.chart("UBER"),
+    app.quotes(["ABNB", "AAPL"]),
+    app.accountNumber().then(app.accountPositions.bind(app)),
+  ]);
 }
 
 run().catch(console.error);

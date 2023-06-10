@@ -1,9 +1,18 @@
 import WebSocket from "isomorphic-ws";
-import MessageBuilder, { ChartRequestParams } from "./messageBuilder";
+import {
+  ChartRequestParams,
+  newAccountPositionsRequest,
+  newChartRequest,
+  newConnectionRequest,
+  newLoginRequest,
+  newQuotesRequest,
+  newUserPropertiesRequest,
+} from "./messageBuilder";
 import {
   LoginResponse,
   LoginResponseBody,
   ParsedWebSocketResponse,
+  RawPayloadRequest,
   WsJsonRawMessage,
 } from "./tdaWsJsonTypes";
 import { debugLog } from "./util";
@@ -11,10 +20,20 @@ import ResponseParser from "./responseParser";
 import MulticastIterator from "obgen/multicastIterator";
 import BufferedIterator from "obgen/bufferedIterator";
 import {
+  isChartResponse,
   isConnectionResponse,
   isLoginResponse,
-  isSuccessfulLogin,
+  isPositionsResponse,
+  isQuotesResponse,
+  isSuccessful,
+  isUserPropertiesResponse,
 } from "./messageTypeHelpers";
+import { deferredWrap } from "obgen";
+import { QuotesResponse } from "./types/quoteTypes";
+import { ChartResponse } from "./types/chartTypes";
+import Observable from "obgen/observable";
+import { PositionsResponse } from "./types/positionsTypes";
+import { RawPayloadResponseUserProperties } from "./types/userPropertiesTypes";
 
 enum ChannelState {
   DISCONNECTED,
@@ -32,7 +51,6 @@ export default class WsJsonClient {
   constructor(
     private readonly accessToken: string,
     private readonly wsUrl = "wss://services.thinkorswim.com/Services/WsJson",
-    private readonly messageBuilder = new MessageBuilder(),
     private readonly responseParser = new ResponseParser()
   ) {}
 
@@ -54,11 +72,10 @@ export default class WsJsonClient {
   }
 
   private doConnect(): Promise<LoginResponseBody> {
-    const { messageBuilder, wsUrl } = this;
+    const { wsUrl } = this;
     return new Promise((resolve, reject) => {
       this.socket = new WebSocket(wsUrl);
-      this.socket.onopen = () =>
-        this.sendMessage(messageBuilder.connectionRequest());
+      this.socket.onopen = () => this.sendMessage(newConnectionRequest());
       this.socket.onclose = () => debugLog("connection closed");
       this.socket.onmessage = ({ data }) =>
         this.onMessage(data, resolve, reject);
@@ -70,10 +87,10 @@ export default class WsJsonClient {
     resolve: (value: LoginResponseBody) => void,
     reject: (reason?: any) => void
   ) {
-    const { responseParser, messageBuilder, buffer, accessToken } = this;
+    const { responseParser, buffer, accessToken } = this;
     const message = JSON.parse(data) as WsJsonRawMessage;
     if (isConnectionResponse(message)) {
-      const loginMessage = messageBuilder.loginRequest(accessToken);
+      const loginMessage = newLoginRequest(accessToken);
       this.sendMessage(loginMessage);
     } else if (isLoginResponse(message)) {
       this.handleLoginResponse(message, resolve, reject);
@@ -96,38 +113,37 @@ export default class WsJsonClient {
     }
   }
 
-  quotes(symbols: string[]): AsyncIterable<ParsedWebSocketResponse> {
-    this.ensureConnected();
-    const { messageBuilder, iterator } = this;
-    const message = messageBuilder.quotesRequest(symbols);
-    this.sendMessage(message);
-    return iterator;
+  quotes(symbols: string[]): AsyncIterable<QuotesResponse> {
+    return this.dispatch(() => newQuotesRequest(symbols))
+      .filter(isQuotesResponse)
+      .iterable() as AsyncIterable<QuotesResponse>;
   }
 
-  accountPositions(
-    accountNumber: string
-  ): AsyncIterable<ParsedWebSocketResponse> {
-    this.ensureConnected();
-    const { messageBuilder, iterator } = this;
-    const message = messageBuilder.accountPositionsRequest(accountNumber);
-    this.sendMessage(message);
-    return iterator;
+  accountPositions(accountNumber: string): AsyncIterable<PositionsResponse> {
+    return this.dispatch(() => newAccountPositionsRequest(accountNumber))
+      .filter(isPositionsResponse)
+      .iterable() as AsyncIterable<PositionsResponse>;
   }
 
-  chart(request: ChartRequestParams): AsyncIterable<ParsedWebSocketResponse> {
-    this.ensureConnected();
-    const { messageBuilder, iterator } = this;
-    const message = messageBuilder.chartRequest(request);
-    this.sendMessage(message);
-    return iterator;
+  chart(request: ChartRequestParams): AsyncIterable<ChartResponse> {
+    return this.dispatch(() => newChartRequest(request))
+      .filter(isChartResponse)
+      .iterable() as AsyncIterable<ChartResponse>;
   }
 
-  userProperties() {
+  userProperties(): Promise<RawPayloadResponseUserProperties> {
+    const iterator = this.dispatch(() => newUserPropertiesRequest())
+      .filter(isUserPropertiesResponse)
+      .iterator() as AsyncIterator<RawPayloadResponseUserProperties>;
+    return iterator.next().then((r) => r.value);
+  }
+
+  private dispatch(
+    fn: () => RawPayloadRequest
+  ): Observable<ParsedWebSocketResponse> {
     this.ensureConnected();
-    const { messageBuilder, iterator } = this;
-    const message = messageBuilder.userProperties();
-    this.sendMessage(message);
-    return iterator;
+    this.sendMessage(fn());
+    return deferredWrap(() => this.iterator);
   }
 
   private sendMessage(data: any) {
@@ -140,7 +156,7 @@ export default class WsJsonClient {
     reject: (reason?: any) => void
   ) {
     const body = message?.payload?.[0]?.body;
-    if (isSuccessfulLogin(message)) {
+    if (isSuccessful(message)) {
       this.state = ChannelState.CONNECTED;
       resolve(body);
     } else {
