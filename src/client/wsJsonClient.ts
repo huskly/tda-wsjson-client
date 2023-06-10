@@ -1,4 +1,4 @@
-import WebSocket from "ws";
+import WebSocket from "isomorphic-ws";
 import MessageBuilder from "./messageBuilder";
 import {
   isSuccessfulLogin,
@@ -20,10 +20,10 @@ enum ChannelState {
 }
 
 export default class WsJsonClient {
-  private readonly headers = {
-    Host: "services.thinkorswim.com",
-    Origin: "https://trade.thinkorswim.com",
-  };
+  // private readonly headers = {
+  //   Host: "services.thinkorswim.com",
+  //   Origin: "https://trade.thinkorswim.com",
+  // };
   private socket: WebSocket | null = null;
   private buffer = new BufferedIterator<ParsedWebSocketResponse>();
   private iterator = new MulticastIterator(this.buffer);
@@ -56,19 +56,16 @@ export default class WsJsonClient {
   private doConnect(): Promise<LoginResponseBody> {
     const { messageBuilder } = this;
     return new Promise((resolve, reject) => {
-      this.socket = new WebSocket(this.wsUrl, { headers: this.headers });
-      this.socket.addEventListener("open", () => {
+      this.socket = new WebSocket(this.wsUrl /*{ headers: this.headers }*/);
+      this.socket.onopen = () => {
         this.sendMessage(messageBuilder.connectionRequest());
-      });
-      this.socket.on("connection", function connection(ws) {
-        ws.on("error", console.error);
-      });
-      this.socket.on("close", function close() {
+      };
+      this.socket.onclose = () => {
         debugLog("disconnected");
-      });
-      this.socket.addEventListener("message", ({ data }) => {
+      };
+      this.socket.onmessage = ({ data }) => {
         this.onMessage(data, resolve, reject);
-      });
+      };
     });
   }
 
