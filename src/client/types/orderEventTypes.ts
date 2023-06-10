@@ -132,13 +132,14 @@ export function parseOrderEventsResponse(
 ): OrderEventsSnapshotResponse | OrderEventsPatchResponse | null {
   const [{ header, body }] = message.payload;
   switch (header.type) {
-    case "snapshot":
+    case "snapshot": {
       const { orders } = body as RawOrderEventsResponse;
       const parsedOrders = compact(
         orders?.map((order) => parseOrderEvent(order))
       );
       return { orders: parsedOrders || [], service: "order_events" };
-    case "patch":
+    }
+    case "patch": {
       const { patches } = body as RawOrderEventsResponse;
       const parsedPatches = patches?.map(({ value, ...rest }) => ({
         value: parsePatchValue(value),
@@ -148,6 +149,7 @@ export function parseOrderEventsResponse(
         patches: parsedPatches,
         service: "order_events",
       } as OrderEventsPatchResponse;
+    }
     default:
       console.warn("Unexpected positions response", message);
       return null;

@@ -16,6 +16,7 @@ export function positionNetQuantity(position: AccountPosition): number {
   return position.longQuantity - position.shortQuantity;
 }
 
+// eslint-disable-line @typescript-eslint/no-explicit-any
 export function debugLog(...args: any[]) {
   if (process.env.NODE_ENV === "development") {
     console.log(...args);
