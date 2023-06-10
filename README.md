@@ -1,16 +1,44 @@
 # TDA WsJson API client
 
-This is a node client for the (undocumented) TDAmeritrade Websocket API.
+This is a node and browser API client for the (undocumented) TDAmeritrade WebSocket API.
 
-Work in progress
+🚧 Work in progress 🚧
 
 # Building for Node
 
-`yarn build`
+```
+yarn install
+yarn build
+```
 
-# Building for browser
+# Running the sample app
 
-`yarn bundle`
+```
+cd example
+yarn install
+yarn link tda-wsjson-client
+yarn start
+```
+
+# Usage
+
+```typescript
+import WsJsonClient from "tda-wsjson-client/wsJsonClient";
+import {isSuccessfulLoginResponse} from "tda-wsjson-client/messageTypeHelpers";
+
+const client = new WsJsonClient(accessToken);
+const loginResponse = await client.connect();
+const successful = isSuccessfulLoginResponse(loginResponse);
+const chartRequest = {
+  symbol: "UBER",
+  timeAggregation: "DAY",
+  range: "YEAR2",
+  includeExtendedHours: true,
+};
+for await (const event of client.chart(chartRequest)) {
+  console.log(event);
+}
+```
 
 # Running tests
 

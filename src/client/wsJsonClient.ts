@@ -1,7 +1,6 @@
 import WebSocket from "isomorphic-ws";
-import MessageBuilder from "./messageBuilder";
+import MessageBuilder, { ChartRequestParams } from "./messageBuilder";
 import {
-  isSuccessfulLogin,
   LoginResponse,
   LoginResponseBody,
   ParsedWebSocketResponse,
@@ -11,6 +10,11 @@ import { debugLog } from "./util";
 import ResponseParser from "./responseParser";
 import MulticastIterator from "obgen/multicastIterator";
 import BufferedIterator from "obgen/bufferedIterator";
+import {
+  isConnectionResponse,
+  isLoginResponse,
+  isSuccessfulLogin,
+} from "./messageTypeHelpers";
 
 enum ChannelState {
   DISCONNECTED,
@@ -20,10 +24,6 @@ enum ChannelState {
 }
 
 export default class WsJsonClient {
-  // private readonly headers = {
-  //   Host: "services.thinkorswim.com",
-  //   Origin: "https://trade.thinkorswim.com",
-  // };
   private socket: WebSocket | null = null;
   private buffer = new BufferedIterator<ParsedWebSocketResponse>();
   private iterator = new MulticastIterator(this.buffer);
@@ -54,18 +54,14 @@ export default class WsJsonClient {
   }
 
   private doConnect(): Promise<LoginResponseBody> {
-    const { messageBuilder } = this;
+    const { messageBuilder, wsUrl } = this;
     return new Promise((resolve, reject) => {
-      this.socket = new WebSocket(this.wsUrl /*{ headers: this.headers }*/);
-      this.socket.onopen = () => {
+      this.socket = new WebSocket(wsUrl);
+      this.socket.onopen = () =>
         this.sendMessage(messageBuilder.connectionRequest());
-      };
-      this.socket.onclose = () => {
-        debugLog("disconnected");
-      };
-      this.socket.onmessage = ({ data }) => {
+      this.socket.onclose = () => debugLog("connection closed");
+      this.socket.onmessage = ({ data }) =>
         this.onMessage(data, resolve, reject);
-      };
     });
   }
 
@@ -76,10 +72,10 @@ export default class WsJsonClient {
   ) {
     const { responseParser, messageBuilder, buffer, accessToken } = this;
     const message = JSON.parse(data) as WsJsonRawMessage;
-    if (responseParser.isConnectionResponse(message)) {
+    if (isConnectionResponse(message)) {
       const loginMessage = messageBuilder.loginRequest(accessToken);
       this.sendMessage(loginMessage);
-    } else if (responseParser.isLoginResponse(message)) {
+    } else if (isLoginResponse(message)) {
       this.handleLoginResponse(message, resolve, reject);
     } else {
       const parsedResponse = responseParser.parseResponse(message);
@@ -100,13 +96,36 @@ export default class WsJsonClient {
     }
   }
 
-  quotes(symbols: string[]): AsyncIterableIterator<ParsedWebSocketResponse> {
+  quotes(symbols: string[]): AsyncIterable<ParsedWebSocketResponse> {
     this.ensureConnected();
-    if (this.state !== ChannelState.CONNECTED) {
-      throw new Error("Please call connectIfNeeded() first");
-    }
     const { messageBuilder, iterator } = this;
     const message = messageBuilder.quotesRequest(symbols);
+    this.sendMessage(message);
+    return iterator;
+  }
+
+  accountPositions(
+    accountNumber: string
+  ): AsyncIterable<ParsedWebSocketResponse> {
+    this.ensureConnected();
+    const { messageBuilder, iterator } = this;
+    const message = messageBuilder.accountPositionsRequest(accountNumber);
+    this.sendMessage(message);
+    return iterator;
+  }
+
+  chart(request: ChartRequestParams): AsyncIterable<ParsedWebSocketResponse> {
+    this.ensureConnected();
+    const { messageBuilder, iterator } = this;
+    const message = messageBuilder.chartRequest(request);
+    this.sendMessage(message);
+    return iterator;
+  }
+
+  userProperties() {
+    this.ensureConnected();
+    const { messageBuilder, iterator } = this;
+    const message = messageBuilder.userProperties();
     this.sendMessage(message);
     return iterator;
   }
@@ -120,13 +139,13 @@ export default class WsJsonClient {
     resolve: (value: LoginResponseBody) => void,
     reject: (reason?: any) => void
   ) {
+    const body = message?.payload?.[0]?.body;
     if (isSuccessfulLogin(message)) {
       this.state = ChannelState.CONNECTED;
-      const body = message?.payload?.[0]?.body;
       resolve(body);
     } else {
       this.state = ChannelState.ERROR;
-      reject();
+      reject(`Login failed: ${body.message}`);
     }
   }
 

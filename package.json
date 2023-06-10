@@ -6,7 +6,8 @@
   "types": "dist/web.d.ts",
   "exports": {
     "./wsJsonClient": "./dist/client/wsJsonClient.js",
-    "./tdaWsJsonTypes": "./dist/client/tdaWsJsonTypes.js"
+    "./tdaWsJsonTypes": "./dist/client/tdaWsJsonTypes.js",
+    "./messageTypeHelpers": "./dist/client/messageTypeHelpers.js"
   },
   "scripts": {
     "prepublish": "tsc -p tsconfig.json",

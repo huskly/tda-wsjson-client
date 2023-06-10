@@ -1,3 +1,5 @@
+import { RawPayloadResponse } from "../tdaWsJsonTypes";
+
 export type OHLC = {
   open: number;
   high: number;
@@ -36,10 +38,11 @@ export type ChartResponse = {
 };
 
 export function parseChartResponse(
-  response: RawPayloadResponseChart
+  response: RawPayloadResponse
 ): ChartResponse | null {
-  const isPatchResponse = "patches" in response;
-  if (isPatchResponse && response.patches[0].path !== "") {
+  const body = response.payload[0].body as RawPayloadResponseChart;
+  const isPatchResponse = "patches" in body;
+  if (isPatchResponse && body.patches[0].path !== "") {
     // The API sometimes sends a chart patch for incremental changes to the last candle, for example
     // which we don't currently use, so we'll discard that response, eg.:
     // {"payload":[{"header":{"service":"chart","id":"chart-page-chart-1","ver":1,"type":"patch"},
@@ -48,7 +51,7 @@ export function parseChartResponse(
     // {"op":"replace","path":"/candles/closes/799","value":278.01}]}}]}
     return null;
   }
-  const actualResponse = isPatchResponse ? response.patches[0].value : response;
+  const actualResponse = isPatchResponse ? body.patches[0].value : body;
   const { candles, symbol } = actualResponse;
   const data: StockPrice[] = [];
   const { timestamps, opens, closes, highs, lows, volumes } = candles;

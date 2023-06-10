@@ -1,3 +1,12 @@
+import { RawPayloadRequest } from "./tdaWsJsonTypes";
+
+export type ChartRequestParams = {
+  symbol: string;
+  timeAggregation: string;
+  range: string;
+  includeExtendedHours: boolean;
+};
+
 export default class MessageBuilder {
   connectionRequest() {
     return {
@@ -7,7 +16,30 @@ export default class MessageBuilder {
     };
   }
 
-  quotesRequest(symbols: string[]) {
+  accountPositionsRequest(accountNumber: string): RawPayloadRequest {
+    return {
+      payload: [
+        {
+          header: { service: "positions", ver: 0, id: "positions" },
+          params: {
+            account: accountNumber,
+            betaWeightingSymbols: [],
+            //additional fields are: MARK DELTA GAMMA THETA VEGA RHO OPEN_COST BP_EFFECT MARK_CHANGE MARGIN
+            fields: [
+              "QUANTITY",
+              "OPEN_PRICE",
+              "NET_LIQ",
+              "PL_OPEN",
+              "PL_YTD",
+              "PL_DAY",
+            ],
+          },
+        },
+      ],
+    };
+  }
+
+  quotesRequest(symbols: string[]): RawPayloadRequest {
     return {
       payload: [
         {
@@ -40,7 +72,40 @@ export default class MessageBuilder {
     };
   }
 
-  loginRequest(accessToken: string) {
+  userProperties(): RawPayloadRequest {
+    return {
+      payload: [
+        {
+          header: { service: "user_properties", id: "user_properties", ver: 0 },
+          params: {},
+        },
+      ],
+    };
+  }
+
+  chartRequest({
+    symbol,
+    timeAggregation,
+    range,
+    includeExtendedHours,
+  }: ChartRequestParams): RawPayloadRequest {
+    return {
+      payload: [
+        {
+          header: { service: "chart", id: "chart-page-chart-1", ver: 1 },
+          params: {
+            symbol,
+            timeAggregation,
+            studies: [],
+            range,
+            extendedHours: includeExtendedHours,
+          },
+        },
+      ],
+    };
+  }
+
+  loginRequest(accessToken: string): RawPayloadRequest {
     return {
       payload: [
         {

@@ -1,3 +1,5 @@
+import { RawPayloadResponse } from "../tdaWsJsonTypes";
+
 export type RawPayloadResponseUserProperties = {
   defaultAccountCode: string;
   nickname: string;
@@ -19,3 +21,9 @@ export type RawPayloadResponseUserProperties = {
   forexOrderDefaultQuantity: number;
   forexOrderQuantityIncrement: number;
 };
+
+export function parseUserPropertiesResponse(
+  message: RawPayloadResponse
+): RawPayloadResponseUserProperties {
+  return message.payload[0].body as RawPayloadResponseUserProperties;
+}

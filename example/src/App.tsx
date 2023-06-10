@@ -1,7 +1,7 @@
 import React, { FormEvent, useCallback, useState } from "react";
 import "./App.css";
 import WsJsonClient from "tda-wsjson-client/wsJsonClient";
-import { isSuccessfulLoginResponse } from "tda-wsjson-client/tdaWsJsonTypes";
+import { isSuccessfulLoginResponse } from "tda-wsjson-client/messageTypeHelpers";
 
 function App() {
   const [accessToken, setAccessToken] = useState<string>();
@@ -11,12 +11,17 @@ function App() {
   const onClickConnect = useCallback(async () => {
     if (accessToken) {
       const client = new WsJsonClient(accessToken);
-      const loginResponse = await client.connect();
-      const successful = isSuccessfulLoginResponse(loginResponse);
-      if (successful) {
-        setConnected(successful);
-        setClient(client);
-      } else {
+      try {
+        const loginResponse = await client.connect();
+        const successful = isSuccessfulLoginResponse(loginResponse);
+        if (successful) {
+          setConnected(successful);
+          setClient(client);
+        } else {
+          alert("Login failed");
+        }
+      } catch (e) {
+        console.error(e);
         alert("Login failed");
       }
     }
@@ -25,7 +30,18 @@ function App() {
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (symbol && connected && client) {
-        for await (const event of client.quotes([symbol])) {
+        // request quotes
+        // for await (const event of client.quotes([symbol])) {
+        //   console.log(event);
+        // }
+        // request chart data
+        const chartRequest = {
+          symbol,
+          timeAggregation: "DAY",
+          range: "YEAR2",
+          includeExtendedHours: true,
+        };
+        for await (const event of client.chart(chartRequest)) {
           console.log(event);
         }
       }
@@ -48,18 +64,20 @@ function App() {
           {connected ? "Connected" : "Connect"}
         </button>
       </header>
-      <div className="mt-8">
-        <form onSubmit={(e) => onChangeSymbol(e)}>
-          <input
-            type="text"
-            placeholder="Symbol"
-            value={symbol}
-            onChange={(e) => setSymbol(e.target.value)}
-            className="px-3 py-3 dark:text-gray-500 rounded text-2xl"
-          />
-          <input type="submit" className="hidden" value="Submit" />
-        </form>
-      </div>
+      {connected && (
+        <div className="mt-8">
+          <form onSubmit={(e) => onChangeSymbol(e)}>
+            <input
+              type="text"
+              placeholder="Symbol"
+              value={symbol}
+              onChange={(e) => setSymbol(e.target.value)}
+              className="px-3 py-3 dark:text-gray-500 rounded text-2xl"
+            />
+            <input type="submit" className="hidden" value="Submit" />
+          </form>
+        </div>
+      )}
     </div>
   );
 }
