@@ -26,7 +26,7 @@ yarn start
 import WsJsonClient from "tda-wsjson-client/wsJsonClient";
 
 const client = new WsJsonClient(accessToken);
-const loginResponse = await client.connect();
+await client.authenticate();
 console.log(loginResponse);
 const chartRequest = {
   symbol: "UBER",

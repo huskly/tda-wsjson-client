@@ -10,6 +10,7 @@ import { isPayloadResponse } from "./messageTypeHelpers";
 import { parseOrderEventsResponse } from "./types/orderEventTypes";
 import { parsePositionsResponse } from "./types/positionsTypes";
 import { parseUserPropertiesResponse } from "./types/userPropertiesTypes";
+import { parsePlaceOrderResponse } from "./types/placeOrderTypes";
 
 type MessageServiceToParserMapping = {
   [key: string]: (
@@ -18,20 +19,22 @@ type MessageServiceToParserMapping = {
 };
 
 export default class ResponseParser {
-  private readonly messageParserMappings: MessageServiceToParserMapping = {
-    quotes: parseQuotesResponse,
-    chart: parseChartResponse,
-    order_events: parseOrderEventsResponse,
-    positions: parsePositionsResponse,
-    user_properties: parseUserPropertiesResponse,
-  };
+  private readonly messageServiceToParserMappings: MessageServiceToParserMapping =
+    {
+      quotes: parseQuotesResponse,
+      chart: parseChartResponse,
+      order_events: parseOrderEventsResponse,
+      positions: parsePositionsResponse,
+      place_order: parsePlaceOrderResponse,
+      user_properties: parseUserPropertiesResponse,
+    };
 
   /** Parses a raw TDA json websocket message into a more usable format */
   parseResponse(message: WsJsonRawMessage): ParsedWebSocketResponse | null {
     if (isPayloadResponse(message)) {
       const [{ header }] = message.payload;
       const { service } = header;
-      const messageParser = this.messageParserMappings[service];
+      const messageParser = this.messageServiceToParserMappings[service];
       if (messageParser) {
         return messageParser(message);
       } else {

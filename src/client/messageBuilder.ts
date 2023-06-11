@@ -1,10 +1,17 @@
-import { RawPayloadRequest } from "./tdaWsJsonTypes";
+import { RawPayloadRequest, RawPayloadRequestItem } from "./tdaWsJsonTypes";
 
 export type ChartRequestParams = {
   symbol: string;
   timeAggregation: string;
   range: string;
   includeExtendedHours: boolean;
+};
+
+export type PlaceLimitOrderRequestParams = {
+  accountNumber: string;
+  limitPrice: number;
+  symbol: string;
+  quantity: number;
 };
 
 export function newConnectionRequest() {
@@ -18,70 +25,58 @@ export function newConnectionRequest() {
 export function newAccountPositionsRequest(
   accountNumber: string
 ): RawPayloadRequest {
-  return {
-    payload: [
-      {
-        header: { service: "positions", ver: 0, id: "positions" },
-        params: {
-          account: accountNumber,
-          betaWeightingSymbols: [],
-          //additional fields are: MARK DELTA GAMMA THETA VEGA RHO OPEN_COST BP_EFFECT MARK_CHANGE MARGIN
-          fields: [
-            "QUANTITY",
-            "OPEN_PRICE",
-            "NET_LIQ",
-            "PL_OPEN",
-            "PL_YTD",
-            "PL_DAY",
-          ],
-        },
-      },
-    ],
-  };
+  return newPayload({
+    header: { service: "positions", ver: 0, id: "positions" },
+    params: {
+      account: accountNumber,
+      betaWeightingSymbols: [],
+      //additional fields are: MARK DELTA GAMMA THETA VEGA RHO OPEN_COST BP_EFFECT MARK_CHANGE MARGIN
+      fields: [
+        "QUANTITY",
+        "OPEN_PRICE",
+        "NET_LIQ",
+        "PL_OPEN",
+        "PL_YTD",
+        "PL_DAY",
+      ],
+    },
+  });
 }
 
 export function newQuotesRequest(symbols: string[]): RawPayloadRequest {
-  return {
-    payload: [
-      {
-        header: { service: "quotes", id: "generalQuotes", ver: 0 },
-        params: {
-          account: "COMBINED ACCOUNT",
-          symbols,
-          refreshRate: 300,
-          fields: [
-            "MARK",
-            "MARK_CHANGE",
-            "MARK_PERCENT_CHANGE",
-            "NET_CHANGE",
-            "NET_CHANGE_PERCENT",
-            "BID",
-            "ASK",
-            "BID_SIZE",
-            "ASK_SIZE",
-            "VOLUME",
-            "OPEN",
-            "HIGH",
-            "LOW",
-            "LAST",
-            "LAST_SIZE",
-            "CLOSE",
-          ],
-        },
-      },
-    ],
-  };
+  return newPayload({
+    header: { service: "quotes", id: "generalQuotes", ver: 0 },
+    params: {
+      account: "COMBINED ACCOUNT",
+      symbols,
+      refreshRate: 300,
+      fields: [
+        "MARK",
+        "MARK_CHANGE",
+        "MARK_PERCENT_CHANGE",
+        "NET_CHANGE",
+        "NET_CHANGE_PERCENT",
+        "BID",
+        "ASK",
+        "BID_SIZE",
+        "ASK_SIZE",
+        "VOLUME",
+        "OPEN",
+        "HIGH",
+        "LOW",
+        "LAST",
+        "LAST_SIZE",
+        "CLOSE",
+      ],
+    },
+  });
 }
 
 export function newUserPropertiesRequest(): RawPayloadRequest {
-  return {
-    payload: [
-      {
-        header: { service: "user_properties", id: "user_properties", ver: 0 },
-        params: {},
-      },
-    ],
-  };
+  return newPayload({
+    header: { service: "user_properties", id: "user_properties", ver: 0 },
+    params: {},
+  });
 }
 
 export function newChartRequest({
@@ -90,35 +85,91 @@ export function newChartRequest({
   range,
   includeExtendedHours,
 }: ChartRequestParams): RawPayloadRequest {
-  return {
-    payload: [
-      {
-        header: { service: "chart", id: "chart-page-chart-1", ver: 1 },
-        params: {
-          symbol,
-          timeAggregation,
-          studies: [],
-          range,
-          extendedHours: includeExtendedHours,
-        },
-      },
-    ],
-  };
+  return newPayload({
+    header: { service: "chart", id: "chart-page-chart-1", ver: 1 },
+    params: {
+      symbol,
+      timeAggregation,
+      studies: [],
+      range,
+      extendedHours: includeExtendedHours,
+    },
+  });
 }
 
 export function newLoginRequest(accessToken: string): RawPayloadRequest {
-  return {
-    payload: [
-      {
-        header: { service: "login", id: "login", ver: 0 },
-        params: {
-          accessToken,
-          domain: "TOS",
-          platform: "PROD",
-          token: "",
+  return newPayload({
+    header: { service: "login", id: "login", ver: 0 },
+    params: {
+      accessToken,
+      domain: "TOS",
+      platform: "PROD",
+      token: "",
+      tag: "TOSWeb",
+    },
+  });
+}
+
+// quantity > 0 => buy
+// quantity < 0 => sell
+export function newPlaceLimitOrderRequest({
+  accountNumber,
+  limitPrice,
+  symbol,
+  quantity,
+}: PlaceLimitOrderRequestParams): RawPayloadRequest {
+  return newPayload({
+    header: {
+      id: `update-draft-order-${symbol}`,
+      service: "place_order",
+      ver: 1,
+    },
+    params: {
+      accountCode: accountNumber,
+      action: "CONFIRM",
+      marker: "SINGLE",
+      orders: [
+        {
+          requestType: "INIT_STOCK",
+          orderType: "LIMIT",
+          limitPrice,
+          legs: [{ symbol, quantity }],
+        },
+      ],
+    },
+  });
+}
+
+export function newSubmitLimitOrderRequest({
+  accountNumber,
+  limitPrice,
+  symbol,
+  quantity,
+}: PlaceLimitOrderRequestParams): RawPayloadRequest {
+  return newPayload({
+    header: {
+      id: `update-draft-order-${symbol}`,
+      service: "place_order",
+      ver: 0,
+    },
+    params: {
+      accountCode: accountNumber,
+      action: "SUBMIT",
+      marker: "SINGLE",
+      orders: [
+        {
+          tif: "DAY",
+          orderType: "LIMIT",
+          limitPrice: limitPrice,
+          requestType: "EDIT_ORDER",
+          legs: [{ symbol, quantity }],
           tag: "TOSWeb",
         },
-      },
-    ],
-  };
+      ],
+    },
+  });
+}
+
+function newPayload(item: RawPayloadRequestItem) {
+  return { payload: [item] };
 }

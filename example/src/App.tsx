@@ -1,66 +1,64 @@
-import React, { FormEvent, useCallback, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import WsJsonClient from "tda-wsjson-client/wsJsonClient";
+import env from "react-dotenv";
+import ReactJson from "react-json-view";
 
 function App() {
-  const [accessToken, setAccessToken] = useState<string>();
+  const [accessToken] = useState<string>(env.ACCESS_TOKEN || "");
+  const [jsonData, setJsonData] = useState<any[]>([]);
   const [connected, setConnected] = useState(false);
-  const [symbol, setSymbol] = useState<string>("");
+  const [symbol, setSymbol] = useState<string>("ABNB");
   const [client, setClient] = useState<WsJsonClient | null>();
-  const onClickConnect = useCallback(async () => {
-    if (accessToken) {
-      const client = new WsJsonClient(accessToken);
-      try {
-        await client.connect();
-        setConnected(true);
-        setClient(client);
-      } catch (e) {
-        console.error(e);
-        alert("Login failed");
+  useEffect(() => {
+    (async function () {
+      if (accessToken && !connected && !client) {
+        console.log("logging in");
+        const client = new WsJsonClient(accessToken);
+        try {
+          const response = await client.authenticate();
+          setJsonData((prev) => [response, ...prev]);
+          setConnected(true);
+          setClient(client);
+        } catch (e) {
+          console.error(e);
+          alert("Login failed");
+        }
       }
-    }
-  }, [accessToken]);
-  const onChangeSymbol = useCallback(
-    async (e: FormEvent<HTMLFormElement>) => {
+    })();
+  }, [accessToken, client, connected]);
+  const onClickBtn = useCallback(
+    async (e: React.MouseEvent<HTMLInputElement>, action: string) => {
       e.preventDefault();
       if (symbol && connected && client) {
-        // request quotes
-        // for await (const event of client.quotes([symbol])) {
-        //   console.log(event);
-        // }
-        // request chart data
-        const chartRequest = {
-          symbol,
-          timeAggregation: "DAY",
-          range: "YEAR2",
-          includeExtendedHours: true,
-        };
-        for await (const event of client.chart(chartRequest)) {
-          console.log(event);
+        switch (action) {
+          case "quotes": {
+            for await (const event of client.quotes([symbol])) {
+              setJsonData((prev) => [event, ...prev]);
+            }
+            break;
+          }
+          case "chart": {
+            const chartRequest = {
+              symbol,
+              timeAggregation: "DAY",
+              range: "YEAR2",
+              includeExtendedHours: true,
+            };
+            for await (const event of client.chart(chartRequest)) {
+              setJsonData((prev) => [event, ...prev]);
+            }
+          }
         }
       }
     },
-    [symbol, connected]
+    [symbol, connected, client]
   );
   return (
-    <div className="dark:bg-gray-800 flex items-center flex-col h-screen">
-      <header className="flex pt-10 flex-col">
-        <textarea
-          onChange={(e) => setAccessToken(e.target.value)}
-          placeholder="Access Token"
-          className="dark:text-gray-500 py-3 px-6 rounded mb-2 w-96 h-32 text-xs disabled:bg-gray-500"
-        />
-        <button
-          onClick={onClickConnect}
-          className="bg-amber-700 px-4 py-2 rounded hover:bg-amber-600 text-2xl text-gray-100"
-          disabled={connected}
-        >
-          {connected ? "Connected" : "Connect"}
-        </button>
-      </header>
+    <div className="dark:bg-gray-800 flex items-center flex-col min-h-screen">
       {connected && (
         <div className="mt-8">
-          <form onSubmit={(e) => onChangeSymbol(e)}>
+          <form className="mb-8">
             <input
               type="text"
               placeholder="Symbol"
@@ -69,7 +67,20 @@ function App() {
               className="px-3 py-3 dark:text-gray-500 rounded text-2xl"
             />
             <input type="submit" className="hidden" value="Submit" />
+            <input
+              type="button"
+              value="Quotes"
+              onClick={(e) => onClickBtn(e, "quotes")}
+              className="px-4 py-3 bg-amber-600 rounded ml-2 text-2xl hover:bg-amber-400"
+            />
+            <input
+              type="button"
+              value="Chart"
+              onClick={(e) => onClickBtn(e, "chart")}
+              className="px-4 py-3 bg-lime-600 rounded ml-2 text-2xl hover:bg-lime-400"
+            />
           </form>
+          <ReactJson src={jsonData} theme="monokai" style={{ width: "80vw" }} />
         </div>
       )}
     </div>

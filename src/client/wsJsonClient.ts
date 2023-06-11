@@ -5,8 +5,11 @@ import {
   newChartRequest,
   newConnectionRequest,
   newLoginRequest,
+  newPlaceLimitOrderRequest,
   newQuotesRequest,
+  newSubmitLimitOrderRequest,
   newUserPropertiesRequest,
+  PlaceLimitOrderRequestParams,
 } from "./messageBuilder";
 import {
   LoginResponse,
@@ -23,6 +26,8 @@ import {
   isChartResponse,
   isConnectionResponse,
   isLoginResponse,
+  isOrderEventsPatchResponse,
+  isPlaceOrderResponse,
   isPositionsResponse,
   isQuotesResponse,
   isSuccessful,
@@ -34,6 +39,7 @@ import { ChartResponse } from "./types/chartTypes";
 import Observable from "obgen/observable";
 import { PositionsResponse } from "./types/positionsTypes";
 import { RawPayloadResponseUserProperties } from "./types/userPropertiesTypes";
+import { OrderEventsPatchResponse } from "./types/orderEventTypes";
 
 enum ChannelState {
   DISCONNECTED,
@@ -55,14 +61,14 @@ export default class WsJsonClient {
     private readonly responseParser = new ResponseParser()
   ) {}
 
-  authenticate(): Promise<LoginResponseBody | null> {
+  async authenticate(): Promise<LoginResponseBody | null> {
     const { state } = this;
     switch (state) {
       case ChannelState.DISCONNECTED:
         this.buffer = new BufferedIterator<ParsedWebSocketResponse>();
         this.iterator = new MulticastIterator(this.buffer);
         this.state = ChannelState.CONNECTING;
-        return this.doConnect();
+        return await this.doConnect();
       case ChannelState.CONNECTING: // no-op
         return Promise.reject("Already connecting");
       case ChannelState.CONNECTED: // no-op
@@ -80,12 +86,13 @@ export default class WsJsonClient {
       }
       socket.onopen = () => this.sendMessage(newConnectionRequest());
       socket.onclose = () => debugLog("connection closed");
-      socket.onmessage = ({ data }) => this.onMessage(data, resolve, reject);
+      socket.onmessage = ({ data }) =>
+        this.onMessage(data as string, resolve, reject);
     });
   }
 
   private onMessage(
-    data: any,
+    data: string,
     resolve: (value: LoginResponseBody) => void,
     reject: (reason?: any) => void
   ) {
@@ -133,11 +140,23 @@ export default class WsJsonClient {
       .iterable() as AsyncIterable<ChartResponse>;
   }
 
+  async placeOrder(
+    request: PlaceLimitOrderRequestParams
+  ): Promise<AsyncIterable<OrderEventsPatchResponse>> {
+    // 1. place order
+    await this.dispatch(() => newPlaceLimitOrderRequest(request))
+      .filter(isPlaceOrderResponse)
+      .promise();
+    // 2. submit order
+    return this.dispatch(() => newSubmitLimitOrderRequest(request))
+      .filter(isOrderEventsPatchResponse)
+      .iterable() as AsyncIterable<OrderEventsPatchResponse>;
+  }
+
   userProperties(): Promise<RawPayloadResponseUserProperties> {
-    const iterator = this.dispatch(() => newUserPropertiesRequest())
+    return this.dispatch(() => newUserPropertiesRequest())
       .filter(isUserPropertiesResponse)
-      .iterator() as AsyncIterator<RawPayloadResponseUserProperties>;
-    return iterator.next().then((r) => r.value);
+      .promise() as Promise<RawPayloadResponseUserProperties>;
   }
 
   private dispatch(

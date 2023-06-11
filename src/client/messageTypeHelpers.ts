@@ -9,6 +9,8 @@ import { ChartResponse } from "./types/chartTypes";
 import { QuotesResponse } from "./types/quoteTypes";
 import { PositionsResponse } from "./types/positionsTypes";
 import { RawPayloadResponseUserProperties } from "./types/userPropertiesTypes";
+import { PlaceOrderSnapshotResponse } from "./types/placeOrderTypes";
+import { OrderEventsPatchResponse } from "./types/orderEventTypes";
 
 export function isSuccessful({ payload }: LoginResponse): boolean {
   return payload?.[0]?.body?.authenticationStatus === "OK";
@@ -57,4 +59,16 @@ export function isUserPropertiesResponse(
   response: ParsedWebSocketResponse
 ): response is RawPayloadResponseUserProperties {
   return "defaultAccountCode" in response;
+}
+
+export function isPlaceOrderResponse(
+  response: ParsedWebSocketResponse
+): response is PlaceOrderSnapshotResponse {
+  return "orders" in response && response.service === "place_order";
+}
+
+export function isOrderEventsPatchResponse(
+  response: ParsedWebSocketResponse
+): response is OrderEventsPatchResponse {
+  return "patches" in response && response.service === "order_events";
 }

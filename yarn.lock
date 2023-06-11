@@ -3832,10 +3832,10 @@ npm-run-path@^4.0.1:
   dependencies:
     path-key "^3.0.0"
 
-obgen@^0.4.0:
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/obgen/-/obgen-0.4.0.tgz#48c28ae901e5eb5c22b15cd366a90dff2f8cfb14"
-  integrity sha512-f9jVXQw2WKH/Lq5435DJJ9ovC1xS4z9P68tHpCoEF3p2ME09HQJd9VjFSrCX1Ul3/q5U36Y4dwPG2pZGSKA5jg==
+obgen@^0.5.1:
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/obgen/-/obgen-0.5.1.tgz#7e51a6c2763a2c1c39097bc58838414204d246ae"
+  integrity sha512-/TjLbBW04iPvTL4e3XhR/z6ZsOHpp7gfFtXcx4o7QiTHA9RE0l4UdMAPXlhh4ssYfIdJXdKfu6vsk4QOPxAy4w==
 
 object-assign@^4.1.1:
   version "4.1.1"
