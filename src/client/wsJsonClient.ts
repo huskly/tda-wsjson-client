@@ -2,6 +2,7 @@ import WebSocket from "isomorphic-ws";
 import {
   ChartRequestParams,
   newAccountPositionsRequest,
+  newCancelOrderRequest,
   newChartRequest,
   newConnectionRequest,
   newLoginRequest,
@@ -23,6 +24,7 @@ import ResponseParser from "./responseParser";
 import MulticastIterator from "obgen/multicastIterator";
 import BufferedIterator from "obgen/bufferedIterator";
 import {
+  isCancelOrderResponse,
   isChartResponse,
   isConnectionResponse,
   isLoginResponse,
@@ -40,6 +42,8 @@ import Observable from "obgen/observable";
 import { PositionsResponse } from "./types/positionsTypes";
 import { RawPayloadResponseUserProperties } from "./types/userPropertiesTypes";
 import { OrderEventsPatchResponse } from "./types/orderEventTypes";
+import debug from "debug";
+import { CancelOrderResponse } from "./types/placeOrderTypes";
 
 enum ChannelState {
   DISCONNECTED,
@@ -47,6 +51,8 @@ enum ChannelState {
   CONNECTED,
   ERROR,
 }
+
+const logger = debug("ws");
 
 export default class WsJsonClient {
   private buffer = new BufferedIterator<ParsedWebSocketResponse>();
@@ -98,6 +104,7 @@ export default class WsJsonClient {
   ) {
     const { responseParser, buffer, accessToken } = this;
     const message = JSON.parse(data) as WsJsonRawMessage;
+    logger("⬅️\treceived %O", message);
     if (isConnectionResponse(message)) {
       const loginMessage = newLoginRequest(accessToken);
       this.sendMessage(loginMessage);
@@ -153,6 +160,12 @@ export default class WsJsonClient {
       .iterable() as AsyncIterable<OrderEventsPatchResponse>;
   }
 
+  cancelOrder(orderId: number): Promise<CancelOrderResponse> {
+    return this.dispatch(() => newCancelOrderRequest(orderId))
+      .filter(isCancelOrderResponse)
+      .promise() as Promise<CancelOrderResponse>;
+  }
+
   userProperties(): Promise<RawPayloadResponseUserProperties> {
     return this.dispatch(() => newUserPropertiesRequest())
       .filter(isUserPropertiesResponse)
@@ -168,7 +181,9 @@ export default class WsJsonClient {
   }
 
   private sendMessage(data: any) {
-    this.socket?.send(JSON.stringify(data));
+    logger("➡️\tsending %O", data);
+    const msg = JSON.stringify(data);
+    this.socket?.send(msg);
   }
 
   private handleLoginResponse(

@@ -10,7 +10,10 @@ import { isPayloadResponse } from "./messageTypeHelpers";
 import { parseOrderEventsResponse } from "./types/orderEventTypes";
 import { parsePositionsResponse } from "./types/positionsTypes";
 import { parseUserPropertiesResponse } from "./types/userPropertiesTypes";
-import { parsePlaceOrderResponse } from "./types/placeOrderTypes";
+import {
+  parseCancelOrderResponse,
+  parsePlaceOrderResponse,
+} from "./types/placeOrderTypes";
 
 type MessageServiceToParserMapping = {
   [key: string]: (
@@ -22,6 +25,7 @@ export default class ResponseParser {
   private readonly messageServiceToParserMappings: MessageServiceToParserMapping =
     {
       quotes: parseQuotesResponse,
+      cancel_order: parseCancelOrderResponse,
       chart: parseChartResponse,
       order_events: parseOrderEventsResponse,
       positions: parsePositionsResponse,

@@ -9,7 +9,10 @@ import { ChartResponse } from "./types/chartTypes";
 import { QuotesResponse } from "./types/quoteTypes";
 import { PositionsResponse } from "./types/positionsTypes";
 import { RawPayloadResponseUserProperties } from "./types/userPropertiesTypes";
-import { PlaceOrderSnapshotResponse } from "./types/placeOrderTypes";
+import {
+  CancelOrderResponse,
+  PlaceOrderSnapshotResponse,
+} from "./types/placeOrderTypes";
 import { OrderEventsPatchResponse } from "./types/orderEventTypes";
 
 export function isSuccessful({ payload }: LoginResponse): boolean {
@@ -65,6 +68,12 @@ export function isPlaceOrderResponse(
   response: ParsedWebSocketResponse
 ): response is PlaceOrderSnapshotResponse {
   return "orders" in response && response.service === "place_order";
+}
+
+export function isCancelOrderResponse(
+  response: ParsedWebSocketResponse
+): response is CancelOrderResponse {
+  return "service" in response && response.service === "cancel_order";
 }
 
 export function isOrderEventsPatchResponse(

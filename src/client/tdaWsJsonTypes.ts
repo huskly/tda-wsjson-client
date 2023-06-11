@@ -5,6 +5,7 @@ import {
   RawAlertSubscribeResponse,
 } from "./types/alertTypes";
 import {
+  CancelOrderResponse,
   PlaceOrderPatchResponse,
   PlaceOrderSnapshotResponse,
   RawPlaceOrderPatchResponse,
@@ -132,6 +133,7 @@ export type WsJsonRawMessage =
 export type ParsedWebSocketResponse =
   | QuotesResponse
   | InstrumentSearchResponse
+  | CancelOrderResponse
   | ConnectionResponse
   | ChartResponse
   | RawPayloadResponseUserProperties

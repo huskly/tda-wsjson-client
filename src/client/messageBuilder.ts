@@ -170,6 +170,13 @@ export function newSubmitLimitOrderRequest({
   });
 }
 
+export function newCancelOrderRequest(orderId: number): RawPayloadRequest {
+  return newPayload({
+    header: { service: "cancel_order", id: `cancel-${orderId}`, ver: 0 },
+    params: { orderId },
+  });
+}
+
 function newPayload(item: RawPayloadRequestItem) {
   return { payload: [item] };
 }
