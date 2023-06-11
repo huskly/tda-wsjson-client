@@ -75,7 +75,7 @@ export function parsePositionsResponse(
 ): PositionsResponse | null {
   const [{ header, body }] = message.payload;
   switch (header.type) {
-    case "snapshot":
+    case "snapshot": {
       const { items } = body as RawPositionsResponse;
       const positions = items.map(({ values, instrument }) => {
         const averagePrice = values.OPEN_PRICE;
@@ -104,6 +104,7 @@ export function parsePositionsResponse(
         // it's already been closed)
         positions: positions.filter((p) => positionNetQuantity(p) > 0),
       };
+    }
     case "patch":
       // TODO: not yet implemented
       debugLog(

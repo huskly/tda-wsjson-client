@@ -40,11 +40,11 @@ export type QuotesResponseItem = {
   symbol?: string;
   symbolIndex?: number;
   path: string;
-  last: any;
-  ask: any;
-  bid: any;
-  askSize: any;
-  bidSize: any;
+  last: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  ask: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  bid: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  askSize: any; // eslint-disable-line @typescript-eslint/no-explicit-any
+  bidSize: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
 function parsePatchQuotesDataMessage({

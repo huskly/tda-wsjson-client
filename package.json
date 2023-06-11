@@ -15,8 +15,9 @@
     "prebundle": "yarn build",
     "bundle": "esbuild dist/client/tdaWsJsonClient.js --bundle --outfile=dist/app.bundle.js --minify --sourcemap --target=es2020",
     "check_prettier": "prettier --check .",
+    "lint": "eslint .",
     "test": "yarn run jest",
-    "ci": "yarn check_prettier && yarn build && yarn test"
+    "ci": "yarn check_prettier && yarn build && yarn lint && yarn test"
   },
   "dependencies": {
     "@babel/core": "^7.15.8",
@@ -29,6 +30,8 @@
     "eslint-plugin-flowtype": "^7.0.0",
     "eslint-plugin-import": "^2.22.1",
     "eslint-plugin-jest": "^27.2.1",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-testing-library": "^5.9.1",
     "isomorphic-ws": "^5.0.0",
     "jest": "29.5.0",
@@ -48,9 +51,13 @@
   "author": "felipe lima",
   "license": "MIT",
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/ws": "^8.5.5",
+    "@typescript-eslint/eslint-plugin": "^5.59.9",
+    "@typescript-eslint/parser": "^5.59.9",
     "dotenv": "^16.1.4",
     "esbuild": "^0.18.0",
+    "eslint-plugin-prettier": "^4.2.1",
     "jest-websocket-mock": "^2.4.0"
   }
 }

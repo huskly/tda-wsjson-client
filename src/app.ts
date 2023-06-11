@@ -19,8 +19,8 @@ class TestApp {
 
   async accountNumber(): Promise<string> {
     console.log(" --- accountNumber() requesting account number ---");
-    const userProperties = await this.client.userProperties();
-    return userProperties.defaultAccountCode;
+    const { defaultAccountCode } = await this.client.userProperties();
+    return defaultAccountCode;
   }
 
   async accountPositions(accountNumber: string) {

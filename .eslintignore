@@ -1,0 +1,4 @@
+dist/
+example/
+tsconfig.json
+babel.config.js

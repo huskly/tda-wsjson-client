@@ -133,13 +133,13 @@ export function parseAlertSubscribeResponse({
       return null;
     case "ChangedAlertResponse":
       return {
-        alerts: [parseAlert({ rawAlert: changedAlert! })],
+        alerts: [parseAlert({ rawAlert: changedAlert! })], // eslint-disable-line @typescript-eslint/no-non-null-assertion
       };
     case "TriggeredAlertResponse":
       return {
         alerts: [
           parseAlert({
-            rawAlert: alert!,
+            rawAlert: alert!, // eslint-disable-line @typescript-eslint/no-non-null-assertion
             description: alertDescription!,
           }),
         ],
