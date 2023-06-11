@@ -67,6 +67,15 @@ export type PlaceOrderSnapshotResponse = {
   service: "place_order";
 };
 
+export type CancelOrderResponse = {
+  service: "cancel_order";
+  orderId: number;
+  // type: "snapshot" | "error"
+  // for a failed cancel order request, type will be "error"
+  type: string;
+  body: Record<string, any>;
+};
+
 export type PlaceOrderPatchResponse = {
   patches: OrderPatch[];
   service: "place_order";
@@ -142,4 +151,16 @@ export function parsePlaceOrderResponse(
       console.warn("Unexpected place_order response", message);
       return null;
   }
+}
+
+export function parseCancelOrderResponse(
+  message: RawPayloadResponse
+): CancelOrderResponse | null {
+  const [{ header, body }] = message.payload;
+  return {
+    service: "cancel_order",
+    type: header.type,
+    orderId: +header.id.split("-")[1],
+    body,
+  };
 }
