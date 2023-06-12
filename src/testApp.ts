@@ -68,7 +68,7 @@ async function run() {
   //   symbol: "ABNB",
   //   accountNumber,
   // });
-  await app.quotes(["ABNB"]);
+  await app.quotes(["/NQ:XCME"]);
 }
 
 run().catch(console.error);

@@ -2,7 +2,12 @@ import React, { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import WsJsonClient from "tda-wsjson-client/wsJsonClient";
 import env from "react-dotenv";
+import { format } from "d3-format";
 import ReactJson from "react-json-view";
+import { QuotesResponseItem } from "../../src/client/types/quoteTypes";
+
+const APPEND_LOGS = false;
+export const priceFormat = format(".2f");
 
 function App() {
   const [accessToken] = useState<string>(env.ACCESS_TOKEN || "");
@@ -10,6 +15,7 @@ function App() {
   const [connected, setConnected] = useState(false);
   const [symbol, setSymbol] = useState<string>("ABNB");
   const [client, setClient] = useState<WsJsonClient | null>();
+  const [quote, setQuote] = useState<Partial<QuotesResponseItem>>();
   useEffect(() => {
     (async function () {
       if (accessToken && !connected && !client) {
@@ -34,7 +40,16 @@ function App() {
         switch (action) {
           case "quotes": {
             for await (const event of client.quotes([symbol])) {
-              setJsonData((prev) => [event, ...prev]);
+              if (APPEND_LOGS) setJsonData((prev) => [event, ...prev]);
+              event.quotes.forEach(({ ask, bid, askSize, bidSize, last }) => {
+                setQuote((oldQuote) => ({
+                  ask: ask || oldQuote?.ask,
+                  bid: bid || oldQuote?.bid,
+                  askSize: askSize || oldQuote?.askSize,
+                  bidSize: bidSize || oldQuote?.bidSize,
+                  last: last || oldQuote?.last,
+                }));
+              });
             }
             break;
           }
@@ -46,7 +61,7 @@ function App() {
               includeExtendedHours: true,
             };
             for await (const event of client.chart(chartRequest)) {
-              setJsonData((prev) => [event, ...prev]);
+              if (APPEND_LOGS) setJsonData((prev) => [event, ...prev]);
             }
           }
         }
@@ -79,7 +94,16 @@ function App() {
               onClick={(e) => onClickBtn(e, "chart")}
               className="px-4 py-3 bg-lime-600 rounded ml-2 text-2xl hover:bg-lime-400"
             />
+            <span className="ml-4 text-4xl dark:text-gray-200 font-mono">
+              {priceFormat(quote?.last)}
+            </span>
           </form>
+          <div className="text-lg dark:text-gray-200 font-mono">
+            Ask: {priceFormat(quote?.ask)} x {quote?.askSize}
+          </div>
+          <div className="text-lg dark:text-gray-200 font-mono mb-3">
+            Bid: {priceFormat(quote?.bid)} x {quote?.bidSize}
+          </div>
           <ReactJson src={jsonData} theme="monokai" style={{ width: "80vw" }} />
         </div>
       )}
