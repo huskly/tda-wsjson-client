@@ -55,7 +55,7 @@
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@types/debug": "^4.1.8",
     "@types/ws": "^8.5.5",
-    "@typescript-eslint/eslint-plugin": "^5.59.9",
+    "@typescript-eslint/eslint-plugin": "^5.59.11",
     "@typescript-eslint/parser": "^5.59.9",
     "dotenv": "^16.1.4",
     "esbuild": "^0.18.0",
