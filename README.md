@@ -4,21 +4,47 @@ This is a node and browser API client for the (undocumented) TDAmeritrade WebSoc
 
 🚧 Work in progress 🚧
 
+# Prerequisites
+
+* Node 16+
+
+Create a `.env` file and set your TDAmeritrade oauth access token:
+
+```
+ACCESS_TOKEN=your-access-token
+```
+
+```
+
 # Building for Node
 
 ```
+
 yarn install
 yarn build
-```
-
-# Running the sample app
 
 ```
+
+# Running the example app
+
+```
+
 cd example
 yarn install
 yarn link tda-wsjson-client
 yarn start
+
 ```
+
+# Supported APIs
+
+* Authentication via access token
+* Quotes
+* Price History
+* Account positions
+* Place order
+* Cancel order
+* User properties
 
 # Usage
 
