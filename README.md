@@ -14,8 +14,6 @@ Create a `.env` file and set your TDAmeritrade oauth access token:
 ACCESS_TOKEN=your-access-token
 ```
 
-```
-
 # Building for Node
 
 ```
