@@ -26,7 +26,7 @@ const InstrumentTopPanel = ({
         placeholder="Symbol"
         value={symbol}
         onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-        className="px-2 py-2 ml-2 dark:text-gray-500 rounded text-2xl w-48"
+        className="dark:bg-stone-900 px-3 py-3 ml-2 dark:text-gray-500 rounded text-xl w-48"
       />
       <input type="submit" className="hidden" value="Submit" />
       {quote?.last && (
