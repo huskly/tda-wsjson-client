@@ -63,7 +63,8 @@ for await (const event of client.chart(chartRequest)) {
 }
 ```
 
-For more sample usage check out https://github.com/felipecsl/tda-wsjson-client/blob/master/src/app.ts
+For more sample usage check out https://github.com/felipecsl/tda-wsjson-client/blob/master/src/testApp.ts and
+https://github.com/felipecsl/tda-wsjson-client/blob/master/example/src/App.tsx
 
 # Running tests
 
