@@ -8,7 +8,7 @@ export type OHLC = {
   volume: number;
 };
 
-export type StockPrice = { date: Date } & OHLC;
+export type PriceItem = { date: Date } & OHLC;
 
 type RawPayloadResponseChartData = {
   candles: {
@@ -33,7 +33,7 @@ export type RawPayloadResponseChart =
     };
 
 export type ChartResponse = {
-  candles: StockPrice[];
+  candles: PriceItem[];
   symbol: string;
 };
 
@@ -53,7 +53,7 @@ export function parseChartResponse(
   }
   const actualResponse = isPatchResponse ? body.patches[0].value : body;
   const { candles, symbol } = actualResponse;
-  const data: StockPrice[] = [];
+  const data: PriceItem[] = [];
   const { timestamps, opens, closes, highs, lows, volumes } = candles;
   for (let i = 0; i < timestamps.length; i++) {
     data.push({
