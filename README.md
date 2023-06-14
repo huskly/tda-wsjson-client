@@ -6,7 +6,7 @@ This is a node and browser API client for the (undocumented) TDAmeritrade WebSoc
 
 # Prerequisites
 
-* Node 16+
+- Node 16+
 
 Create a `.env` file and set your TDAmeritrade oauth access token:
 
@@ -36,13 +36,13 @@ yarn start
 
 # Supported APIs
 
-* Authentication via access token
-* Quotes
-* Price History
-* Account positions
-* Place order
-* Cancel order
-* User properties
+- Authentication via access token
+- Quotes
+- Price History
+- Account positions
+- Place order
+- Cancel order
+- User properties
 
 # Usage
 
