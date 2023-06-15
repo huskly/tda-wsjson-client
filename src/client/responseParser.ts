@@ -21,7 +21,10 @@ import {
   parseSubscribeToAlertResponse,
 } from "./types/alertTypes";
 import { parseInstrumentSearchResponse } from "./types/instrumentSearchTypes";
-import { parseOptionSeriesResponse } from "./types/optionChainTypes";
+import {
+  parseOptionChainDetailsResponse,
+  parseOptionChainResponse,
+} from "./types/optionChainTypes";
 
 type MessageServiceToParserMapping = {
   [key: string]: (
@@ -36,10 +39,12 @@ export default class ResponseParser {
       chart: parseChartResponse,
       order_events: parseOrderEventsResponse,
       instrument_search: parseInstrumentSearchResponse,
-      optionSeries: parseOptionSeriesResponse,
+      optionSeries: parseOptionChainResponse,
+      "option_chain/get": parseOptionChainDetailsResponse,
       positions: parsePositionsResponse,
       place_order: parsePlaceOrderResponse,
       quotes: parseQuotesResponse,
+      // "quotes/options": parseOptionQuotesResponse,
       user_properties: parseUserPropertiesResponse,
       "alerts/create": parseCreateAlertResponse,
       "alerts/cancel": parseCancelAlertResponse,

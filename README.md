@@ -46,7 +46,9 @@ yarn start
 - [x] Create alert
 - [x] Cancel alert
 - [x] Instrument search
-- [x] Option series
+- [x] Option chains
+- [x] Option chain details
+- [ ] Option quotes
 - [ ] Alert subscription
 - [ ] Alert lookup
 - [ ] Order events

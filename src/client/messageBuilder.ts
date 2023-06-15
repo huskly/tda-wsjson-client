@@ -136,6 +136,24 @@ export function newOptionChainRequest(symbol: string): RawPayloadRequest {
   };
 }
 
+// param `seriesNames` as returned from `newOptionChainRequest`, eg: "16 JUN 23 100"
+export function newOptionChainDetailsRequest(
+  symbol: string,
+  seriesNames: string[]
+): RawPayloadRequest {
+  return {
+    payload: [
+      {
+        header: { service: "option_chain/get", id: "option_chain/get", ver: 0 },
+        params: {
+          underlyingSymbol: symbol,
+          filter: { strikeQuantity: 2147483647, seriesNames },
+        },
+      },
+    ],
+  };
+}
+
 export function newLoginRequest(accessToken: string): RawPayloadRequest {
   return newPayload({
     header: { service: "login", id: "login", ver: 0 },

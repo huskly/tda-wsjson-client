@@ -82,6 +82,15 @@ class TestApp {
     const optionChain = await this.client.optionChain(symbol);
     logger("optionChain() : " + JSON.stringify(optionChain));
   }
+
+  async optionChainDetails(symbol: string, seriesNames: string[]) {
+    logger(" --- optionChainDetails() requesting option chain details ---");
+    const optionChainDetails = await this.client.optionChainDetails(
+      symbol,
+      seriesNames
+    );
+    logger("optionChainDetails() : " + JSON.stringify(optionChainDetails));
+  }
 }
 
 async function run() {
@@ -89,7 +98,7 @@ async function run() {
   const client = new WsJsonClient(accessToken);
   await client.authenticate();
   const app = new TestApp(client);
-  await app.optionChain("ABNB");
+  await app.optionChainDetails("COIN", ["16 JUN 23 100"]);
 }
 
 run().catch(console.error);

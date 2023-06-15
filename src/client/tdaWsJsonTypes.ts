@@ -32,6 +32,7 @@ import {
 import { RawPayloadResponseUserProperties } from "./types/userPropertiesTypes";
 import { ChartResponse, RawPayloadResponseChart } from "./types/chartTypes";
 import {
+  OptionChainDetailsResponse,
   OptionChainResponse,
   RawOptionSeriesResponse,
 } from "./types/optionChainTypes";
@@ -143,4 +144,5 @@ export type ParsedWebSocketResponse =
   | OrderEventsPatchResponse
   | PlaceOrderSnapshotResponse
   | PlaceOrderPatchResponse
-  | OptionChainResponse;
+  | OptionChainResponse
+  | OptionChainDetailsResponse;

@@ -16,7 +16,10 @@ import {
 import { OrderEventsPatchResponse } from "./types/orderEventTypes";
 import { AlertsResponse } from "./types/alertTypes";
 import { InstrumentSearchResponse } from "./types/instrumentSearchTypes";
-import { OptionChainResponse } from "./types/optionChainTypes";
+import {
+  OptionChainDetailsResponse,
+  OptionChainResponse,
+} from "./types/optionChainTypes";
 
 export function isSuccessful({ payload }: LoginResponse): boolean {
   return payload?.[0]?.body?.authenticationStatus === "OK";
@@ -101,4 +104,10 @@ export function isOptionChainResponse(
   response: ParsedWebSocketResponse
 ): response is OptionChainResponse {
   return "series" in response;
+}
+
+export function isOptionChainDetailsResponse(
+  response: ParsedWebSocketResponse
+): response is OptionChainDetailsResponse {
+  return "seriesDetails" in response;
 }
