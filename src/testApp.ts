@@ -69,6 +69,13 @@ class TestApp {
     const cancelResponse = await this.client.cancelAlert(alertId);
     logger(cancelResponse);
   }
+
+  async instrumentSearch(query: string) {
+    logger(" --- instrumentSearch() searching for instrument ---");
+    for await (const event of this.client.searchInstruments(query)) {
+      logger("instrumentSearch() : " + JSON.stringify(event));
+    }
+  }
 }
 
 async function run() {
@@ -76,7 +83,7 @@ async function run() {
   const client = new WsJsonClient(accessToken);
   await client.authenticate();
   const app = new TestApp(client);
-  await app.cancelAlert(2284140224);
+  await app.instrumentSearch("AAP");
 }
 
 run().catch(console.error);

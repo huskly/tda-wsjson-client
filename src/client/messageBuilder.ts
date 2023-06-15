@@ -28,6 +28,8 @@ export function newConnectionRequest() {
   };
 }
 
+const newRandomId = () => Math.floor(Math.random() * 1_000_000_000);
+
 export function newAccountPositionsRequest(
   accountNumber: string
 ): RawPayloadRequest {
@@ -101,6 +103,25 @@ export function newChartRequest({
       extendedHours: includeExtendedHours,
     },
   });
+}
+
+export function newInstrumentSearchRequest(
+  query: string,
+  limit = 5
+): RawPayloadRequest {
+  const id = newRandomId();
+  return {
+    payload: [
+      {
+        header: {
+          service: "instrument_search",
+          ver: 0,
+          id: `searchForSymbol-${id}`,
+        },
+        params: { limit, pattern: query },
+      },
+    ],
+  };
 }
 
 export function newLoginRequest(accessToken: string): RawPayloadRequest {
@@ -181,7 +202,7 @@ export function newCreateAlertRequest({
   triggerPrice,
   operator,
 }: CreateAlertRequestParams): RawPayloadRequest {
-  const id = Math.floor(Math.random() * 1_000_000_000);
+  const id = newRandomId();
   return {
     payload: [
       {

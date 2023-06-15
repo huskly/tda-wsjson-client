@@ -8,6 +8,7 @@ import {
   newChartRequest,
   newConnectionRequest,
   newCreateAlertRequest,
+  newInstrumentSearchRequest,
   newLoginRequest,
   newPlaceLimitOrderRequest,
   newQuotesRequest,
@@ -31,6 +32,7 @@ import {
   isCancelOrderResponse,
   isChartResponse,
   isConnectionResponse,
+  isInstrumentsResponse,
   isLoginResponse,
   isOrderEventsPatchResponse,
   isPlaceOrderResponse,
@@ -49,6 +51,7 @@ import { OrderEventsPatchResponse } from "./types/orderEventTypes";
 import debug from "debug";
 import { CancelOrderResponse } from "./types/placeOrderTypes";
 import { AlertsResponse } from "./types/alertTypes";
+import { InstrumentSearchResponse } from "./types/instrumentSearchTypes";
 
 enum ChannelState {
   DISCONNECTED,
@@ -150,6 +153,12 @@ export default class WsJsonClient {
     return this.dispatch(() => newChartRequest(request))
       .filter(isChartResponse)
       .iterable() as AsyncIterable<ChartResponse>;
+  }
+
+  searchInstruments(query: string): AsyncIterable<InstrumentSearchResponse> {
+    return this.dispatch(() => newInstrumentSearchRequest(query))
+      .filter(isInstrumentsResponse)
+      .iterable() as AsyncIterable<InstrumentSearchResponse>;
   }
 
   async placeOrder(

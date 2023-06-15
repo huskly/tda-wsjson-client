@@ -45,9 +45,9 @@ yarn start
 - [x] User properties
 - [x] Create alert
 - [x] Cancel alert
+- [x] Instrument search
 - [ ] Alert subscription
 - [ ] Alert lookup
-- [ ] Instrument search
 
 # Usage
 

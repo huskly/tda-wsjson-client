@@ -20,6 +20,7 @@ import {
   parseLookupAlertsResponse,
   parseSubscribeToAlertResponse,
 } from "./types/alertTypes";
+import { parseInstrumentSearchResponse } from "./types/instrumentSearchTypes";
 
 type MessageServiceToParserMapping = {
   [key: string]: (
@@ -30,12 +31,13 @@ type MessageServiceToParserMapping = {
 export default class ResponseParser {
   private readonly messageServiceToParserMappings: MessageServiceToParserMapping =
     {
-      quotes: parseQuotesResponse,
       cancel_order: parseCancelOrderResponse,
       chart: parseChartResponse,
       order_events: parseOrderEventsResponse,
+      instrument_search: parseInstrumentSearchResponse,
       positions: parsePositionsResponse,
       place_order: parsePlaceOrderResponse,
+      quotes: parseQuotesResponse,
       user_properties: parseUserPropertiesResponse,
       "alerts/create": parseCreateAlertResponse,
       "alerts/cancel": parseCancelAlertResponse,
