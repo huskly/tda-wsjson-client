@@ -131,6 +131,7 @@ export type WsJsonRawMessage =
   | LoginResponse
   | RawPayloadResponse;
 
+// todo change to an interface implemented by services
 export type ParsedWebSocketResponse =
   | QuotesResponse
   | InstrumentSearchResponse

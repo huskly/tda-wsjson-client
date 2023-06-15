@@ -10,7 +10,6 @@ import {
   newCreateAlertRequest,
   newInstrumentSearchRequest,
   newLoginRequest,
-  newOptionChainDetailsRequest,
   newOptionChainRequest,
   newPlaceLimitOrderRequest,
   newQuotesRequest,
@@ -26,7 +25,9 @@ import {
   WsJsonRawMessage,
 } from "./tdaWsJsonTypes";
 import { debugLog } from "./util";
-import ResponseParser from "./responseParser";
+import ResponseParser, {
+  MessageServiceToParserMapping,
+} from "./responseParser";
 import MulticastIterator from "obgen/multicastIterator";
 import BufferedIterator from "obgen/bufferedIterator";
 import {
@@ -36,7 +37,6 @@ import {
   isConnectionResponse,
   isInstrumentsResponse,
   isLoginResponse,
-  isOptionChainDetailsResponse,
   isOptionChainResponse,
   isOrderEventsPatchResponse,
   isPlaceOrderResponse,
@@ -46,20 +46,56 @@ import {
   isUserPropertiesResponse,
 } from "./messageTypeHelpers";
 import { deferredWrap } from "obgen";
-import { QuotesResponse } from "./types/quoteTypes";
-import { ChartResponse } from "./types/chartTypes";
+import { parseQuotesResponse, QuotesResponse } from "./types/quoteTypes";
 import Observable from "obgen/observable";
-import { PositionsResponse } from "./types/positionsTypes";
-import { RawPayloadResponseUserProperties } from "./types/userPropertiesTypes";
-import { OrderEventsPatchResponse } from "./types/orderEventTypes";
+import {
+  parsePositionsResponse,
+  PositionsResponse,
+} from "./types/positionsTypes";
+import {
+  parseUserPropertiesResponse,
+  RawPayloadResponseUserProperties,
+} from "./types/userPropertiesTypes";
+import {
+  OrderEventsPatchResponse,
+  parseOrderEventsResponse,
+} from "./types/orderEventTypes";
 import debug from "debug";
 import { CancelOrderResponse } from "./types/placeOrderTypes";
-import { AlertsResponse } from "./types/alertTypes";
-import { InstrumentSearchResponse } from "./types/instrumentSearchTypes";
 import {
-  OptionChainDetailsResponse,
+  AlertsResponse,
+  parseCancelAlertResponse,
+  parseCreateAlertResponse,
+  parseLookupAlertsResponse,
+  parseSubscribeToAlertResponse,
+} from "./types/alertTypes";
+import {
+  InstrumentSearchResponse,
+  parseInstrumentSearchResponse,
+} from "./types/instrumentSearchTypes";
+import {
   OptionChainResponse,
+  parseOptionChainResponse,
 } from "./types/optionChainTypes";
+import OptionChainDetailsService, {
+  isOptionChainDetailsResponse,
+  OptionChainDetailsResponse,
+} from "./services/optionChainDetailsService";
+import MessageServiceDefinition from "./services/messageServiceDefinition";
+import CancelAlertService from "./services/cancelAlertService";
+import CreateAlertService from "./services/createAlertService";
+import AlertLookupService from "./services/alertLookupService";
+import SubscribeToAlertService from "./services/subscribeToAlertService";
+import OptionQuotesService from "./services/optionQuotesService";
+import ChartService from "./services/chartService";
+import InstrumentSearchService from "./services/instrumentSearchService";
+import CancelOrderService from "./services/cancelOrderService";
+import OptionSeriesService from "./services/optionSeriesService";
+import OrderEventsService from "./services/orderEventsService";
+import PositionsService from "./services/positionsService";
+import QuotesService from "./services/quotesService";
+import UserPropertiesService from "./services/userPropertiesService";
+import PlaceOrderService from "./services/placeOrderService";
 
 enum ChannelState {
   DISCONNECTED,
@@ -69,6 +105,54 @@ enum ChannelState {
 }
 
 const logger = debug("ws");
+type ApiService =
+  | "cancel_order"
+  | "chart"
+  | "order_events"
+  | "instrument_search"
+  | "optionSeries"
+  | "option_chain/get"
+  | "positions"
+  | "place_order"
+  | "quotes"
+  | "quotes/options"
+  | "user_properties"
+  | "alerts/create"
+  | "alerts/cancel"
+  | "alerts/subscribe"
+  | "alerts/lookup";
+
+const RESPONSE_MESSAGE_PARSERS: MessageServiceToParserMapping = {
+  order_events: parseOrderEventsResponse,
+  instrument_search: parseInstrumentSearchResponse,
+  optionSeries: parseOptionChainResponse,
+  positions: parsePositionsResponse,
+  quotes: parseQuotesResponse,
+  // "quotes/options": parseOptionQuotesResponse,
+  user_properties: parseUserPropertiesResponse,
+  "alerts/create": parseCreateAlertResponse,
+  "alerts/cancel": parseCancelAlertResponse,
+  "alerts/subscribe": parseSubscribeToAlertResponse,
+  "alerts/lookup": parseLookupAlertsResponse,
+};
+
+const SERVICES: Record<ApiService, MessageServiceDefinition<any, any>> = {
+  "alerts/cancel": new CancelAlertService(),
+  "alerts/create": new CreateAlertService(),
+  "alerts/lookup": new AlertLookupService(),
+  "alerts/subscribe": new SubscribeToAlertService(),
+  "quotes/options": new OptionQuotesService(),
+  cancel_order: new CancelOrderService(),
+  chart: new ChartService(),
+  instrument_search: new InstrumentSearchService(),
+  optionSeries: new OptionSeriesService(),
+  order_events: new OrderEventsService(),
+  place_order: new PlaceOrderService(),
+  positions: new PositionsService(),
+  quotes: new QuotesService(),
+  user_properties: new UserPropertiesService(),
+  "option_chain/get": new OptionChainDetailsService(),
+};
 
 export default class WsJsonClient {
   private buffer = new BufferedIterator<ParsedWebSocketResponse>();
@@ -80,7 +164,9 @@ export default class WsJsonClient {
     private readonly socket = new WebSocket(
       "wss://services.thinkorswim.com/Services/WsJson"
     ),
-    private readonly responseParser = new ResponseParser()
+    private readonly responseParser = new ResponseParser(
+      Object.values(SERVICES)
+    )
   ) {}
 
   async authenticate(): Promise<LoginResponseBody | null> {
@@ -179,7 +265,8 @@ export default class WsJsonClient {
     symbol: string,
     seriesNames: string[]
   ): Promise<OptionChainDetailsResponse> {
-    const fn = () => newOptionChainDetailsRequest(symbol, seriesNames);
+    const service = SERVICES["option_chain/get"];
+    const fn = () => service.sendRequest({ symbol, seriesNames });
     return this.dispatch(fn)
       .filter(isOptionChainDetailsResponse)
       .promise() as Promise<OptionChainDetailsResponse>;

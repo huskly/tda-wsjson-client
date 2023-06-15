@@ -1,4 +1,4 @@
-import { RawPayloadRequest, RawPayloadRequestItem } from "./tdaWsJsonTypes";
+import { RawPayloadRequest } from "./tdaWsJsonTypes";
 
 export type ChartRequestParams = {
   symbol: string;
@@ -87,24 +87,6 @@ export function newUserPropertiesRequest(): RawPayloadRequest {
   });
 }
 
-export function newChartRequest({
-  symbol,
-  timeAggregation,
-  range,
-  includeExtendedHours,
-}: ChartRequestParams): RawPayloadRequest {
-  return newPayload({
-    header: { service: "chart", id: "chart-page-chart-1", ver: 1 },
-    params: {
-      symbol,
-      timeAggregation,
-      studies: [],
-      range,
-      extendedHours: includeExtendedHours,
-    },
-  });
-}
-
 export function newInstrumentSearchRequest(
   query: string,
   limit = 5
@@ -136,24 +118,6 @@ export function newOptionChainRequest(symbol: string): RawPayloadRequest {
   };
 }
 
-// param `seriesNames` as returned from `newOptionChainRequest`, eg: "16 JUN 23 100"
-export function newOptionChainDetailsRequest(
-  symbol: string,
-  seriesNames: string[]
-): RawPayloadRequest {
-  return {
-    payload: [
-      {
-        header: { service: "option_chain/get", id: "option_chain/get", ver: 0 },
-        params: {
-          underlyingSymbol: symbol,
-          filter: { strikeQuantity: 2147483647, seriesNames },
-        },
-      },
-    ],
-  };
-}
-
 export function newLoginRequest(accessToken: string): RawPayloadRequest {
   return newPayload({
     header: { service: "login", id: "login", ver: 0 },
@@ -163,36 +127,6 @@ export function newLoginRequest(accessToken: string): RawPayloadRequest {
       platform: "PROD",
       token: "",
       tag: "TOSWeb",
-    },
-  });
-}
-
-// quantity > 0 => buy
-// quantity < 0 => sell
-export function newPlaceLimitOrderRequest({
-  accountNumber,
-  limitPrice,
-  symbol,
-  quantity,
-}: PlaceLimitOrderRequestParams): RawPayloadRequest {
-  return newPayload({
-    header: {
-      id: `update-draft-order-${symbol}`,
-      service: "place_order",
-      ver: 1,
-    },
-    params: {
-      accountCode: accountNumber,
-      action: "CONFIRM",
-      marker: "SINGLE",
-      orders: [
-        {
-          requestType: "INIT_STOCK",
-          orderType: "LIMIT",
-          limitPrice,
-          legs: [{ symbol, quantity }],
-        },
-      ],
     },
   });
 }
@@ -262,15 +196,4 @@ export function newCancelAlertRequest(alertId: number): RawPayloadRequest {
       },
     ],
   };
-}
-
-export function newCancelOrderRequest(orderId: number): RawPayloadRequest {
-  return newPayload({
-    header: { service: "cancel_order", id: `cancel-${orderId}`, ver: 0 },
-    params: { orderId },
-  });
-}
-
-function newPayload(item: RawPayloadRequestItem) {
-  return { payload: [item] };
 }
