@@ -14,6 +14,12 @@ export type PlaceLimitOrderRequestParams = {
   quantity: number;
 };
 
+export type CreateAlertRequestParams = {
+  symbol: string;
+  triggerPrice: number;
+  operator: "GREATER_OR_EQUAL" | "LESS_OR_EQUAL";
+};
+
 export function newConnectionRequest() {
   return {
     ver: "27.*.*",
@@ -168,6 +174,43 @@ export function newSubmitLimitOrderRequest({
       ],
     },
   });
+}
+
+export function newCreateAlertRequest({
+  symbol,
+  triggerPrice,
+  operator,
+}: CreateAlertRequestParams): RawPayloadRequest {
+  const id = Math.floor(Math.random() * 1_000_000_000);
+  return {
+    payload: [
+      {
+        header: { service: "alerts/create", ver: 0, id: `alert-${id}` },
+        params: {
+          alert: {
+            market: {
+              components: [{ symbol, quantity: 1 }],
+              exchange: "BEST",
+              threshold: triggerPrice,
+              field: "MARK",
+              operator,
+            },
+          },
+        },
+      },
+    ],
+  };
+}
+
+export function newCancelAlertRequest(alertId: number): RawPayloadRequest {
+  return {
+    payload: [
+      {
+        header: { service: "alerts/cancel", id: "cancel_alert", ver: 0 },
+        params: { alertId },
+      },
+    ],
+  };
 }
 
 export function newCancelOrderRequest(orderId: number): RawPayloadRequest {

@@ -1,7 +1,10 @@
 import WsJsonClient from "./client/wsJsonClient";
 import "dotenv/config";
 import debug from "debug";
-import { PlaceLimitOrderRequestParams } from "./client/messageBuilder";
+import {
+  CreateAlertRequestParams,
+  PlaceLimitOrderRequestParams,
+} from "./client/messageBuilder";
 
 const logger = debug("testapp");
 
@@ -54,6 +57,18 @@ class TestApp {
     const cancelResponse = await this.client.cancelOrder(orderId);
     logger(cancelResponse);
   }
+
+  async createAlert(request: CreateAlertRequestParams) {
+    logger(" --- createAlert() creating alert ---");
+    const result = await this.client.createAlert(request);
+    logger("createAlert() : " + JSON.stringify(result));
+  }
+
+  async cancelAlert(alertId: number) {
+    logger(" --- cancelAlert() cancelling alert ---");
+    const cancelResponse = await this.client.cancelAlert(alertId);
+    logger(cancelResponse);
+  }
 }
 
 async function run() {
@@ -61,14 +76,7 @@ async function run() {
   const client = new WsJsonClient(accessToken);
   await client.authenticate();
   const app = new TestApp(client);
-  // const accountNumber = await app.accountNumber();
-  // await app.placeOrder({
-  //   limitPrice: 100,
-  //   quantity: 1,
-  //   symbol: "ABNB",
-  //   accountNumber,
-  // });
-  await app.quotes(["/NQ:XCME"]);
+  await app.cancelAlert(2284140224);
 }
 
 run().catch(console.error);

@@ -1,10 +1,13 @@
 import WebSocket from "isomorphic-ws";
 import {
   ChartRequestParams,
+  CreateAlertRequestParams,
   newAccountPositionsRequest,
+  newCancelAlertRequest,
   newCancelOrderRequest,
   newChartRequest,
   newConnectionRequest,
+  newCreateAlertRequest,
   newLoginRequest,
   newPlaceLimitOrderRequest,
   newQuotesRequest,
@@ -24,6 +27,7 @@ import ResponseParser from "./responseParser";
 import MulticastIterator from "obgen/multicastIterator";
 import BufferedIterator from "obgen/bufferedIterator";
 import {
+  isAlertsResponse,
   isCancelOrderResponse,
   isChartResponse,
   isConnectionResponse,
@@ -44,6 +48,7 @@ import { RawPayloadResponseUserProperties } from "./types/userPropertiesTypes";
 import { OrderEventsPatchResponse } from "./types/orderEventTypes";
 import debug from "debug";
 import { CancelOrderResponse } from "./types/placeOrderTypes";
+import { AlertsResponse } from "./types/alertTypes";
 
 enum ChannelState {
   DISCONNECTED,
@@ -158,6 +163,18 @@ export default class WsJsonClient {
     return this.dispatch(() => newSubmitLimitOrderRequest(request))
       .filter(isOrderEventsPatchResponse)
       .iterable() as AsyncIterable<OrderEventsPatchResponse>;
+  }
+
+  createAlert(request: CreateAlertRequestParams): Promise<AlertsResponse> {
+    return this.dispatch(() => newCreateAlertRequest(request))
+      .filter(isAlertsResponse)
+      .promise() as Promise<AlertsResponse>;
+  }
+
+  cancelAlert(alertId: number): Promise<AlertsResponse> {
+    return this.dispatch(() => newCancelAlertRequest(alertId))
+      .filter(isAlertsResponse)
+      .promise() as Promise<AlertsResponse>;
   }
 
   cancelOrder(orderId: number): Promise<CancelOrderResponse> {

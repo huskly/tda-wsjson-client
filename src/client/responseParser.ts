@@ -14,6 +14,12 @@ import {
   parseCancelOrderResponse,
   parsePlaceOrderResponse,
 } from "./types/placeOrderTypes";
+import {
+  parseCancelAlertResponse,
+  parseCreateAlertResponse,
+  parseLookupAlertsResponse,
+  parseSubscribeToAlertResponse,
+} from "./types/alertTypes";
 
 type MessageServiceToParserMapping = {
   [key: string]: (
@@ -31,6 +37,10 @@ export default class ResponseParser {
       positions: parsePositionsResponse,
       place_order: parsePlaceOrderResponse,
       user_properties: parseUserPropertiesResponse,
+      "alerts/create": parseCreateAlertResponse,
+      "alerts/cancel": parseCancelAlertResponse,
+      "alerts/subscribe": parseSubscribeToAlertResponse,
+      "alerts/lookup": parseLookupAlertsResponse,
     };
 
   /** Parses a raw TDA json websocket message into a more usable format */

@@ -43,6 +43,8 @@ yarn start
 - Place order
 - Cancel order
 - User properties
+- Create alert
+- Cancel alert
 
 # Usage
 

@@ -1,5 +1,6 @@
 import { isEmpty } from "lodash";
 import { debugLog } from "../util";
+import { RawPayloadResponse } from "../tdaWsJsonTypes";
 
 export type AlertStatus = "ACTIVE" | "CANCELED" | "TRIGGERED";
 
@@ -80,9 +81,9 @@ function parseAlert({
   };
 }
 
-export function parseAlertsCreateResponse({
-  alert,
-}: RawAlertCreateResponse): null {
+export function parseCreateAlertResponse(message: RawPayloadResponse): null {
+  const [{ body }] = message.payload;
+  const { alert } = body as RawAlertCreateResponse;
   if (alert && alert.status === "ACTIVE") {
     debugLog(
       `Alert created, symbol=${alert.market.components[0].symbol}, triggerPrice=${alert.market.threshold}, operator=${alert.market.operator}`
@@ -91,10 +92,9 @@ export function parseAlertsCreateResponse({
   return null;
 }
 
-export function parseAlertCancelResponse({
-  alertId,
-  result,
-}: RawAlertCancelResponse): null {
+export function parseCancelAlertResponse(message: RawPayloadResponse): null {
+  const [{ body }] = message.payload;
+  const { alertId, result } = body as RawAlertCancelResponse;
   if (result === "Alert cancelled") {
     debugLog(`Alert cancelled, id=${alertId}`);
   } else {
@@ -103,10 +103,11 @@ export function parseAlertCancelResponse({
   return null;
 }
 
-export function parseAlertsLookupResponse(
-  body: RawAlertLookupResponse
+export function parseLookupAlertsResponse(
+  message: RawPayloadResponse
 ): AlertsResponse | null {
-  const { alerts } = body;
+  const [{ body }] = message.payload;
+  const { alerts } = body as RawAlertLookupResponse;
   if (!isEmpty(alerts)) {
     const parsedAlerts = alerts.map((alert) => parseAlert({ rawAlert: alert }));
     return { alerts: parsedAlerts };
@@ -115,13 +116,12 @@ export function parseAlertsLookupResponse(
   }
 }
 
-export function parseAlertSubscribeResponse({
-  type,
-  result,
-  alert,
-  alertDescription,
-  changedAlert,
-}: RawAlertSubscribeResponse): AlertsResponse | null {
+export function parseSubscribeToAlertResponse(
+  message: RawPayloadResponse
+): AlertsResponse | null {
+  const [{ body }] = message.payload;
+  const { type, result, alert, alertDescription, changedAlert } =
+    body as RawAlertSubscribeResponse;
   switch (type) {
     case "AlertsSubscriptionConfirmationResponse":
       if (result !== "Subscribed OK.") {
