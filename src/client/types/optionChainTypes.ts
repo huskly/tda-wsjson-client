@@ -1,3 +1,5 @@
+import { RawPayloadResponse } from "../tdaWsJsonTypes";
+
 export type RawOptionSeriesResponse = {
   series: {
     // symbol
@@ -30,9 +32,11 @@ export type OptionChainItem = {
   settlementType: string;
 };
 
-export function parseOptionSeriesResponse({
-  series,
-}: RawOptionSeriesResponse): OptionChainResponse {
+export function parseOptionSeriesResponse(
+  message: RawPayloadResponse
+): OptionChainResponse {
+  const [{ body }] = message.payload;
+  const { series } = body as RawOptionSeriesResponse;
   return {
     series: series.map((s) => ({
       underlying: s.underlying,

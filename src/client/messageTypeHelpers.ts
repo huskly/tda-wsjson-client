@@ -16,6 +16,7 @@ import {
 import { OrderEventsPatchResponse } from "./types/orderEventTypes";
 import { AlertsResponse } from "./types/alertTypes";
 import { InstrumentSearchResponse } from "./types/instrumentSearchTypes";
+import { OptionChainResponse } from "./types/optionChainTypes";
 
 export function isSuccessful({ payload }: LoginResponse): boolean {
   return payload?.[0]?.body?.authenticationStatus === "OK";
@@ -94,4 +95,10 @@ export function isInstrumentsResponse(
   response: ParsedWebSocketResponse
 ): response is InstrumentSearchResponse {
   return "instruments" in response;
+}
+
+export function isOptionChainResponse(
+  response: ParsedWebSocketResponse
+): response is OptionChainResponse {
+  return "series" in response;
 }

@@ -76,6 +76,12 @@ class TestApp {
       logger("instrumentSearch() : " + JSON.stringify(event));
     }
   }
+
+  async optionChain(symbol: string) {
+    logger(" --- optionChain() requesting option chain ---");
+    const optionChain = await this.client.optionChain(symbol);
+    logger("optionChain() : " + JSON.stringify(optionChain));
+  }
 }
 
 async function run() {
@@ -83,7 +89,7 @@ async function run() {
   const client = new WsJsonClient(accessToken);
   await client.authenticate();
   const app = new TestApp(client);
-  await app.instrumentSearch("AAP");
+  await app.optionChain("ABNB");
 }
 
 run().catch(console.error);

@@ -10,6 +10,7 @@ import {
   newCreateAlertRequest,
   newInstrumentSearchRequest,
   newLoginRequest,
+  newOptionChainRequest,
   newPlaceLimitOrderRequest,
   newQuotesRequest,
   newSubmitLimitOrderRequest,
@@ -34,6 +35,7 @@ import {
   isConnectionResponse,
   isInstrumentsResponse,
   isLoginResponse,
+  isOptionChainResponse,
   isOrderEventsPatchResponse,
   isPlaceOrderResponse,
   isPositionsResponse,
@@ -52,6 +54,7 @@ import debug from "debug";
 import { CancelOrderResponse } from "./types/placeOrderTypes";
 import { AlertsResponse } from "./types/alertTypes";
 import { InstrumentSearchResponse } from "./types/instrumentSearchTypes";
+import { OptionChainResponse } from "./types/optionChainTypes";
 
 enum ChannelState {
   DISCONNECTED,
@@ -159,6 +162,12 @@ export default class WsJsonClient {
     return this.dispatch(() => newInstrumentSearchRequest(query))
       .filter(isInstrumentsResponse)
       .iterable() as AsyncIterable<InstrumentSearchResponse>;
+  }
+
+  optionChain(symbol: string): Promise<OptionChainResponse> {
+    return this.dispatch(() => newOptionChainRequest(symbol))
+      .filter(isOptionChainResponse)
+      .promise() as Promise<OptionChainResponse>;
   }
 
   async placeOrder(

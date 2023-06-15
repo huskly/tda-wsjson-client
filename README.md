@@ -46,8 +46,10 @@ yarn start
 - [x] Create alert
 - [x] Cancel alert
 - [x] Instrument search
+- [x] Option series
 - [ ] Alert subscription
 - [ ] Alert lookup
+- [ ] Order events
 
 # Usage
 

@@ -124,6 +124,18 @@ export function newInstrumentSearchRequest(
   };
 }
 
+export function newOptionChainRequest(symbol: string): RawPayloadRequest {
+  const id = newRandomId();
+  return {
+    payload: [
+      {
+        header: { id: `option-series-${id}`, service: "optionSeries", ver: 0 },
+        params: { underlying: symbol },
+      },
+    ],
+  };
+}
+
 export function newLoginRequest(accessToken: string): RawPayloadRequest {
   return newPayload({
     header: { service: "login", id: "login", ver: 0 },
