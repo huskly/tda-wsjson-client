@@ -36,15 +36,18 @@ yarn start
 
 # Supported APIs
 
-- Authentication via access token
-- Quotes
-- Price History
-- Account positions
-- Place order
-- Cancel order
-- User properties
-- Create alert
-- Cancel alert
+- [x] Authentication via access token
+- [x] Quotes
+- [x] Price History (chart)
+- [x] Account positions
+- [x] Place & submit order
+- [x] Cancel order
+- [x] User properties
+- [x] Create alert
+- [x] Cancel alert
+- [ ] Alert subscription
+- [ ] Alert lookup
+- [ ] Instrument search
 
 # Usage
 
