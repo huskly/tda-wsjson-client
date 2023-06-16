@@ -1,33 +1,10 @@
 import WebSocket from "isomorphic-ws";
 import {
-  ChartRequestParams,
-  CreateAlertRequestParams,
-  newAccountPositionsRequest,
-  newCancelAlertRequest,
-  newCancelOrderRequest,
-  newChartRequest,
-  newConnectionRequest,
-  newCreateAlertRequest,
-  newInstrumentSearchRequest,
-  newLoginRequest,
-  newOptionChainRequest,
-  newPlaceLimitOrderRequest,
-  newQuotesRequest,
-  newSubmitLimitOrderRequest,
-  newUserPropertiesRequest,
-  PlaceLimitOrderRequestParams,
-} from "./messageBuilder";
-import {
-  LoginResponse,
-  LoginResponseBody,
   ParsedWebSocketResponse,
-  RawPayloadRequest,
+  RawPayloadResponse,
   WsJsonRawMessage,
 } from "./tdaWsJsonTypes";
 import { debugLog } from "./util";
-import ResponseParser, {
-  MessageServiceToParserMapping,
-} from "./responseParser";
 import MulticastIterator from "obgen/multicastIterator";
 import BufferedIterator from "obgen/bufferedIterator";
 import {
@@ -42,62 +19,65 @@ import {
   isPlaceOrderResponse,
   isPositionsResponse,
   isQuotesResponse,
-  isSuccessful,
   isUserPropertiesResponse,
 } from "./messageTypeHelpers";
 import { deferredWrap } from "obgen";
-import { parseQuotesResponse, QuotesResponse } from "./types/quoteTypes";
-import Observable from "obgen/observable";
-import {
-  parsePositionsResponse,
-  PositionsResponse,
-} from "./types/positionsTypes";
-import {
-  parseUserPropertiesResponse,
-  RawPayloadResponseUserProperties,
-} from "./types/userPropertiesTypes";
-import {
-  OrderEventsPatchResponse,
-  parseOrderEventsResponse,
-} from "./types/orderEventTypes";
 import debug from "debug";
-import { CancelOrderResponse } from "./types/placeOrderTypes";
-import {
-  AlertsResponse,
-  parseCancelAlertResponse,
-  parseCreateAlertResponse,
-  parseLookupAlertsResponse,
-  parseSubscribeToAlertResponse,
-} from "./types/alertTypes";
-import {
-  InstrumentSearchResponse,
-  parseInstrumentSearchResponse,
-} from "./types/instrumentSearchTypes";
-import {
-  OptionChainResponse,
-  parseOptionChainResponse,
-} from "./types/optionChainTypes";
-import OptionChainDetailsService, {
+import Observable from "obgen/observable";
+import OptionChainDetailsMessageHandler, {
   isOptionChainDetailsResponse,
+  OptionChainDetailsRequest,
   OptionChainDetailsResponse,
-} from "./services/optionChainDetailsService";
-import MessageServiceDefinition from "./services/messageServiceDefinition";
-import CancelAlertService from "./services/cancelAlertService";
-import CreateAlertService from "./services/createAlertService";
-import AlertLookupService from "./services/alertLookupService";
-import SubscribeToAlertService from "./services/subscribeToAlertService";
-import OptionQuotesService from "./services/optionQuotesService";
-import ChartService from "./services/chartService";
-import InstrumentSearchService from "./services/instrumentSearchService";
-import CancelOrderService from "./services/cancelOrderService";
-import OptionSeriesService from "./services/optionSeriesService";
-import OrderEventsService from "./services/orderEventsService";
-import PositionsService from "./services/positionsService";
-import QuotesService from "./services/quotesService";
-import UserPropertiesService from "./services/userPropertiesService";
-import PlaceOrderService from "./services/placeOrderService";
+} from "./services/optionChainDetailsMessageHandler";
+import CancelAlertMessageHandler from "./services/cancelAlertMessageHandler";
+import CreateAlertMessageHandler, {
+  CreateAlertRequestParams,
+} from "./services/createAlertMessageHandler";
+import AlertLookupMessageHandler from "./services/alertLookupMessageHandler";
+import SubscribeToAlertMessageHandler from "./services/subscribeToAlertMessageHandler";
+import OptionQuotesMessageHandler from "./services/optionQuotesMessageHandler";
+import ChartMessageHandler, {
+  ChartRequestParams,
+  ChartResponse,
+} from "./services/chartMessageHandler";
+import InstrumentSearchMessageHandler, {
+  InstrumentSearchResponse,
+} from "./services/instrumentSearchMessageHandler";
+import CancelOrderMessageHandler from "./services/cancelOrderMessageHandler";
+import OptionSeriesMessageHandler, {
+  OptionChainResponse,
+} from "./services/optionSeriesMessageHandler";
+import OrderEventsMessageHandler, {
+  OrderEventsPatchResponse,
+} from "./services/orderEventsMessageHandler";
+import PositionsMessageHandler, {
+  PositionsResponse,
+} from "./services/positionsMessageHandler";
+import QuotesMessageHandler, {
+  QuotesResponse,
+} from "./services/quotesMessageHandler";
+import UserPropertiesMessageHandler, {
+  UserPropertiesResponse,
+} from "./services/userPropertiesMessageHandler";
+import PlaceOrderMessageHandler, {
+  PlaceLimitOrderRequestParams,
+} from "./services/placeOrderMessageHandler";
+import WebSocketApiMessageHandler from "./services/webSocketApiMessageHandler";
+import { ApiService } from "./services/apiService";
+import { keyBy } from "lodash";
+import ResponseParser from "./responseParser";
+import {
+  CONNECTION_REQUEST_MESSAGE,
+  newSubmitLimitOrderRequest,
+} from "./messageBuilder";
+import { AlertsResponse } from "./types/alertTypes";
+import { CancelOrderResponse } from "./types/placeOrderTypes";
+import LoginMessageHandler, {
+  RawLoginResponse,
+  RawLoginResponseBody,
+} from "./services/loginMessageHandler";
 
-enum ChannelState {
+export enum ChannelState {
   DISCONNECTED,
   CONNECTING,
   CONNECTED,
@@ -105,54 +85,28 @@ enum ChannelState {
 }
 
 const logger = debug("ws");
-type ApiService =
-  | "cancel_order"
-  | "chart"
-  | "order_events"
-  | "instrument_search"
-  | "optionSeries"
-  | "option_chain/get"
-  | "positions"
-  | "place_order"
-  | "quotes"
-  | "quotes/options"
-  | "user_properties"
-  | "alerts/create"
-  | "alerts/cancel"
-  | "alerts/subscribe"
-  | "alerts/lookup";
 
-const RESPONSE_MESSAGE_PARSERS: MessageServiceToParserMapping = {
-  order_events: parseOrderEventsResponse,
-  instrument_search: parseInstrumentSearchResponse,
-  optionSeries: parseOptionChainResponse,
-  positions: parsePositionsResponse,
-  quotes: parseQuotesResponse,
-  // "quotes/options": parseOptionQuotesResponse,
-  user_properties: parseUserPropertiesResponse,
-  "alerts/create": parseCreateAlertResponse,
-  "alerts/cancel": parseCancelAlertResponse,
-  "alerts/subscribe": parseSubscribeToAlertResponse,
-  "alerts/lookup": parseLookupAlertsResponse,
-};
-
-const SERVICES: Record<ApiService, MessageServiceDefinition<any, any>> = {
-  "alerts/cancel": new CancelAlertService(),
-  "alerts/create": new CreateAlertService(),
-  "alerts/lookup": new AlertLookupService(),
-  "alerts/subscribe": new SubscribeToAlertService(),
-  "quotes/options": new OptionQuotesService(),
-  cancel_order: new CancelOrderService(),
-  chart: new ChartService(),
-  instrument_search: new InstrumentSearchService(),
-  optionSeries: new OptionSeriesService(),
-  order_events: new OrderEventsService(),
-  place_order: new PlaceOrderService(),
-  positions: new PositionsService(),
-  quotes: new QuotesService(),
-  user_properties: new UserPropertiesService(),
-  "option_chain/get": new OptionChainDetailsService(),
-};
+const DEFAULT_MESSAGE_HANDLERS = keyBy(
+  [
+    new CancelAlertMessageHandler(),
+    new CreateAlertMessageHandler(),
+    new AlertLookupMessageHandler(),
+    new SubscribeToAlertMessageHandler(),
+    new OptionQuotesMessageHandler(),
+    new CancelOrderMessageHandler(),
+    new ChartMessageHandler(),
+    new InstrumentSearchMessageHandler(),
+    new OptionSeriesMessageHandler(),
+    new OrderEventsMessageHandler(),
+    new PlaceOrderMessageHandler(),
+    new PositionsMessageHandler(),
+    new QuotesMessageHandler(),
+    new UserPropertiesMessageHandler(),
+    new OptionChainDetailsMessageHandler(),
+    new LoginMessageHandler(),
+  ],
+  (s) => s.service
+) as Record<ApiService, WebSocketApiMessageHandler<any, any>>;
 
 export default class WsJsonClient {
   private buffer = new BufferedIterator<ParsedWebSocketResponse>();
@@ -165,11 +119,11 @@ export default class WsJsonClient {
       "wss://services.thinkorswim.com/Services/WsJson"
     ),
     private readonly responseParser = new ResponseParser(
-      Object.values(SERVICES)
+      DEFAULT_MESSAGE_HANDLERS
     )
   ) {}
 
-  async authenticate(): Promise<LoginResponseBody | null> {
+  async authenticate(): Promise<RawLoginResponseBody | null> {
     const { state } = this;
     switch (state) {
       case ChannelState.DISCONNECTED:
@@ -186,13 +140,13 @@ export default class WsJsonClient {
     }
   }
 
-  private doConnect(): Promise<LoginResponseBody> {
+  private doConnect(): Promise<RawLoginResponseBody> {
     const { socket } = this;
     return new Promise((resolve, reject) => {
       if (socket.readyState === WebSocket.OPEN) {
-        this.sendMessage(newConnectionRequest());
+        this.sendMessage(CONNECTION_REQUEST_MESSAGE);
       }
-      socket.onopen = () => this.sendMessage(newConnectionRequest());
+      socket.onopen = () => this.sendMessage(CONNECTION_REQUEST_MESSAGE);
       socket.onclose = () => debugLog("connection closed");
       socket.onmessage = ({ data }) =>
         this.onMessage(data as string, resolve, reject);
@@ -201,15 +155,16 @@ export default class WsJsonClient {
 
   private onMessage(
     data: string,
-    resolve: (value: LoginResponseBody) => void,
+    resolve: (value: RawLoginResponseBody) => void,
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     reject: (reason?: any) => void
   ) {
     const { responseParser, buffer, accessToken } = this;
     const message = JSON.parse(data) as WsJsonRawMessage;
     logger("⬅️\treceived %O", message);
     if (isConnectionResponse(message)) {
-      const loginMessage = newLoginRequest(accessToken);
-      this.sendMessage(loginMessage);
+      const handler = DEFAULT_MESSAGE_HANDLERS["login"];
+      this.sendMessage(handler.buildRequest(accessToken));
     } else if (isLoginResponse(message)) {
       this.handleLoginResponse(message, resolve, reject);
     } else {
@@ -232,42 +187,45 @@ export default class WsJsonClient {
   }
 
   quotes(symbols: string[]): AsyncIterable<QuotesResponse> {
-    return this.dispatch(() => newQuotesRequest(symbols))
+    const handler = DEFAULT_MESSAGE_HANDLERS["quotes"];
+    return this.dispatch(handler, symbols)
       .filter(isQuotesResponse)
       .iterable() as AsyncIterable<QuotesResponse>;
   }
 
   accountPositions(accountNumber: string): AsyncIterable<PositionsResponse> {
-    return this.dispatch(() => newAccountPositionsRequest(accountNumber))
+    const handler = DEFAULT_MESSAGE_HANDLERS["positions"];
+    return this.dispatch(handler, accountNumber)
       .filter(isPositionsResponse)
       .iterable() as AsyncIterable<PositionsResponse>;
   }
 
   chart(request: ChartRequestParams): AsyncIterable<ChartResponse> {
-    return this.dispatch(() => newChartRequest(request))
+    const handler = DEFAULT_MESSAGE_HANDLERS["chart"];
+    return this.dispatch(handler, request)
       .filter(isChartResponse)
       .iterable() as AsyncIterable<ChartResponse>;
   }
 
   searchInstruments(query: string): AsyncIterable<InstrumentSearchResponse> {
-    return this.dispatch(() => newInstrumentSearchRequest(query))
+    const handler = DEFAULT_MESSAGE_HANDLERS["instrument_search"];
+    return this.dispatch(handler, query)
       .filter(isInstrumentsResponse)
       .iterable() as AsyncIterable<InstrumentSearchResponse>;
   }
 
   optionChain(symbol: string): Promise<OptionChainResponse> {
-    return this.dispatch(() => newOptionChainRequest(symbol))
+    const handler = DEFAULT_MESSAGE_HANDLERS["optionSeries"];
+    return this.dispatch(handler, symbol)
       .filter(isOptionChainResponse)
       .promise() as Promise<OptionChainResponse>;
   }
 
   optionChainDetails(
-    symbol: string,
-    seriesNames: string[]
+    request: OptionChainDetailsRequest
   ): Promise<OptionChainDetailsResponse> {
-    const service = SERVICES["option_chain/get"];
-    const fn = () => service.sendRequest({ symbol, seriesNames });
-    return this.dispatch(fn)
+    const service = DEFAULT_MESSAGE_HANDLERS["option_chain/get"];
+    return this.dispatch(service, request)
       .filter(isOptionChainDetailsResponse)
       .promise() as Promise<OptionChainDetailsResponse>;
   }
@@ -276,7 +234,8 @@ export default class WsJsonClient {
     request: PlaceLimitOrderRequestParams
   ): Promise<AsyncIterable<OrderEventsPatchResponse>> {
     // 1. place order
-    await this.dispatch(() => newPlaceLimitOrderRequest(request))
+    const service = DEFAULT_MESSAGE_HANDLERS["place_order"];
+    await this.dispatch(service, request)
       .filter(isPlaceOrderResponse)
       .promise();
     // 2. submit order
@@ -286,37 +245,43 @@ export default class WsJsonClient {
   }
 
   createAlert(request: CreateAlertRequestParams): Promise<AlertsResponse> {
-    return this.dispatch(() => newCreateAlertRequest(request))
+    const service = DEFAULT_MESSAGE_HANDLERS["alerts/create"];
+    return this.dispatch(service, request)
       .filter(isAlertsResponse)
       .promise() as Promise<AlertsResponse>;
   }
 
   cancelAlert(alertId: number): Promise<AlertsResponse> {
-    return this.dispatch(() => newCancelAlertRequest(alertId))
+    const service = DEFAULT_MESSAGE_HANDLERS["alerts/cancel"];
+    return this.dispatch(service, alertId)
       .filter(isAlertsResponse)
       .promise() as Promise<AlertsResponse>;
   }
 
   cancelOrder(orderId: number): Promise<CancelOrderResponse> {
-    return this.dispatch(() => newCancelOrderRequest(orderId))
+    const service = DEFAULT_MESSAGE_HANDLERS["cancel_order"];
+    return this.dispatch(service, orderId)
       .filter(isCancelOrderResponse)
       .promise() as Promise<CancelOrderResponse>;
   }
 
-  userProperties(): Promise<RawPayloadResponseUserProperties> {
-    return this.dispatch(() => newUserPropertiesRequest())
+  userProperties(): Promise<UserPropertiesResponse> {
+    const service = DEFAULT_MESSAGE_HANDLERS["user_properties"];
+    return this.dispatch(service, null)
       .filter(isUserPropertiesResponse)
-      .promise() as Promise<RawPayloadResponseUserProperties>;
+      .promise() as Promise<UserPropertiesResponse>;
   }
 
-  private dispatch(
-    fn: () => RawPayloadRequest
+  private dispatch<Req, Res>(
+    handler: WebSocketApiMessageHandler<Req, Res>,
+    args: Req
   ): Observable<ParsedWebSocketResponse> {
     this.ensureConnected();
-    this.sendMessage(fn());
+    this.sendMessage(handler.buildRequest(args));
     return deferredWrap(() => this.iterator);
   }
 
+  // eslint-disable-line @typescript-eslint/no-explicit-any
   private sendMessage(data: any) {
     logger("➡️\tsending %O", data);
     const msg = JSON.stringify(data);
@@ -324,12 +289,15 @@ export default class WsJsonClient {
   }
 
   private handleLoginResponse(
-    message: LoginResponse,
-    resolve: (value: LoginResponseBody) => void,
+    message: RawLoginResponse,
+    resolve: (value: RawLoginResponseBody) => void,
+    // eslint-disable-line @typescript-eslint/no-explicit-any
     reject: (reason?: any) => void
   ) {
-    const body = message?.payload?.[0]?.body;
-    if (isSuccessful(message)) {
+    const handler = DEFAULT_MESSAGE_HANDLERS["login"];
+    const successful = handler.parseResponse(message as RawPayloadResponse);
+    const [{ body }] = message.payload;
+    if (successful) {
       this.state = ChannelState.CONNECTED;
       resolve(body);
     } else {

@@ -1,11 +1,12 @@
-import MessageServiceDefinition, {
+import WebSocketApiMessageHandler, {
   newPayload,
-} from "./messageServiceDefinition";
+} from "./webSocketApiMessageHandler";
 import { CancelOrderResponse } from "../types/placeOrderTypes";
 import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
+import { ApiService } from "./apiService";
 
-export default class CancelOrderService
-  implements MessageServiceDefinition<number, CancelOrderResponse>
+export default class CancelOrderMessageHandler
+  implements WebSocketApiMessageHandler<number, CancelOrderResponse>
 {
   parseResponse(message: RawPayloadResponse): CancelOrderResponse {
     const [{ header, body }] = message.payload;
@@ -17,10 +18,12 @@ export default class CancelOrderService
     };
   }
 
-  sendRequest(orderId: number): RawPayloadRequest {
+  buildRequest(orderId: number): RawPayloadRequest {
     return newPayload({
       header: { service: "cancel_order", id: `cancel-${orderId}`, ver: 0 },
       params: { orderId },
     });
   }
+
+  service: ApiService = "cancel_order";
 }

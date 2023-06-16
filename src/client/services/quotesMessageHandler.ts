@@ -1,5 +1,9 @@
-import { RawPayloadResponse } from "../tdaWsJsonTypes";
+import WebSocketApiMessageHandler, {
+  newPayload,
+} from "./webSocketApiMessageHandler";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
 import { compact, isEmpty } from "lodash";
+import { ApiService } from "./apiService";
 
 export type RawPayloadResponseQuotesSnapshot = {
   items: {
@@ -9,7 +13,7 @@ export type RawPayloadResponseQuotesSnapshot = {
   }[];
 };
 
-export type RawPayloadResponseQuotesPatchValue = {
+type RawPayloadResponseQuotesPatchValue = {
   items: {
     symbol: string;
     isDelayed: boolean;
@@ -47,6 +51,72 @@ export type QuotesResponseItem = {
   bidSize: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 };
 
+export default class QuotesMessageHandler
+  implements WebSocketApiMessageHandler<string[], QuotesResponse>
+{
+  parseResponse({
+    payload: [{ header, body }],
+  }: RawPayloadResponse): QuotesResponse | null {
+    switch (header.type) {
+      case "snapshot":
+        return parseSnapshotDataMessage(
+          body as RawPayloadResponseQuotesSnapshot
+        );
+      case "patch":
+        return parsePatchQuotesDataMessage(
+          body as RawPayloadResponseQuotesPatch
+        );
+      default:
+        return null;
+    }
+  }
+
+  buildRequest(symbols: string[]): RawPayloadRequest {
+    return newPayload({
+      header: { service: "quotes", id: "generalQuotes", ver: 0 },
+      params: {
+        account: "COMBINED ACCOUNT",
+        symbols,
+        refreshRate: 300,
+        fields: [
+          "MARK",
+          "MARK_CHANGE",
+          "MARK_PERCENT_CHANGE",
+          "NET_CHANGE",
+          "NET_CHANGE_PERCENT",
+          "BID",
+          "ASK",
+          "BID_SIZE",
+          "ASK_SIZE",
+          "VOLUME",
+          "OPEN",
+          "HIGH",
+          "LOW",
+          "LAST",
+          "LAST_SIZE",
+          "CLOSE",
+        ],
+      },
+    });
+  }
+
+  service: ApiService = "quotes";
+}
+
+function parseSnapshotDataMessage({
+  items,
+}: RawPayloadResponseQuotesSnapshot): QuotesResponse {
+  const quotes = items.map(({ values, symbol }) => {
+    const last = values.LAST;
+    const ask = values.ASK;
+    const bid = values.BID;
+    const askSize = values.ASK_SIZE;
+    const bidSize = values.BID_SIZE;
+    return { symbol, last, ask, bid, askSize, bidSize };
+  });
+  return { quotes };
+}
+
 function parsePatchQuotesDataMessage({
   patches,
 }: RawPayloadResponseQuotesPatch): QuotesResponse | null {
@@ -82,31 +152,4 @@ function parsePatchQuotesDataMessage({
   });
   const finalQuotes = compact(quotes);
   return !isEmpty(finalQuotes) ? { quotes: finalQuotes } : null;
-}
-
-function parseSnapshotDataMessage({
-  items,
-}: RawPayloadResponseQuotesSnapshot): QuotesResponse {
-  const quotes = items.map(({ values, symbol }) => {
-    const last = values.LAST;
-    const ask = values.ASK;
-    const bid = values.BID;
-    const askSize = values.ASK_SIZE;
-    const bidSize = values.BID_SIZE;
-    return { symbol, last, ask, bid, askSize, bidSize };
-  });
-  return { quotes };
-}
-
-export function parseQuotesResponse({
-  payload: [{ header, body }],
-}: RawPayloadResponse): QuotesResponse | null {
-  switch (header.type) {
-    case "snapshot":
-      return parseSnapshotDataMessage(body as RawPayloadResponseQuotesSnapshot);
-    case "patch":
-      return parsePatchQuotesDataMessage(body as RawPayloadResponseQuotesPatch);
-    default:
-      return null;
-  }
 }

@@ -1,11 +1,18 @@
-import MessageServiceDefinition, {
+import WebSocketApiMessageHandler, {
   newPayload,
-} from "./messageServiceDefinition";
-import { PlaceLimitOrderRequestParams } from "../messageBuilder";
+} from "./webSocketApiMessageHandler";
 import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
-import { OrderEvent, OrderPatch } from "../types/orderEventTypes";
+import { ApiService } from "./apiService";
+import { OrderEvent, OrderPatch } from "./orderEventsMessageHandler";
 
-type RawPlaceOrderPatchResponse = {
+export type PlaceLimitOrderRequestParams = {
+  accountNumber: string;
+  limitPrice: number;
+  symbol: string;
+  quantity: number;
+};
+
+export type RawPlaceOrderPatchResponse = {
   patches: {
     op: string;
     path: string;
@@ -13,7 +20,7 @@ type RawPlaceOrderPatchResponse = {
   }[];
 };
 
-type RawPlaceOrderSnapshotResponse = {
+export type RawPlaceOrderSnapshotResponse = {
   groupType: string;
   confirmation: {
     commission: number;
@@ -66,21 +73,24 @@ type RawPlaceOrderItem = {
   descriptionTemplate: string;
 };
 
-type PlaceOrderSnapshotResponse = {
+export type PlaceOrderSnapshotResponse = {
   orders: OrderEvent[];
   service: "place_order";
 };
 
-type PlaceOrderPatchResponse = {
+export type PlaceOrderPatchResponse = {
   patches: OrderPatch[];
   service: "place_order";
 };
 
 type PlaceOrderResponse = PlaceOrderSnapshotResponse | PlaceOrderPatchResponse;
 
-export default class PlaceOrderService
+export default class PlaceOrderMessageHandler
   implements
-    MessageServiceDefinition<PlaceLimitOrderRequestParams, PlaceOrderResponse>
+    WebSocketApiMessageHandler<
+      PlaceLimitOrderRequestParams,
+      PlaceOrderResponse
+    >
 {
   parseResponse(message: RawPayloadResponse): PlaceOrderResponse | null {
     const [{ header, body }] = message.payload;
@@ -101,7 +111,7 @@ export default class PlaceOrderService
 
   // quantity > 0 => buy
   // quantity < 0 => sell
-  sendRequest({
+  buildRequest({
     accountNumber,
     limitPrice,
     symbol,
@@ -183,4 +193,6 @@ export default class PlaceOrderService
       return null;
     }
   }
+
+  service: ApiService = "place_order";
 }

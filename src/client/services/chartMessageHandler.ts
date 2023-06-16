@@ -1,9 +1,8 @@
-import MessageServiceDefinition, {
+import WebSocketApiMessageHandler, {
   newPayload,
-} from "./messageServiceDefinition";
-import { ChartRequestParams } from "../messageBuilder";
-import { PriceItem } from "../types/chartTypes";
+} from "./webSocketApiMessageHandler";
 import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
+import { ApiService } from "./apiService";
 
 type RawPayloadResponseChartData = {
   candles: {
@@ -17,7 +16,7 @@ type RawPayloadResponseChartData = {
   symbol: string;
 };
 
-type RawPayloadResponseChart =
+export type RawPayloadResponseChart =
   | RawPayloadResponseChartData
   | {
       patches: {
@@ -32,8 +31,25 @@ export type ChartResponse = {
   symbol: string;
 };
 
-export default class ChartService
-  implements MessageServiceDefinition<ChartRequestParams, ChartResponse>
+export type OHLC = {
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
+
+export type PriceItem = { date: Date } & OHLC;
+
+export type ChartRequestParams = {
+  symbol: string;
+  timeAggregation: string;
+  range: string;
+  includeExtendedHours: boolean;
+};
+
+export default class ChartMessageHandler
+  implements WebSocketApiMessageHandler<ChartRequestParams, ChartResponse>
 {
   parseResponse(message: RawPayloadResponse): ChartResponse | null {
     const body = message.payload[0].body as RawPayloadResponseChart;
@@ -64,7 +80,7 @@ export default class ChartService
     return { symbol, candles: data };
   }
 
-  sendRequest({
+  buildRequest({
     symbol,
     timeAggregation,
     range,
@@ -81,4 +97,6 @@ export default class ChartService
       },
     });
   }
+
+  service: ApiService = "chart";
 }

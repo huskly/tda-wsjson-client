@@ -1,26 +1,20 @@
 import {
   ConnectionResponse,
-  LoginResponse,
   ParsedWebSocketResponse,
   RawPayloadResponse,
   WsJsonRawMessage,
 } from "./tdaWsJsonTypes";
-import { ChartResponse } from "./types/chartTypes";
-import { QuotesResponse } from "./types/quoteTypes";
-import { PositionsResponse } from "./types/positionsTypes";
-import { RawPayloadResponseUserProperties } from "./types/userPropertiesTypes";
-import {
-  CancelOrderResponse,
-  PlaceOrderSnapshotResponse,
-} from "./types/placeOrderTypes";
-import { OrderEventsPatchResponse } from "./types/orderEventTypes";
+import { ChartResponse } from "./services/chartMessageHandler";
+import { QuotesResponse } from "./services/quotesMessageHandler";
+import { PositionsResponse } from "./services/positionsMessageHandler";
+import { PlaceOrderSnapshotResponse } from "./services/placeOrderMessageHandler";
+import { CancelOrderResponse } from "./types/placeOrderTypes";
+import { OrderEventsPatchResponse } from "./services/orderEventsMessageHandler";
+import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler";
+import { InstrumentSearchResponse } from "./services/instrumentSearchMessageHandler";
 import { AlertsResponse } from "./types/alertTypes";
-import { InstrumentSearchResponse } from "./types/instrumentSearchTypes";
-import { OptionChainResponse } from "./types/optionChainTypes";
-
-export function isSuccessful({ payload }: LoginResponse): boolean {
-  return payload?.[0]?.body?.authenticationStatus === "OK";
-}
+import { OptionChainResponse } from "./services/optionSeriesMessageHandler";
+import { RawLoginResponse } from "./services/loginMessageHandler";
 
 export function isPayloadResponse(
   response: WsJsonRawMessage
@@ -36,7 +30,7 @@ export function isConnectionResponse(
 
 export function isLoginResponse(
   message: WsJsonRawMessage
-): message is LoginResponse {
+): message is RawLoginResponse {
   if (!isPayloadResponse(message)) return false;
   const [{ header }] = message.payload;
   const { service } = header;
@@ -63,7 +57,7 @@ export function isPositionsResponse(
 
 export function isUserPropertiesResponse(
   response: ParsedWebSocketResponse
-): response is RawPayloadResponseUserProperties {
+): response is UserPropertiesResponse {
   return "defaultAccountCode" in response;
 }
 

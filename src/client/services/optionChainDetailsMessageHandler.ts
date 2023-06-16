@@ -1,9 +1,10 @@
-import MessageServiceDefinition from "./messageServiceDefinition";
+import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
 import {
   ParsedWebSocketResponse,
   RawPayloadRequest,
   RawPayloadResponse,
 } from "../tdaWsJsonTypes";
+import { ApiService } from "./apiService";
 
 export type RawOptionChainDetailsResponse = {
   optionSeries: OptionChainDetailsItem[];
@@ -37,9 +38,9 @@ export type OptionChainDetailsRequest = {
   seriesNames: string[];
 };
 
-export default class OptionChainDetailsService
+export default class OptionChainDetailsMessageHandler
   implements
-    MessageServiceDefinition<
+    WebSocketApiMessageHandler<
       OptionChainDetailsRequest,
       OptionChainDetailsResponse
     >
@@ -51,7 +52,7 @@ export default class OptionChainDetailsService
   }
 
   // param `seriesNames` as returned from `newOptionChainRequest`, eg: "16 JUN 23 100"
-  sendRequest({
+  buildRequest({
     symbol,
     seriesNames,
   }: OptionChainDetailsRequest): RawPayloadRequest {
@@ -71,6 +72,8 @@ export default class OptionChainDetailsService
       ],
     };
   }
+
+  service: ApiService = "option_chain/get";
 }
 
 export function isOptionChainDetailsResponse(

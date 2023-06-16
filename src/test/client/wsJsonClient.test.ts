@@ -1,10 +1,7 @@
 import WsJsonClient from "../../client/wsJsonClient";
 import "dotenv/config";
 import WS from "jest-websocket-mock";
-import {
-  newConnectionRequest,
-  newLoginRequest,
-} from "../../client/messageBuilder";
+import { CONNECTION_REQUEST_MESSAGE } from "../../client/messageBuilder";
 
 describe("wsJsonClientTest", () => {
   it("should connect and log in successfully", async () => {
@@ -81,7 +78,7 @@ describe("wsJsonClientTest", () => {
     client.authenticate();
     server.send(connectionResponse);
     server.send(loginResponse);
-    await expect(server).toReceiveMessage(newConnectionRequest());
+    await expect(server).toReceiveMessage(CONNECTION_REQUEST_MESSAGE);
     await expect(server).toReceiveMessage(newLoginRequest(accessToken));
     expect(client.isConnected()).toBeTruthy();
     client.disconnect();

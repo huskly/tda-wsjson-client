@@ -1,7 +1,3 @@
-import { isEmpty } from "lodash";
-import { debugLog } from "../util";
-import { RawPayloadResponse } from "../tdaWsJsonTypes";
-
 export type AlertStatus = "ACTIVE" | "CANCELED" | "TRIGGERED";
 
 export type PriceAlert = {
@@ -56,15 +52,7 @@ export type RawAlertCancelResponse = {
   result: string;
 };
 
-export type RawAlertCreateResponse = {
-  alert: RawAlertResponse;
-};
-
-export type RawAlertLookupResponse = {
-  alerts: RawAlertResponse[];
-};
-
-function parseAlert({
+export function parseAlert({
   rawAlert,
   description,
 }: {
@@ -79,70 +67,4 @@ function parseAlert({
     status,
     id,
   };
-}
-
-export function parseCreateAlertResponse(message: RawPayloadResponse): null {
-  const [{ body }] = message.payload;
-  const { alert } = body as RawAlertCreateResponse;
-  if (alert && alert.status === "ACTIVE") {
-    debugLog(
-      `Alert created, symbol=${alert.market.components[0].symbol}, triggerPrice=${alert.market.threshold}, operator=${alert.market.operator}`
-    );
-  }
-  return null;
-}
-
-export function parseCancelAlertResponse(message: RawPayloadResponse): null {
-  const [{ body }] = message.payload;
-  const { alertId, result } = body as RawAlertCancelResponse;
-  if (result === "Alert cancelled") {
-    debugLog(`Alert cancelled, id=${alertId}`);
-  } else {
-    console.warn("Unexpected alert/cancel response", { alertId, result });
-  }
-  return null;
-}
-
-export function parseLookupAlertsResponse(
-  message: RawPayloadResponse
-): AlertsResponse | null {
-  const [{ body }] = message.payload;
-  const { alerts } = body as RawAlertLookupResponse;
-  if (!isEmpty(alerts)) {
-    const parsedAlerts = alerts.map((alert) => parseAlert({ rawAlert: alert }));
-    return { alerts: parsedAlerts };
-  } else {
-    return null;
-  }
-}
-
-export function parseSubscribeToAlertResponse(
-  message: RawPayloadResponse
-): AlertsResponse | null {
-  const [{ body }] = message.payload;
-  const { type, result, alert, alertDescription, changedAlert } =
-    body as RawAlertSubscribeResponse;
-  switch (type) {
-    case "AlertsSubscriptionConfirmationResponse":
-      if (result !== "Subscribed OK.") {
-        const errorMsg =
-          "Received error response from `alert/subscribe` request";
-        console.error(errorMsg, { type, result });
-      }
-      // return null since this response is a no-op message
-      return null;
-    case "ChangedAlertResponse":
-      return {
-        alerts: [parseAlert({ rawAlert: changedAlert! })], // eslint-disable-line @typescript-eslint/no-non-null-assertion
-      };
-    case "TriggeredAlertResponse":
-      return {
-        alerts: [
-          parseAlert({
-            rawAlert: alert!, // eslint-disable-line @typescript-eslint/no-non-null-assertion
-            description: alertDescription!,
-          }),
-        ],
-      };
-  }
 }

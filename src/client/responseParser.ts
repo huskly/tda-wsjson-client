@@ -1,21 +1,15 @@
-import {
-  ParsedWebSocketResponse,
-  RawPayloadResponse,
-  WsJsonRawMessage,
-} from "./tdaWsJsonTypes";
+import { ParsedWebSocketResponse, WsJsonRawMessage } from "./tdaWsJsonTypes";
 import { debugLog } from "./util";
 import { isPayloadResponse } from "./messageTypeHelpers";
-import MessageServiceDefinition from "./services/messageServiceDefinition";
-
-export type MessageServiceToParserMapping = {
-  [key: string]: (
-    message: RawPayloadResponse
-  ) => ParsedWebSocketResponse | null;
-};
+import WebSocketApiMessageHandler from "./services/webSocketApiMessageHandler";
+import { ApiService } from "./services/apiService";
 
 export default class ResponseParser {
   constructor(
-    private readonly services: MessageServiceDefinition<any, any>[]
+    private readonly serviceRegistry: Record<
+      ApiService,
+      WebSocketApiMessageHandler<any, any>
+    >
   ) {}
 
   /** Parses a raw TDA json websocket message into a more usable format */
@@ -23,11 +17,11 @@ export default class ResponseParser {
     if (isPayloadResponse(message)) {
       const [{ header }] = message.payload;
       const { service } = header;
-      const messageParser = this.responseMessageParsers[service];
-      if (messageParser) {
-        return messageParser(message);
+      const serviceHandler = this.serviceRegistry[service];
+      if (serviceHandler) {
+        return serviceHandler.parseResponse(message);
       } else {
-        debugLog(`Don't know how to parse message with service: ${service}`);
+        debugLog(`Don't know how to handle message with service=${service}`);
         return null;
       }
     } else {
