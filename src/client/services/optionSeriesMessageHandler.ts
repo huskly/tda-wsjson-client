@@ -1,6 +1,6 @@
 import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
 import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
-import { newRandomId } from "../messageBuilder";
+import { newRandomId } from "../util";
 import { ApiService } from "./apiService";
 
 export type RawOptionSeriesResponse = {

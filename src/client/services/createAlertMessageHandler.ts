@@ -1,8 +1,8 @@
 import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
-import { newRandomId } from "../messageBuilder";
 import { AlertsResponse, RawAlertResponse } from "../types/alertTypes";
 import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
 import { ApiService } from "./apiService";
+import { newRandomId } from "../util";
 
 type RawAlertCreateResponse = {
   alert: RawAlertResponse;

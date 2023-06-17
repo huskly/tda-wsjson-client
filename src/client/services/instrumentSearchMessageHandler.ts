@@ -1,6 +1,6 @@
 import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
 import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
-import { newRandomId } from "../messageBuilder";
+import { newRandomId } from "../util";
 import { ApiService } from "./apiService";
 
 export type RawPayloadResponseInstrumentSearch = {
@@ -18,7 +18,7 @@ type InstrumentSearchMatch = {
 
 type InstrumentSearchRequest = {
   query: string;
-  limit: number;
+  limit?: number;
 };
 
 export type InstrumentSearchResponse = {
@@ -38,7 +38,10 @@ export default class InstrumentSearchMessageHandler
     return { instruments };
   }
 
-  buildRequest({ query, limit }: InstrumentSearchRequest): RawPayloadRequest {
+  buildRequest({
+    query,
+    limit = 5,
+  }: InstrumentSearchRequest): RawPayloadRequest {
     const id = newRandomId();
     return {
       payload: [

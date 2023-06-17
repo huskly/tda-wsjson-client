@@ -4,7 +4,7 @@ import {
   RawPayloadResponse,
   WsJsonRawMessage,
 } from "./tdaWsJsonTypes";
-import { debugLog } from "./util";
+import { debugLog, findByTypeOrThrow } from "./util";
 import MulticastIterator from "obgen/multicastIterator";
 import BufferedIterator from "obgen/bufferedIterator";
 import {
@@ -63,19 +63,20 @@ import PlaceOrderMessageHandler, {
   PlaceLimitOrderRequestParams,
 } from "./services/placeOrderMessageHandler";
 import WebSocketApiMessageHandler from "./services/webSocketApiMessageHandler";
-import { ApiService } from "./services/apiService";
-import { keyBy } from "lodash";
 import ResponseParser from "./responseParser";
-import {
-  CONNECTION_REQUEST_MESSAGE,
-  newSubmitLimitOrderRequest,
-} from "./messageBuilder";
 import { AlertsResponse } from "./types/alertTypes";
 import { CancelOrderResponse } from "./types/placeOrderTypes";
 import LoginMessageHandler, {
   RawLoginResponse,
   RawLoginResponseBody,
 } from "./services/loginMessageHandler";
+import SubmitOrderMessageHandler from "./services/submitOrderMessageHandler";
+
+export const CONNECTION_REQUEST_MESSAGE = {
+  ver: "27.*.*",
+  fmt: "json-patches-structured",
+  heartbeat: "2s",
+};
 
 export enum ChannelState {
   DISCONNECTED,
@@ -86,27 +87,24 @@ export enum ChannelState {
 
 const logger = debug("ws");
 
-const DEFAULT_MESSAGE_HANDLERS = keyBy(
-  [
-    new CancelAlertMessageHandler(),
-    new CreateAlertMessageHandler(),
-    new AlertLookupMessageHandler(),
-    new SubscribeToAlertMessageHandler(),
-    new OptionQuotesMessageHandler(),
-    new CancelOrderMessageHandler(),
-    new ChartMessageHandler(),
-    new InstrumentSearchMessageHandler(),
-    new OptionSeriesMessageHandler(),
-    new OrderEventsMessageHandler(),
-    new PlaceOrderMessageHandler(),
-    new PositionsMessageHandler(),
-    new QuotesMessageHandler(),
-    new UserPropertiesMessageHandler(),
-    new OptionChainDetailsMessageHandler(),
-    new LoginMessageHandler(),
-  ],
-  (s) => s.service
-) as Record<ApiService, WebSocketApiMessageHandler<any, any>>;
+const messageHandlers = [
+  new CancelAlertMessageHandler(),
+  new CreateAlertMessageHandler(),
+  new AlertLookupMessageHandler(),
+  new SubscribeToAlertMessageHandler(),
+  new OptionQuotesMessageHandler(),
+  new CancelOrderMessageHandler(),
+  new ChartMessageHandler(),
+  new InstrumentSearchMessageHandler(),
+  new OptionSeriesMessageHandler(),
+  new OrderEventsMessageHandler(),
+  new PlaceOrderMessageHandler(),
+  new PositionsMessageHandler(),
+  new QuotesMessageHandler(),
+  new UserPropertiesMessageHandler(),
+  new OptionChainDetailsMessageHandler(),
+  new LoginMessageHandler(),
+];
 
 export default class WsJsonClient {
   private buffer = new BufferedIterator<ParsedWebSocketResponse>();
@@ -119,7 +117,7 @@ export default class WsJsonClient {
       "wss://services.thinkorswim.com/Services/WsJson"
     ),
     private readonly responseParser = new ResponseParser(
-      DEFAULT_MESSAGE_HANDLERS
+      messageHandlers as WebSocketApiMessageHandler<any, any>[]
     )
   ) {}
 
@@ -163,7 +161,7 @@ export default class WsJsonClient {
     const message = JSON.parse(data) as WsJsonRawMessage;
     logger("⬅️\treceived %O", message);
     if (isConnectionResponse(message)) {
-      const handler = DEFAULT_MESSAGE_HANDLERS["login"];
+      const handler = findByTypeOrThrow(messageHandlers, LoginMessageHandler);
       this.sendMessage(handler.buildRequest(accessToken));
     } else if (isLoginResponse(message)) {
       this.handleLoginResponse(message, resolve, reject);
@@ -187,35 +185,41 @@ export default class WsJsonClient {
   }
 
   quotes(symbols: string[]): AsyncIterable<QuotesResponse> {
-    const handler = DEFAULT_MESSAGE_HANDLERS["quotes"];
+    const handler = findByTypeOrThrow(messageHandlers, QuotesMessageHandler);
     return this.dispatch(handler, symbols)
       .filter(isQuotesResponse)
       .iterable() as AsyncIterable<QuotesResponse>;
   }
 
   accountPositions(accountNumber: string): AsyncIterable<PositionsResponse> {
-    const handler = DEFAULT_MESSAGE_HANDLERS["positions"];
+    const handler = findByTypeOrThrow(messageHandlers, PositionsMessageHandler);
     return this.dispatch(handler, accountNumber)
       .filter(isPositionsResponse)
       .iterable() as AsyncIterable<PositionsResponse>;
   }
 
   chart(request: ChartRequestParams): AsyncIterable<ChartResponse> {
-    const handler = DEFAULT_MESSAGE_HANDLERS["chart"];
+    const handler = findByTypeOrThrow(messageHandlers, ChartMessageHandler);
     return this.dispatch(handler, request)
       .filter(isChartResponse)
       .iterable() as AsyncIterable<ChartResponse>;
   }
 
   searchInstruments(query: string): AsyncIterable<InstrumentSearchResponse> {
-    const handler = DEFAULT_MESSAGE_HANDLERS["instrument_search"];
-    return this.dispatch(handler, query)
+    const handler = findByTypeOrThrow(
+      messageHandlers,
+      InstrumentSearchMessageHandler
+    );
+    return this.dispatch(handler, { query })
       .filter(isInstrumentsResponse)
       .iterable() as AsyncIterable<InstrumentSearchResponse>;
   }
 
   optionChain(symbol: string): Promise<OptionChainResponse> {
-    const handler = DEFAULT_MESSAGE_HANDLERS["optionSeries"];
+    const handler = findByTypeOrThrow(
+      messageHandlers,
+      OptionSeriesMessageHandler
+    );
     return this.dispatch(handler, symbol)
       .filter(isOptionChainResponse)
       .promise() as Promise<OptionChainResponse>;
@@ -224,8 +228,11 @@ export default class WsJsonClient {
   optionChainDetails(
     request: OptionChainDetailsRequest
   ): Promise<OptionChainDetailsResponse> {
-    const service = DEFAULT_MESSAGE_HANDLERS["option_chain/get"];
-    return this.dispatch(service, request)
+    const handler = findByTypeOrThrow(
+      messageHandlers,
+      OptionChainDetailsMessageHandler
+    );
+    return this.dispatch(handler, request)
       .filter(isOptionChainDetailsResponse)
       .promise() as Promise<OptionChainDetailsResponse>;
   }
@@ -234,40 +241,59 @@ export default class WsJsonClient {
     request: PlaceLimitOrderRequestParams
   ): Promise<AsyncIterable<OrderEventsPatchResponse>> {
     // 1. place order
-    const service = DEFAULT_MESSAGE_HANDLERS["place_order"];
-    await this.dispatch(service, request)
+    const handler = findByTypeOrThrow(
+      messageHandlers,
+      PlaceOrderMessageHandler
+    );
+    await this.dispatch(handler, request)
       .filter(isPlaceOrderResponse)
       .promise();
     // 2. submit order
-    return this.dispatch(() => newSubmitLimitOrderRequest(request))
+    const submitOrderHandler = findByTypeOrThrow(
+      messageHandlers,
+      SubmitOrderMessageHandler
+    );
+    return this.dispatch(submitOrderHandler, request)
       .filter(isOrderEventsPatchResponse)
       .iterable() as AsyncIterable<OrderEventsPatchResponse>;
   }
 
   createAlert(request: CreateAlertRequestParams): Promise<AlertsResponse> {
-    const service = DEFAULT_MESSAGE_HANDLERS["alerts/create"];
-    return this.dispatch(service, request)
+    const handler = findByTypeOrThrow(
+      messageHandlers,
+      CreateAlertMessageHandler
+    );
+    return this.dispatch(handler, request)
       .filter(isAlertsResponse)
       .promise() as Promise<AlertsResponse>;
   }
 
   cancelAlert(alertId: number): Promise<AlertsResponse> {
-    const service = DEFAULT_MESSAGE_HANDLERS["alerts/cancel"];
-    return this.dispatch(service, alertId)
+    const handler = findByTypeOrThrow(
+      messageHandlers,
+      CancelAlertMessageHandler
+    );
+    return this.dispatch(handler, alertId)
       .filter(isAlertsResponse)
       .promise() as Promise<AlertsResponse>;
   }
 
   cancelOrder(orderId: number): Promise<CancelOrderResponse> {
-    const service = DEFAULT_MESSAGE_HANDLERS["cancel_order"];
+    const service = findByTypeOrThrow(
+      messageHandlers,
+      CancelOrderMessageHandler
+    );
     return this.dispatch(service, orderId)
       .filter(isCancelOrderResponse)
       .promise() as Promise<CancelOrderResponse>;
   }
 
   userProperties(): Promise<UserPropertiesResponse> {
-    const service = DEFAULT_MESSAGE_HANDLERS["user_properties"];
-    return this.dispatch(service, null)
+    const service = findByTypeOrThrow(
+      messageHandlers,
+      UserPropertiesMessageHandler
+    );
+    return this.dispatch(service, null as never)
       .filter(isUserPropertiesResponse)
       .promise() as Promise<UserPropertiesResponse>;
   }
@@ -294,7 +320,7 @@ export default class WsJsonClient {
     // eslint-disable-line @typescript-eslint/no-explicit-any
     reject: (reason?: any) => void
   ) {
-    const handler = DEFAULT_MESSAGE_HANDLERS["login"];
+    const handler = findByTypeOrThrow(messageHandlers, LoginMessageHandler);
     const successful = handler.parseResponse(message as RawPayloadResponse);
     const [{ body }] = message.payload;
     if (successful) {

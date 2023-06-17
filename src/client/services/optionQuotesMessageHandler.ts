@@ -6,7 +6,9 @@ import { ApiService } from "./apiService";
 export default class OptionQuotesMessageHandler
   implements WebSocketApiMessageHandler<any, any>
 {
-  parseResponse(_: RawPayloadResponse): any {}
+  parseResponse(_: RawPayloadResponse): any {
+    throwError("Not implemented");
+  }
 
   buildRequest(_: any): RawPayloadRequest {
     throwError("Not implemented");

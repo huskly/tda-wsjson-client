@@ -3,14 +3,20 @@ import { debugLog } from "./util";
 import { isPayloadResponse } from "./messageTypeHelpers";
 import WebSocketApiMessageHandler from "./services/webSocketApiMessageHandler";
 import { ApiService } from "./services/apiService";
+import { keyBy } from "lodash";
 
 export default class ResponseParser {
-  constructor(
-    private readonly serviceRegistry: Record<
+  private readonly serviceRegistry: Record<
+    ApiService,
+    WebSocketApiMessageHandler<any, any>
+  >;
+
+  constructor(services: WebSocketApiMessageHandler<any, any>[]) {
+    this.serviceRegistry = keyBy(services, (s) => s.service) as Record<
       ApiService,
       WebSocketApiMessageHandler<any, any>
-    >
-  ) {}
+    >;
+  }
 
   /** Parses a raw TDA json websocket message into a more usable format */
   parseResponse(message: WsJsonRawMessage): ParsedWebSocketResponse | null {
