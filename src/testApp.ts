@@ -1,10 +1,8 @@
 import WsJsonClient from "./client/wsJsonClient";
 import "dotenv/config";
 import debug from "debug";
-import {
-  CreateAlertRequestParams,
-  PlaceLimitOrderRequestParams,
-} from "./client/messageBuilder";
+import { PlaceLimitOrderRequestParams } from "./client/services/placeOrderMessageHandler";
+import { CreateAlertRequestParams } from "./client/services/createAlertMessageHandler";
 
 const logger = debug("testapp");
 
@@ -85,10 +83,10 @@ class TestApp {
 
   async optionChainDetails(symbol: string, seriesNames: string[]) {
     logger(" --- optionChainDetails() requesting option chain details ---");
-    const optionChainDetails = await this.client.optionChainDetails(
+    const optionChainDetails = await this.client.optionChainDetails({
       symbol,
-      seriesNames
-    );
+      seriesNames,
+    });
     logger("optionChainDetails() : " + JSON.stringify(optionChainDetails));
   }
 }

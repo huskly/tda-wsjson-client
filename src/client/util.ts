@@ -1,4 +1,4 @@
-import { AccountPosition } from "./types/positionsTypes";
+import { AccountPosition } from "./services/positionsMessageHandler";
 
 export declare type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends (infer U)[]
@@ -22,3 +22,33 @@ export function debugLog(...args: any[]) {
     console.log(...args);
   }
 }
+
+type Constructor<T> = new (...args: any[]) => T;
+
+// https://stackoverflow.com/questions/17392349/how-can-i-check-if-element-is-an-instanceof-u
+// Filters the array to only elements of the specified type.
+export function ofType<TElements, TFilter extends TElements>(
+  array: TElements[],
+  filterType: Constructor<TFilter>
+): TFilter[] {
+  return array.filter((e): e is TFilter => e instanceof filterType);
+}
+
+export function findByType<TElements, TFilter extends TElements>(
+  array: TElements[],
+  filterType: Constructor<TFilter>
+): TFilter | undefined {
+  return array.find((e): e is TFilter => e instanceof filterType);
+}
+
+export function findByTypeOrThrow<TElements, TFilter extends TElements>(
+  array: TElements[],
+  filterType: Constructor<TFilter>
+): TFilter {
+  return (
+    findByType(array, filterType) ??
+    throwError(`Element with type not found: ${filterType.name}`)
+  );
+}
+
+export const newRandomId = () => Math.floor(Math.random() * 1_000_000_000);

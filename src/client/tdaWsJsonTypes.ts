@@ -1,48 +1,53 @@
 import {
   AlertsResponse,
   RawAlertCancelResponse,
-  RawAlertLookupResponse,
   RawAlertSubscribeResponse,
 } from "./types/alertTypes";
-import {
-  CancelOrderResponse,
-  PlaceOrderPatchResponse,
-  PlaceOrderSnapshotResponse,
-  RawPlaceOrderPatchResponse,
-  RawPlaceOrderSnapshotResponse,
-} from "./types/placeOrderTypes";
 import {
   OrderEventsPatchResponse,
   OrderEventsSnapshotResponse,
   RawOrderEventsResponse,
-} from "./types/orderEventTypes";
+} from "./services/orderEventsMessageHandler";
+import {
+  PlaceOrderPatchResponse,
+  PlaceOrderSnapshotResponse,
+  RawPlaceOrderPatchResponse,
+  RawPlaceOrderSnapshotResponse,
+} from "./services/placeOrderMessageHandler";
+import { RawAlertLookupResponse } from "./services/alertLookupMessageHandler";
+import {
+  PositionsResponse,
+  RawPositionsResponse,
+} from "./services/positionsMessageHandler";
+import { ApiService } from "./services/apiService";
 import {
   QuotesResponse,
   RawPayloadResponseQuotesPatch,
   RawPayloadResponseQuotesSnapshot,
-} from "./types/quoteTypes";
-import {
-  PositionsResponse,
-  RawPositionsResponse,
-} from "./types/positionsTypes";
+} from "./services/quotesMessageHandler";
 import {
   InstrumentSearchResponse,
   RawPayloadResponseInstrumentSearch,
-} from "./types/instrumentSearchTypes";
-import { RawPayloadResponseUserProperties } from "./types/userPropertiesTypes";
-import { ChartResponse, RawPayloadResponseChart } from "./types/chartTypes";
+} from "./services/instrumentSearchMessageHandler";
 import {
-  OptionChainDetailsResponse,
+  ChartResponse,
+  RawPayloadResponseChart,
+} from "./services/chartMessageHandler";
+import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler";
+import {
   OptionChainResponse,
   RawOptionSeriesResponse,
-} from "./types/optionChainTypes";
+} from "./services/optionSeriesMessageHandler";
+import { CancelOrderResponse } from "./types/placeOrderTypes";
+import { OptionChainDetailsResponse } from "./services/optionChainDetailsMessageHandler";
+import { RawLoginResponse } from "./services/loginMessageHandler";
 
 export type RawPayloadResponseItemBody =
   | RawPayloadResponseQuotesSnapshot
   | RawPayloadResponseQuotesPatch
   | RawPayloadResponseInstrumentSearch
   | RawPayloadResponseChart
-  | RawPayloadResponseUserProperties
+  | UserPropertiesResponse
   | RawPlaceOrderSnapshotResponse
   | RawPlaceOrderPatchResponse
   | RawAlertLookupResponse
@@ -53,7 +58,7 @@ export type RawPayloadResponseItemBody =
   | RawOptionSeriesResponse;
 
 export type RawPayloadResponseItemHeader = {
-  service: string;
+  service: ApiService;
   id: string;
   ver: number;
   type: string;
@@ -81,44 +86,6 @@ export type ConnectionResponse = {
   ver: string;
 };
 
-export type LoginResponseBody = {
-  message?: string;
-  authenticationStatus: string;
-  authenticated: boolean;
-  forceLogout: boolean;
-  stalePassword: boolean;
-  userDomain: string;
-  userSegment: string;
-  userId: number;
-  userCdi: string;
-  userCode: string;
-  token: string;
-  schwabAccountMigrationValue: string;
-  permissions: {
-    isCryptoAllowed: boolean;
-    isFractionalQuantityAllowed: boolean;
-    isMandatoryAutoLockAllowed: boolean;
-    isSchwabIntegrationHubLinkAllowed: boolean;
-    isPlaceQuantityLinkOrdersAllowed: boolean;
-  };
-  quotePermissions: {
-    name: string;
-    isAllowed: boolean;
-    children: {
-      name: string;
-      isAllowed: boolean;
-      children: { name: string; isAllowed: boolean }[];
-    }[];
-  };
-};
-
-export type LoginResponse = {
-  payload: {
-    header: RawPayloadResponseItemHeader;
-    body: LoginResponseBody;
-  }[];
-};
-
 export type RawHeartbeatResponse = { heartbeat: number };
 
 export type RawPayloadResponse = { payload: RawPayloadResponseItem[] };
@@ -128,16 +95,17 @@ export type RawPayloadRequest = { payload: RawPayloadRequestItem[] };
 export type WsJsonRawMessage =
   | RawHeartbeatResponse
   | ConnectionResponse
-  | LoginResponse
+  | RawLoginResponse
   | RawPayloadResponse;
 
+// todo change to an interface implemented by services
 export type ParsedWebSocketResponse =
   | QuotesResponse
   | InstrumentSearchResponse
   | CancelOrderResponse
   | ConnectionResponse
   | ChartResponse
-  | RawPayloadResponseUserProperties
+  | UserPropertiesResponse
   | AlertsResponse
   | PositionsResponse
   | OrderEventsSnapshotResponse

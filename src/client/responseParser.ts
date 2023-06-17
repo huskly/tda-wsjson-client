@@ -1,67 +1,33 @@
-import {
-  ParsedWebSocketResponse,
-  RawPayloadResponse,
-  WsJsonRawMessage,
-} from "./tdaWsJsonTypes";
-import { parseQuotesResponse } from "./types/quoteTypes";
-import { parseChartResponse } from "./types/chartTypes";
+import { ParsedWebSocketResponse, WsJsonRawMessage } from "./tdaWsJsonTypes";
 import { debugLog } from "./util";
 import { isPayloadResponse } from "./messageTypeHelpers";
-import { parseOrderEventsResponse } from "./types/orderEventTypes";
-import { parsePositionsResponse } from "./types/positionsTypes";
-import { parseUserPropertiesResponse } from "./types/userPropertiesTypes";
-import {
-  parseCancelOrderResponse,
-  parsePlaceOrderResponse,
-} from "./types/placeOrderTypes";
-import {
-  parseCancelAlertResponse,
-  parseCreateAlertResponse,
-  parseLookupAlertsResponse,
-  parseSubscribeToAlertResponse,
-} from "./types/alertTypes";
-import { parseInstrumentSearchResponse } from "./types/instrumentSearchTypes";
-import {
-  parseOptionChainDetailsResponse,
-  parseOptionChainResponse,
-} from "./types/optionChainTypes";
-
-type MessageServiceToParserMapping = {
-  [key: string]: (
-    message: RawPayloadResponse
-  ) => ParsedWebSocketResponse | null;
-};
+import WebSocketApiMessageHandler from "./services/webSocketApiMessageHandler";
+import { ApiService } from "./services/apiService";
+import { keyBy } from "lodash";
 
 export default class ResponseParser {
-  private readonly messageServiceToParserMappings: MessageServiceToParserMapping =
-    {
-      cancel_order: parseCancelOrderResponse,
-      chart: parseChartResponse,
-      order_events: parseOrderEventsResponse,
-      instrument_search: parseInstrumentSearchResponse,
-      optionSeries: parseOptionChainResponse,
-      "option_chain/get": parseOptionChainDetailsResponse,
-      positions: parsePositionsResponse,
-      place_order: parsePlaceOrderResponse,
-      quotes: parseQuotesResponse,
-      // "quotes/options": parseOptionQuotesResponse,
-      user_properties: parseUserPropertiesResponse,
-      "alerts/create": parseCreateAlertResponse,
-      "alerts/cancel": parseCancelAlertResponse,
-      "alerts/subscribe": parseSubscribeToAlertResponse,
-      "alerts/lookup": parseLookupAlertsResponse,
-    };
+  private readonly serviceRegistry: Record<
+    ApiService,
+    WebSocketApiMessageHandler<any, any>
+  >;
+
+  constructor(services: WebSocketApiMessageHandler<any, any>[]) {
+    this.serviceRegistry = keyBy(services, (s) => s.service) as Record<
+      ApiService,
+      WebSocketApiMessageHandler<any, any>
+    >;
+  }
 
   /** Parses a raw TDA json websocket message into a more usable format */
   parseResponse(message: WsJsonRawMessage): ParsedWebSocketResponse | null {
     if (isPayloadResponse(message)) {
       const [{ header }] = message.payload;
       const { service } = header;
-      const messageParser = this.messageServiceToParserMappings[service];
-      if (messageParser) {
-        return messageParser(message);
+      const serviceHandler = this.serviceRegistry[service];
+      if (serviceHandler) {
+        return serviceHandler.parseResponse(message);
       } else {
-        debugLog(`Don't know how to parse message with service: ${service}`);
+        debugLog(`Don't know how to handle message with service=${service}`);
         return null;
       }
     } else {
