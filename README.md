@@ -36,22 +36,26 @@ yarn start
 
 # Supported APIs
 
-- [x] Authentication via access token
-- [x] Quotes
-- [x] Price History (chart)
-- [x] Account positions
-- [x] Place & submit order
-- [x] Cancel order
-- [x] User properties
-- [x] Create alert
-- [x] Cancel alert
-- [x] Instrument search
-- [x] Option chains
-- [x] Option chain details
-- [ ] Option quotes
-- [ ] Alert subscription
-- [ ] Alert lookup
-- [ ] Order events
+- ✅ Authentication via access token
+- ✅ Quotes
+- ✅ Price History (chart)
+- ✅ Account positions
+- ✅ Place & submit order
+- ✅ Cancel order
+- ✅ User properties
+- ✅ Create alert
+- ✅ Cancel alert
+- ✅ Instrument search
+- ✅ Option chains
+- ✅ Option chain details
+
+# Not yet implemented
+
+- ❌ Option quotes
+- ❌ Alert subscription
+- ❌ Alert lookup
+- ❌ Order events
+- ❌ And many others 😀
 
 # Usage
 

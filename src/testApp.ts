@@ -96,7 +96,7 @@ async function run() {
   const client = new WsJsonClient(accessToken);
   await client.authenticate();
   const app = new TestApp(client);
-  await app.optionChainDetails("COIN", ["16 JUN 23 100"]);
+  await app.optionChainDetails("COIN", ["23 JUN 23 100 (Weeklys)"]);
 }
 
 run().catch(console.error);
