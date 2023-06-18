@@ -205,14 +205,14 @@ export default class WsJsonClient {
       .iterable() as AsyncIterable<ChartResponse>;
   }
 
-  searchInstruments(query: string): AsyncIterable<InstrumentSearchResponse> {
+  searchInstruments(query: string): Promise<InstrumentSearchResponse> {
     const handler = findByTypeOrThrow(
       messageHandlers,
       InstrumentSearchMessageHandler
     );
     return this.dispatch(handler, { query })
       .filter(isInstrumentsResponse)
-      .iterable() as AsyncIterable<InstrumentSearchResponse>;
+      .promise() as Promise<InstrumentSearchResponse>;
   }
 
   optionChain(symbol: string): Promise<OptionChainResponse> {

@@ -11,7 +11,7 @@ export type RawPayloadResponseInstrumentSearch = {
   }[];
 };
 
-type InstrumentSearchMatch = {
+export type InstrumentSearchMatch = {
   symbol: string;
   description: string;
 };

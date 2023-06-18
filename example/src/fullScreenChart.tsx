@@ -6,7 +6,7 @@ import CandleStickChart, {
 } from "./candleStickChart";
 import { isEmpty } from "lodash";
 import { PriceLineOptions, Time } from "lightweight-charts";
-import { OHLC } from "../../src/client/types/chartTypes";
+import { OHLC } from "../../src/client/services/chartMessageHandler";
 
 export type ChartData = { date: any } & OHLC;
 

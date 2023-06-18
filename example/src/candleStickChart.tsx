@@ -13,7 +13,7 @@ import {
 } from "lightweight-charts";
 import React, { useEffect, useRef, useState } from "react";
 import { format } from "d3-format";
-import { OHLC } from "../../src/client/types/chartTypes";
+import { OHLC } from "../../src/client/services/chartMessageHandler";
 
 export type ChartMouseMoveHandlerParams = {
   mouseEventParams: MouseEventParams;

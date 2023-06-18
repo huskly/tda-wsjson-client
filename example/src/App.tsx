@@ -3,10 +3,10 @@ import "./App.css";
 import WsJsonClient from "tda-wsjson-client/wsJsonClient";
 import env from "react-dotenv";
 import { format } from "d3-format";
-import { QuotesResponseItem } from "../../src/client/types/quoteTypes";
-import { PriceItem } from "../../src/client/types/chartTypes";
 import FullScreenChart from "./fullScreenChart";
 import InstrumentTopPanel from "./instrumentTopPanel";
+import { PriceItem } from "../../src/client/services/chartMessageHandler";
+import { QuotesResponseItem } from "../../src/client/services/quotesMessageHandler";
 
 export const priceFormat = format(".2f");
 

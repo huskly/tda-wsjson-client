@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { priceFormat } from "./App";
-import { QuotesResponseItem } from "../../src/client/types/quoteTypes";
+import { QuotesResponseItem } from "../../src/client/services/quotesMessageHandler";
 
 const InstrumentTopPanel = ({
   quote,
@@ -26,7 +26,7 @@ const InstrumentTopPanel = ({
         placeholder="Symbol"
         value={symbol}
         onChange={(e) => setSymbol(e.target.value.toUpperCase())}
-        className="dark:bg-stone-900 px-3 py-3 ml-2 dark:text-gray-500 rounded text-xl w-48"
+        className="dark:bg-gray-900 px-3 py-3 ml-2 dark:text-gray-500 rounded text-xl w-48 shadow-lg font-mono"
       />
       <input type="submit" className="hidden" value="Submit" />
       {quote?.last && (
@@ -34,19 +34,19 @@ const InstrumentTopPanel = ({
           {priceFormat(quote?.last)}
         </div>
       )}
-      {quote?.ask && (
-        <div className="text-lg dark:text-gray-200 font-mono flex flex-col mx-4 text-center">
-          <div>Ask</div>
-          <div>
-            {priceFormat(quote?.ask)} x {quote?.askSize}
-          </div>
-        </div>
-      )}
       {quote?.bid && (
         <div className="text-lg dark:text-gray-200 font-mono flex flex-col mx-4 text-center">
           <div>Bid</div>
           <div>
             {priceFormat(quote?.bid)} x {quote?.bidSize}
+          </div>
+        </div>
+      )}
+      {quote?.ask && (
+        <div className="text-lg dark:text-gray-200 font-mono flex flex-col mx-4 text-center">
+          <div>Ask</div>
+          <div>
+            {priceFormat(quote?.ask)} x {quote?.askSize}
           </div>
         </div>
       )}
