@@ -70,9 +70,8 @@ class TestApp {
 
   async instrumentSearch(query: string) {
     logger(" --- instrumentSearch() searching for instrument ---");
-    for await (const event of this.client.searchInstruments(query)) {
-      logger("instrumentSearch() : " + JSON.stringify(event));
-    }
+    const searchResults = await this.client.searchInstruments(query);
+    logger("instrumentSearch() : " + JSON.stringify(searchResults));
   }
 
   async optionChain(symbol: string) {
@@ -96,7 +95,7 @@ async function run() {
   const client = new WsJsonClient(accessToken);
   await client.authenticate();
   const app = new TestApp(client);
-  await app.optionChainDetails("COIN", ["23 JUN 23 100 (Weeklys)"]);
+  await app.instrumentSearch("AA");
 }
 
 run().catch(console.error);
