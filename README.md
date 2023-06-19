@@ -47,13 +47,13 @@ yarn start
 - ✅ Cancel alert
 - ✅ Instrument search
 - ✅ Option chains
+- ✅ Alert lookup
 - ✅ Option chain details
 
 # Not yet implemented
 
 - ❌ Option quotes
 - ❌ Alert subscription
-- ❌ Alert lookup
 - ❌ Order events
 - ❌ And many others 😀
 

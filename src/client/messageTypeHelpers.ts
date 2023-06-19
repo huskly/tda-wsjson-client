@@ -9,7 +9,10 @@ import { QuotesResponse } from "./services/quotesMessageHandler";
 import { PositionsResponse } from "./services/positionsMessageHandler";
 import { PlaceOrderSnapshotResponse } from "./services/placeOrderMessageHandler";
 import { CancelOrderResponse } from "./types/placeOrderTypes";
-import { OrderEventsPatchResponse } from "./services/orderEventsMessageHandler";
+import {
+  OrderEventsPatchResponse,
+  OrderEventsSnapshotResponse,
+} from "./services/orderEventsMessageHandler";
 import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler";
 import { InstrumentSearchResponse } from "./services/instrumentSearchMessageHandler";
 import { AlertsResponse } from "./types/alertTypes";
@@ -77,6 +80,12 @@ export function isOrderEventsPatchResponse(
   response: ParsedWebSocketResponse
 ): response is OrderEventsPatchResponse {
   return "patches" in response && response.service === "order_events";
+}
+
+export function isOrderEventsSnapshotResponse(
+  response: ParsedWebSocketResponse
+): response is OrderEventsSnapshotResponse {
+  return "orders" in response && response.service === "order_events";
 }
 
 export function isAlertsResponse(

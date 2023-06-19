@@ -16,6 +16,7 @@ import {
   isLoginResponse,
   isOptionChainResponse,
   isOrderEventsPatchResponse,
+  isOrderEventsSnapshotResponse,
   isPlaceOrderResponse,
   isPositionsResponse,
   isQuotesResponse,
@@ -49,6 +50,7 @@ import OptionSeriesMessageHandler, {
 } from "./services/optionSeriesMessageHandler";
 import OrderEventsMessageHandler, {
   OrderEventsPatchResponse,
+  OrderEventsResponse,
 } from "./services/orderEventsMessageHandler";
 import PositionsMessageHandler, {
   PositionsResponse,
@@ -71,6 +73,7 @@ import LoginMessageHandler, {
   RawLoginResponseBody,
 } from "./services/loginMessageHandler";
 import SubmitOrderMessageHandler from "./services/submitOrderMessageHandler";
+import WorkingOrdersMessageHandler from "./services/workingOrdersMessageHandler";
 
 export const CONNECTION_REQUEST_MESSAGE = {
   ver: "27.*.*",
@@ -178,6 +181,11 @@ export default class WsJsonClient {
     return socket !== null && state === ChannelState.CONNECTED;
   }
 
+  isConnecting(): boolean {
+    const { socket, state } = this;
+    return socket !== null && state === ChannelState.CONNECTING;
+  }
+
   private ensureConnected() {
     if (this.state !== ChannelState.CONNECTED) {
       throw new Error("Please call connect() first");
@@ -213,6 +221,16 @@ export default class WsJsonClient {
     return this.dispatch(handler, { query })
       .filter(isInstrumentsResponse)
       .promise() as Promise<InstrumentSearchResponse>;
+  }
+
+  lookupAlerts(): AsyncIterable<AlertsResponse> {
+    const handler = findByTypeOrThrow(
+      messageHandlers,
+      AlertLookupMessageHandler
+    );
+    return this.dispatch(handler, null as never)
+      .filter(isAlertsResponse)
+      .iterable() as AsyncIterable<AlertsResponse>;
   }
 
   optionChain(symbol: string): Promise<OptionChainResponse> {
@@ -256,6 +274,15 @@ export default class WsJsonClient {
     return this.dispatch(submitOrderHandler, request)
       .filter(isOrderEventsPatchResponse)
       .iterable() as AsyncIterable<OrderEventsPatchResponse>;
+  }
+
+  workingOrders(accountNumber: string): AsyncIterable<OrderEventsResponse> {
+    const handler = new WorkingOrdersMessageHandler();
+    return this.dispatch(handler, accountNumber)
+      .filter(
+        (r) => isOrderEventsSnapshotResponse(r) || isOrderEventsPatchResponse(r)
+      )
+      .iterable() as AsyncIterable<OrderEventsResponse>;
   }
 
   createAlert(request: CreateAlertRequestParams): Promise<AlertsResponse> {
