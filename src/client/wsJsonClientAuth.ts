@@ -7,7 +7,7 @@ const logger = debug("wsJsonClientAuth");
 export default class WsJsonClientAuth {
   private readonly oauthClient: OAuth2Client;
 
-  constructor(clientId: string, fetchFn: typeof fetch) {
+  constructor(clientId: string, originalFetch: typeof fetch) {
     this.oauthClient = new OAuth2Client({
       server: "https://auth.tdameritrade.com/",
       clientId,
@@ -16,7 +16,7 @@ export default class WsJsonClientAuth {
       authorizationEndpoint: "/auth",
       authenticationMethod: "client_secret_post",
       // https://github.com/badgateway/oauth2-client/issues/105
-      fetch: fetchFn,
+      fetch: (...args) => originalFetch(...args),
     });
   }
 
@@ -45,4 +45,4 @@ export default class WsJsonClientAuth {
 export type AuthResult = {
   token: OAuth2Token;
   client: WsJsonClient;
-}
+};
