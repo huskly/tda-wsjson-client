@@ -1,4 +1,8 @@
-import { RawPayloadRequest, RawPayloadRequestItem, RawPayloadResponse, } from "../tdaWsJsonTypes";
+import {
+  RawPayloadRequest,
+  RawPayloadRequestItem,
+  RawPayloadResponse,
+} from "../tdaWsJsonTypes";
 import { ApiService } from "./apiService";
 
 // Service interface definition for implementing support for new message types
