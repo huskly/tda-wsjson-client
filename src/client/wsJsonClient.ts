@@ -4,7 +4,7 @@ import {
   RawPayloadResponse,
   WsJsonRawMessage,
 } from "./tdaWsJsonTypes";
-import { debugLog, findByTypeOrThrow } from "./util";
+import { Constructor, debugLog, findByTypeOrThrow } from "./util";
 import MulticastIterator from "obgen/multicastIterator";
 import BufferedIterator from "obgen/bufferedIterator";
 import {
@@ -15,6 +15,7 @@ import {
   isInstrumentsResponse,
   isLoginResponse,
   isOptionChainResponse,
+  isOptionQuotesResponse,
   isOrderEventsPatchResponse,
   isOrderEventsSnapshotResponse,
   isPlaceOrderResponse,
@@ -36,7 +37,10 @@ import CreateAlertMessageHandler, {
 } from "./services/createAlertMessageHandler";
 import AlertLookupMessageHandler from "./services/alertLookupMessageHandler";
 import SubscribeToAlertMessageHandler from "./services/subscribeToAlertMessageHandler";
-import OptionQuotesMessageHandler from "./services/optionQuotesMessageHandler";
+import OptionQuotesMessageHandler, {
+  OptionQuotesRequestParams,
+  OptionQuotesResponse,
+} from "./services/optionQuotesMessageHandler";
 import ChartMessageHandler, {
   ChartRequestParams,
   ChartResponse,
@@ -90,7 +94,7 @@ export enum ChannelState {
 
 const logger = debug("ws");
 
-const messageHandlers = [
+const messageHandlers: WebSocketApiMessageHandler<never, any>[] = [
   new CancelAlertMessageHandler(),
   new CreateAlertMessageHandler(),
   new AlertLookupMessageHandler(),
@@ -193,52 +197,37 @@ export default class WsJsonClient {
   }
 
   quotes(symbols: string[]): AsyncIterable<QuotesResponse> {
-    const handler = findByTypeOrThrow(messageHandlers, QuotesMessageHandler);
-    return this.dispatch(handler, symbols)
+    return this.dispatchHandler(QuotesMessageHandler, symbols)
       .filter(isQuotesResponse)
       .iterable() as AsyncIterable<QuotesResponse>;
   }
 
   accountPositions(accountNumber: string): AsyncIterable<PositionsResponse> {
-    const handler = findByTypeOrThrow(messageHandlers, PositionsMessageHandler);
-    return this.dispatch(handler, accountNumber)
+    return this.dispatchHandler(PositionsMessageHandler, accountNumber)
       .filter(isPositionsResponse)
       .iterable() as AsyncIterable<PositionsResponse>;
   }
 
   chart(request: ChartRequestParams): AsyncIterable<ChartResponse> {
-    const handler = findByTypeOrThrow(messageHandlers, ChartMessageHandler);
-    return this.dispatch(handler, request)
+    return this.dispatchHandler(ChartMessageHandler, request)
       .filter(isChartResponse)
       .iterable() as AsyncIterable<ChartResponse>;
   }
 
   searchInstruments(query: string): Promise<InstrumentSearchResponse> {
-    const handler = findByTypeOrThrow(
-      messageHandlers,
-      InstrumentSearchMessageHandler
-    );
-    return this.dispatch(handler, { query })
+    return this.dispatchHandler(InstrumentSearchMessageHandler, { query })
       .filter(isInstrumentsResponse)
       .promise() as Promise<InstrumentSearchResponse>;
   }
 
   lookupAlerts(): AsyncIterable<AlertsResponse> {
-    const handler = findByTypeOrThrow(
-      messageHandlers,
-      AlertLookupMessageHandler
-    );
-    return this.dispatch(handler, null as never)
+    return this.dispatchHandler(AlertLookupMessageHandler, null as never)
       .filter(isAlertsResponse)
       .iterable() as AsyncIterable<AlertsResponse>;
   }
 
   optionChain(symbol: string): Promise<OptionChainResponse> {
-    const handler = findByTypeOrThrow(
-      messageHandlers,
-      OptionSeriesMessageHandler
-    );
-    return this.dispatch(handler, symbol)
+    return this.dispatchHandler(OptionSeriesMessageHandler, symbol)
       .filter(isOptionChainResponse)
       .promise() as Promise<OptionChainResponse>;
   }
@@ -246,81 +235,61 @@ export default class WsJsonClient {
   optionChainDetails(
     request: OptionChainDetailsRequest
   ): Promise<OptionChainDetailsResponse> {
-    const handler = findByTypeOrThrow(
-      messageHandlers,
-      OptionChainDetailsMessageHandler
-    );
-    return this.dispatch(handler, request)
+    return this.dispatchHandler(OptionChainDetailsMessageHandler, request)
       .filter(isOptionChainDetailsResponse)
       .promise() as Promise<OptionChainDetailsResponse>;
+  }
+
+  optionQuotes(
+    request: OptionQuotesRequestParams
+  ): AsyncIterable<OptionQuotesResponse> {
+    return this.dispatchHandler(OptionQuotesMessageHandler, request)
+      .filter(isOptionQuotesResponse)
+      .iterable() as AsyncIterable<OptionQuotesResponse>;
   }
 
   async placeOrder(
     request: PlaceLimitOrderRequestParams
   ): Promise<AsyncIterable<OrderEventsPatchResponse>> {
     // 1. place order
-    const handler = findByTypeOrThrow(
-      messageHandlers,
-      PlaceOrderMessageHandler
-    );
-    await this.dispatch(handler, request)
+    await this.dispatchHandler(PlaceOrderMessageHandler, request)
       .filter(isPlaceOrderResponse)
       .promise();
     // 2. submit order
-    const submitOrderHandler = findByTypeOrThrow(
-      messageHandlers,
-      SubmitOrderMessageHandler
-    );
-    return this.dispatch(submitOrderHandler, request)
+    return this.dispatchHandler(SubmitOrderMessageHandler, request)
       .filter(isOrderEventsPatchResponse)
       .iterable() as AsyncIterable<OrderEventsPatchResponse>;
   }
 
   workingOrders(accountNumber: string): AsyncIterable<OrderEventsResponse> {
     const handler = new WorkingOrdersMessageHandler();
+    const isOrderEventsResponse = (r: ParsedWebSocketResponse) =>
+      isOrderEventsSnapshotResponse(r) || isOrderEventsPatchResponse(r);
     return this.dispatch(handler, accountNumber)
-      .filter(
-        (r) => isOrderEventsSnapshotResponse(r) || isOrderEventsPatchResponse(r)
-      )
+      .filter(isOrderEventsResponse)
       .iterable() as AsyncIterable<OrderEventsResponse>;
   }
 
   createAlert(request: CreateAlertRequestParams): Promise<AlertsResponse> {
-    const handler = findByTypeOrThrow(
-      messageHandlers,
-      CreateAlertMessageHandler
-    );
-    return this.dispatch(handler, request)
+    return this.dispatchHandler(CreateAlertMessageHandler, request)
       .filter(isAlertsResponse)
       .promise() as Promise<AlertsResponse>;
   }
 
   cancelAlert(alertId: number): Promise<AlertsResponse> {
-    const handler = findByTypeOrThrow(
-      messageHandlers,
-      CancelAlertMessageHandler
-    );
-    return this.dispatch(handler, alertId)
+    return this.dispatchHandler(CancelAlertMessageHandler, alertId)
       .filter(isAlertsResponse)
       .promise() as Promise<AlertsResponse>;
   }
 
   cancelOrder(orderId: number): Promise<CancelOrderResponse> {
-    const service = findByTypeOrThrow(
-      messageHandlers,
-      CancelOrderMessageHandler
-    );
-    return this.dispatch(service, orderId)
+    return this.dispatchHandler(CancelOrderMessageHandler, orderId)
       .filter(isCancelOrderResponse)
       .promise() as Promise<CancelOrderResponse>;
   }
 
   userProperties(): Promise<UserPropertiesResponse> {
-    const service = findByTypeOrThrow(
-      messageHandlers,
-      UserPropertiesMessageHandler
-    );
-    return this.dispatch(service, null as never)
+    return this.dispatchHandler(UserPropertiesMessageHandler, null as never)
       .filter(isUserPropertiesResponse)
       .promise() as Promise<UserPropertiesResponse>;
   }
@@ -360,6 +329,14 @@ export default class WsJsonClient {
       this.state = ChannelState.ERROR;
       reject(`Login failed: ${body.message}`);
     }
+  }
+
+  private dispatchHandler<Req, Res>(
+    handler: Constructor<WebSocketApiMessageHandler<Req, Res>>,
+    arg: Req
+  ): Observable<ParsedWebSocketResponse> {
+    const service = findByTypeOrThrow(messageHandlers, handler);
+    return this.dispatch(service, arg);
   }
 
   disconnect() {

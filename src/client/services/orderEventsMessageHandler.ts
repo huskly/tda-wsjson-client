@@ -96,7 +96,7 @@ export type OrderEventsResponse =
   | OrderEventsPatchResponse;
 
 export default class OrderEventsMessageHandler
-  implements WebSocketApiMessageHandler<never, OrderEventsResponse>
+  implements WebSocketApiMessageHandler<never, OrderEventsResponse | null>
 {
   parseResponse(message: RawPayloadResponse): OrderEventsResponse | null {
     const [{ header, body }] = message.payload;

@@ -16,7 +16,7 @@ export type CreateAlertRequestParams = {
 
 export default class CreateAlertMessageHandler
   implements
-    WebSocketApiMessageHandler<CreateAlertRequestParams, AlertsResponse>
+    WebSocketApiMessageHandler<CreateAlertRequestParams, AlertsResponse | null>
 {
   parseResponse(message: RawPayloadResponse): AlertsResponse | null {
     const [{ body }] = message.payload;

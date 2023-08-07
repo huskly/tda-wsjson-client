@@ -42,10 +42,12 @@ export default class OptionChainDetailsMessageHandler
   implements
     WebSocketApiMessageHandler<
       OptionChainDetailsRequest,
-      OptionChainDetailsResponse
+      OptionChainDetailsResponse | null
     >
 {
-  parseResponse(message: RawPayloadResponse): OptionChainDetailsResponse {
+  parseResponse(
+    message: RawPayloadResponse
+  ): OptionChainDetailsResponse | null {
     const [{ body }] = message.payload;
     const { optionSeries } = body as RawOptionChainDetailsResponse;
     return { seriesDetails: optionSeries };

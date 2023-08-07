@@ -13,7 +13,7 @@ export type RawAlertLookupResponse = {
 };
 
 export default class AlertLookupMessageHandler
-  implements WebSocketApiMessageHandler<never, AlertsResponse>
+  implements WebSocketApiMessageHandler<never, AlertsResponse | null>
 {
   parseResponse({
     payload: [{ body }],

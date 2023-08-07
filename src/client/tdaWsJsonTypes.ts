@@ -41,6 +41,7 @@ import {
 import { CancelOrderResponse } from "./types/placeOrderTypes";
 import { OptionChainDetailsResponse } from "./services/optionChainDetailsMessageHandler";
 import { RawLoginResponse } from "./services/loginMessageHandler";
+import { OptionQuotesResponse } from "./services/optionQuotesMessageHandler";
 
 export type RawPayloadResponseItemBody =
   | RawPayloadResponseQuotesSnapshot
@@ -113,4 +114,5 @@ export type ParsedWebSocketResponse =
   | PlaceOrderSnapshotResponse
   | PlaceOrderPatchResponse
   | OptionChainResponse
-  | OptionChainDetailsResponse;
+  | OptionChainDetailsResponse
+  | OptionQuotesResponse;

@@ -1,8 +1,5 @@
 import { OAuth2Client, OAuth2Token } from "@badgateway/oauth2-client";
 import WsJsonClient from "./wsJsonClient";
-import debug from "debug";
-
-const logger = debug("wsJsonClientAuth");
 
 export default class WsJsonClientAuth {
   private readonly oauthClient: OAuth2Client;
@@ -21,23 +18,25 @@ export default class WsJsonClientAuth {
   }
 
   async authenticateWithRetry(token: OAuth2Token): Promise<AuthResult> {
-    const { oauthClient } = this;
-    let client = new WsJsonClient(token.accessToken);
+    const client = new WsJsonClient(token.accessToken);
     try {
       await client.authenticate();
       return { token, client };
     } catch (e) {
-      // refresh token and retry
-      try {
-        const newToken = await oauthClient.refreshToken(token);
-        client = new WsJsonClient(newToken.accessToken);
-        await client.authenticate();
-        logger(`Successfully refreshed token: ${JSON.stringify(newToken)}`);
-        return { token: newToken, client };
-      } catch (e) {
-        console.error(`Failed to refresh token`, e);
-        throw e;
-      }
+      return await this.refreshToken(token);
+    }
+  }
+
+  async refreshToken(token: OAuth2Token): Promise<AuthResult> {
+    const { oauthClient } = this;
+    try {
+      const newToken = await oauthClient.refreshToken(token);
+      const client = new WsJsonClient(newToken.accessToken);
+      await client.authenticate();
+      return { token: newToken, client };
+    } catch (e) {
+      console.error(`Failed to refresh token`, e);
+      throw e;
     }
   }
 }

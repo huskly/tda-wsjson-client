@@ -49,10 +49,10 @@ yarn start
 - ✅ Option chains
 - ✅ Alert lookup
 - ✅ Option chain details
+- ✅ Option quotes
 
 # Not yet implemented
 
-- ❌ Option quotes
 - ❌ Alert subscription
 - ❌ Order events
 - ❌ And many others 😀

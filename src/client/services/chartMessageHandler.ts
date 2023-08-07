@@ -49,7 +49,8 @@ export type ChartRequestParams = {
 };
 
 export default class ChartMessageHandler
-  implements WebSocketApiMessageHandler<ChartRequestParams, ChartResponse>
+  implements
+    WebSocketApiMessageHandler<ChartRequestParams, ChartResponse | null>
 {
   parseResponse(message: RawPayloadResponse): ChartResponse | null {
     const body = message.payload[0].body as RawPayloadResponseChart;

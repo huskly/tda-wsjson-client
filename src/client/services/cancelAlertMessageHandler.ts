@@ -5,7 +5,7 @@ import { debugLog } from "../util";
 import { ApiService } from "./apiService";
 
 export default class CancelAlertMessageHandler
-  implements WebSocketApiMessageHandler<number, AlertsResponse>
+  implements WebSocketApiMessageHandler<number, AlertsResponse | null>
 {
   parseResponse(message: RawPayloadResponse): AlertsResponse | null {
     const [{ body }] = message.payload;

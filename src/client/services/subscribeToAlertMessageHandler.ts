@@ -15,7 +15,7 @@ export const DEFAULT_ALERT_TYPES = [
 ];
 
 export default class SubscribeToAlertMessageHandler
-  implements WebSocketApiMessageHandler<string[], AlertsResponse>
+  implements WebSocketApiMessageHandler<string[], AlertsResponse | null>
 {
   parseResponse(message: RawPayloadResponse): AlertsResponse | null {
     const [{ body }] = message.payload;
