@@ -75,7 +75,7 @@ export type PositionsResponse = {
 };
 
 export default class PositionsMessageHandler
-  implements WebSocketApiMessageHandler<string, PositionsResponse>
+  implements WebSocketApiMessageHandler<string, PositionsResponse | null>
 {
   parseResponse(message: RawPayloadResponse): PositionsResponse | null {
     const [{ header, body }] = message.payload;

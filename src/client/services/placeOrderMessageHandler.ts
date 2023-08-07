@@ -89,7 +89,7 @@ export default class PlaceOrderMessageHandler
   implements
     WebSocketApiMessageHandler<
       PlaceLimitOrderRequestParams,
-      PlaceOrderResponse
+      PlaceOrderResponse | null
     >
 {
   parseResponse(message: RawPayloadResponse): PlaceOrderResponse | null {

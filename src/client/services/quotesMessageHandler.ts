@@ -52,7 +52,7 @@ export type QuotesResponseItem = {
 };
 
 export default class QuotesMessageHandler
-  implements WebSocketApiMessageHandler<string[], QuotesResponse>
+  implements WebSocketApiMessageHandler<string[], QuotesResponse | null>
 {
   parseResponse({
     payload: [{ header, body }],

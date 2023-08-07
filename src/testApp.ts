@@ -3,6 +3,7 @@ import "dotenv/config";
 import debug from "debug";
 import { PlaceLimitOrderRequestParams } from "./client/services/placeOrderMessageHandler";
 import { CreateAlertRequestParams } from "./client/services/createAlertMessageHandler";
+import { OptionQuotesRequestParams } from "./client/services/optionQuotesMessageHandler";
 
 const logger = debug("testapp");
 
@@ -88,6 +89,12 @@ class TestApp {
     });
     logger("optionChainDetails() : " + JSON.stringify(optionChainDetails));
   }
+
+  async optionQuotes(params: OptionQuotesRequestParams) {
+    logger(" --- optionQuotes() requesting option quotes ---");
+    const optionQuotes = await this.client.optionQuotes(params);
+    logger("optionQuotes() : " + JSON.stringify(optionQuotes));
+  }
 }
 
 async function run() {
@@ -95,7 +102,12 @@ async function run() {
   const client = new WsJsonClient(accessToken);
   await client.authenticate();
   const app = new TestApp(client);
-  await app.instrumentSearch("AA");
+  await app.optionQuotes({
+    underlyingSymbol: "ABNB",
+    seriesNames: ["11 AUG 23 100 (Weeklys)"],
+    minStrike: 134,
+    maxStrike: 148,
+  });
 }
 
 run().catch(console.error);

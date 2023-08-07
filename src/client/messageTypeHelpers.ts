@@ -18,6 +18,7 @@ import { InstrumentSearchResponse } from "./services/instrumentSearchMessageHand
 import { AlertsResponse } from "./types/alertTypes";
 import { OptionChainResponse } from "./services/optionSeriesMessageHandler";
 import { RawLoginResponse } from "./services/loginMessageHandler";
+import { OptionQuotesResponse } from "./services/optionQuotesMessageHandler";
 
 export function isPayloadResponse(
   response: WsJsonRawMessage
@@ -80,6 +81,12 @@ export function isOrderEventsPatchResponse(
   response: ParsedWebSocketResponse
 ): response is OrderEventsPatchResponse {
   return "patches" in response && response.service === "order_events";
+}
+
+export function isOptionQuotesResponse(
+  response: ParsedWebSocketResponse
+): response is OptionQuotesResponse {
+  return "service" in response && response.service === "quotes/options";
 }
 
 export function isOrderEventsSnapshotResponse(

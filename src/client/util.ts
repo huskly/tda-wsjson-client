@@ -23,7 +23,7 @@ export function debugLog(...args: any[]) {
   }
 }
 
-type Constructor<T> = new (...args: any[]) => T;
+export type Constructor<T> = new (...args: any[]) => T;
 
 // https://stackoverflow.com/questions/17392349/how-can-i-check-if-element-is-an-instanceof-u
 // Filters the array to only elements of the specified type.
