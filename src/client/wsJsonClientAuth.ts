@@ -33,7 +33,9 @@ export default class WsJsonClientAuth {
       const newToken = await oauthClient.refreshToken(token);
       const client = new WsJsonClient(newToken.accessToken);
       await client.authenticate();
-      return { token: newToken, client };
+      // oauthClient.refreshToken() doesn't return the refresh token so we need to re-add it
+      const refreshedToken = { ...newToken, refreshToken: token.refreshToken };
+      return { token: refreshedToken, client };
     } catch (e) {
       console.error(`Failed to refresh token`, e);
       throw e;
