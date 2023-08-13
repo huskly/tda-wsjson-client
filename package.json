@@ -1,6 +1,6 @@
 {
   "name": "tda-wsjson-client",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "WebSocket client for the TD Ameritrade wsjson API",
   "main": "dist/web.bundle.js",
   "types": "dist/web.d.ts",
