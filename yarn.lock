@@ -3352,7 +3352,7 @@ jest-get-type@^29.4.3:
   resolved "https://registry.yarnpkg.com/jest-get-type/-/jest-get-type-29.4.3.tgz#1ab7a5207c995161100b5187159ca82dd48b3dd5"
   integrity sha512-J5Xez4nRRMjk8emnTpWrlkyb9pfRQQanDrvWHhsR1+VUfbwxi30eVcZFlcdGInRibU4G5LwHXpI7IRHU0CY+gg==
 
-jest-haste-map@^29.5.0, jest-haste-map@^29.6.2:
+jest-haste-map@^29.6.2:
   version "29.6.2"
   resolved "https://registry.yarnpkg.com/jest-haste-map/-/jest-haste-map-29.6.2.tgz#298c25ea5255cfad8b723179d4295cf3a50a70d1"
   integrity sha512-+51XleTDAAysvU8rT6AnS1ZJ+WHVNqhj1k6nTvN2PYP+HjU3kqlaKQ1Lnw3NYW3bm2r8vq82X0Z1nDDHZMzHVA==
@@ -3431,22 +3431,7 @@ jest-resolve-dependencies@^29.6.2:
     jest-regex-util "^29.4.3"
     jest-snapshot "^29.6.2"
 
-jest-resolve@29.5.0:
-  version "29.5.0"
-  resolved "https://registry.yarnpkg.com/jest-resolve/-/jest-resolve-29.5.0.tgz#b053cc95ad1d5f6327f0ac8aae9f98795475ecdc"
-  integrity sha512-1TzxJ37FQq7J10jPtQjcc+MkCkE3GBpBecsSUWJ0qZNJpmg6m0D9/7II03yJulm3H/fvVjgqLh/k2eYg+ui52w==
-  dependencies:
-    chalk "^4.0.0"
-    graceful-fs "^4.2.9"
-    jest-haste-map "^29.5.0"
-    jest-pnp-resolver "^1.2.2"
-    jest-util "^29.5.0"
-    jest-validate "^29.5.0"
-    resolve "^1.20.0"
-    resolve.exports "^2.0.0"
-    slash "^3.0.0"
-
-jest-resolve@^29.6.2:
+jest-resolve@29.6.2, jest-resolve@^29.6.2:
   version "29.6.2"
   resolved "https://registry.yarnpkg.com/jest-resolve/-/jest-resolve-29.6.2.tgz#f18405fe4b50159b7b6d85e81f6a524d22afb838"
   integrity sha512-G/iQUvZWI5e3SMFssc4ug4dH0aZiZpsDq9o1PtXTV1210Ztyb2+w+ZgQkB3iOiC5SmAEzJBOHWz6Hvrd+QnNPw==
@@ -3542,7 +3527,7 @@ jest-snapshot@^29.6.2:
     pretty-format "^29.6.2"
     semver "^7.5.3"
 
-jest-util@^29.5.0, jest-util@^29.6.2:
+jest-util@^29.6.2:
   version "29.6.2"
   resolved "https://registry.yarnpkg.com/jest-util/-/jest-util-29.6.2.tgz#8a052df8fff2eebe446769fd88814521a517664d"
   integrity sha512-3eX1qb6L88lJNCFlEADKOkjpXJQyZRiavX1INZ4tRnrBVr2COd3RgcTLyUiEXMNBlDU/cgYq6taUS0fExrWW4w==
@@ -3554,7 +3539,7 @@ jest-util@^29.5.0, jest-util@^29.6.2:
     graceful-fs "^4.2.9"
     picomatch "^2.2.3"
 
-jest-validate@^29.5.0, jest-validate@^29.6.2:
+jest-validate@^29.6.2:
   version "29.6.2"
   resolved "https://registry.yarnpkg.com/jest-validate/-/jest-validate-29.6.2.tgz#25d972af35b2415b83b1373baf1a47bb266c1082"
   integrity sha512-vGz0yMN5fUFRRbpJDPwxMpgSXW1LDKROHfBopAvDcmD6s+B/s8WJrwi+4bfH4SdInBA5C3P3BI19dBtKzx1Arg==
