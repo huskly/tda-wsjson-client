@@ -1,9 +1,11 @@
-import WsJsonClient from "./client/wsJsonClient";
+import WsJsonClient from "./client/wsJsonClient.js";
 import "dotenv/config";
 import debug from "debug";
-import { PlaceLimitOrderRequestParams } from "./client/services/placeOrderMessageHandler";
-import { CreateAlertRequestParams } from "./client/services/createAlertMessageHandler";
-import { OptionQuotesRequestParams } from "./client/services/optionQuotesMessageHandler";
+import { PlaceLimitOrderRequestParams } from "./client/services/placeOrderMessageHandler.js";
+import { CreateAlertRequestParams } from "./client/services/createAlertMessageHandler.js";
+import { OptionQuotesRequestParams } from "./client/services/optionQuotesMessageHandler.js";
+import WsJsonClientAuth from "./client/wsJsonClientAuth.js";
+import fetch from "node-fetch";
 
 const logger = debug("testapp");
 
@@ -95,19 +97,33 @@ class TestApp {
     const optionQuotes = await this.client.optionQuotes(params);
     logger("optionQuotes() : " + JSON.stringify(optionQuotes));
   }
+
+  async workingOrders() {
+    const accountNumber = await this.accountNumber();
+    logger(" --- workingOrders() requesting working orders ---");
+    for await (const event of this.client.workingOrders(accountNumber)) {
+      logger("workingOrders() : " + JSON.stringify(event));
+    }
+  }
 }
 
 async function run() {
-  const accessToken = process.env.ACCESS_TOKEN as string;
-  const client = new WsJsonClient(accessToken);
-  await client.authenticate();
+  const clientId = process.env.CLIENT_ID;
+  const accessToken = process.env.ACCESS_TOKEN;
+  const refreshToken = process.env.REFRESH_TOKEN;
+  const expiresAt = process.env.TOKEN_EXPIRES_AT;
+  if (!clientId || !accessToken || !refreshToken || !expiresAt) {
+    throw new Error(
+      "Please provide CLIENT_ID, ACCESS_TOKEN, REFRESH_TOKEN and TOKEN_EXPIRES_AT environment variables"
+    );
+  }
+  const token = { accessToken, refreshToken, expiresAt: +expiresAt };
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const authClient = new WsJsonClientAuth(clientId, fetch);
+  const { client } = await authClient.authenticateWithRetry(token);
   const app = new TestApp(client);
-  await app.optionQuotes({
-    underlyingSymbol: "ABNB",
-    seriesNames: ["11 AUG 23 100 (Weeklys)"],
-    minStrike: 134,
-    maxStrike: 148,
-  });
+  await app.workingOrders();
 }
 
 run().catch(console.error);

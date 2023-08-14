@@ -1,5 +1,5 @@
 import { OAuth2Client, OAuth2Token } from "@badgateway/oauth2-client";
-import WsJsonClient from "./wsJsonClient";
+import WsJsonClient from "./wsJsonClient.js";
 
 export default class WsJsonClientAuth {
   private readonly oauthClient: OAuth2Client;
