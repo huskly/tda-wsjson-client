@@ -71,7 +71,7 @@
     "jest-watch-typeahead": "2.2.2",
     "jest-websocket-mock": "^2.4.0",
     "node-fetch": "^2.6.12",
-    "prettier": "^2.4.1",
+    "prettier": "^3.0.1",
     "ts-node": "^10.4.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.0.4"
