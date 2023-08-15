@@ -50,11 +50,12 @@ yarn start
 - ✅ Alert lookup
 - ✅ Option chain details
 - ✅ Option quotes
+- ✅ Order events
 
 # Not yet implemented
 
+- ❌ Instrument order events
 - ❌ Alert subscription
-- ❌ Order events
 - ❌ And many others 😀
 
 # Usage

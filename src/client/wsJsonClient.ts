@@ -48,7 +48,9 @@ import ChartMessageHandler, {
 import InstrumentSearchMessageHandler, {
   InstrumentSearchResponse,
 } from "./services/instrumentSearchMessageHandler";
-import CancelOrderMessageHandler from "./services/cancelOrderMessageHandler";
+import CancelOrderMessageHandler, {
+  CancelOrderResponse,
+} from "./services/cancelOrderMessageHandler";
 import OptionSeriesMessageHandler, {
   OptionChainResponse,
 } from "./services/optionSeriesMessageHandler";
@@ -71,7 +73,6 @@ import PlaceOrderMessageHandler, {
 import WebSocketApiMessageHandler from "./services/webSocketApiMessageHandler";
 import ResponseParser from "./responseParser";
 import { AlertsResponse } from "./types/alertTypes";
-import { CancelOrderResponse } from "./types/placeOrderTypes";
 import LoginMessageHandler, {
   RawLoginResponse,
   RawLoginResponseBody,
@@ -259,6 +260,14 @@ export default class WsJsonClient {
     return this.dispatchHandler(SubmitOrderMessageHandler, request)
       .filter(isOrderEventsPatchResponse)
       .iterable() as AsyncIterable<OrderEventsPatchResponse>;
+  }
+
+  replaceOrder(
+    request: Required<PlaceLimitOrderRequestParams>
+  ): Promise<OrderEventsResponse> {
+    return this.dispatchHandler(SubmitOrderMessageHandler, request)
+      .filter(isOrderEventsPatchResponse)
+      .promise() as Promise<OrderEventsPatchResponse>;
   }
 
   workingOrders(accountNumber: string): AsyncIterable<OrderEventsResponse> {

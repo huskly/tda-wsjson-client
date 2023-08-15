@@ -10,6 +10,7 @@ export type PlaceLimitOrderRequestParams = {
   limitPrice: number;
   symbol: string;
   quantity: number;
+  refOrderId?: number;
 };
 
 export type RawPlaceOrderPatchResponse = {
@@ -83,7 +84,9 @@ export type PlaceOrderPatchResponse = {
   service: "place_order";
 };
 
-type PlaceOrderResponse = PlaceOrderSnapshotResponse | PlaceOrderPatchResponse;
+export type PlaceOrderResponse =
+  | PlaceOrderSnapshotResponse
+  | PlaceOrderPatchResponse;
 
 export default class PlaceOrderMessageHandler
   implements

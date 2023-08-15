@@ -8,7 +8,6 @@ import { ChartResponse } from "./services/chartMessageHandler";
 import { QuotesResponse } from "./services/quotesMessageHandler";
 import { PositionsResponse } from "./services/positionsMessageHandler";
 import { PlaceOrderSnapshotResponse } from "./services/placeOrderMessageHandler";
-import { CancelOrderResponse } from "./types/placeOrderTypes";
 import {
   OrderEventsPatchResponse,
   OrderEventsSnapshotResponse,
@@ -19,6 +18,7 @@ import { AlertsResponse } from "./types/alertTypes";
 import { OptionChainResponse } from "./services/optionSeriesMessageHandler";
 import { RawLoginResponse } from "./services/loginMessageHandler";
 import { OptionQuotesResponse } from "./services/optionQuotesMessageHandler";
+import { CancelOrderResponse } from "./services/cancelOrderMessageHandler";
 
 export function isPayloadResponse(
   response: WsJsonRawMessage

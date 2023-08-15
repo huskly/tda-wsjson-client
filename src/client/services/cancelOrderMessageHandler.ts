@@ -1,9 +1,17 @@
 import WebSocketApiMessageHandler, {
   newPayload,
 } from "./webSocketApiMessageHandler";
-import { CancelOrderResponse } from "../types/placeOrderTypes";
 import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
 import { ApiService } from "./apiService";
+
+export type CancelOrderResponse = {
+  service: "cancel_order";
+  orderId: number;
+  // type: "snapshot" | "error"
+  // for a failed cancel order request, type will be "error"
+  type: string;
+  body: Record<string, any>;
+};
 
 export default class CancelOrderMessageHandler
   implements WebSocketApiMessageHandler<number, CancelOrderResponse>

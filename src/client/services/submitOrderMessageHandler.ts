@@ -1,11 +1,10 @@
-import WebSocketApiMessageHandler, {
-  newPayload,
-} from "./webSocketApiMessageHandler";
+import WebSocketApiMessageHandler, { newPayload, } from "./webSocketApiMessageHandler";
 import { PlaceLimitOrderRequestParams } from "./placeOrderMessageHandler";
 import { ApiService } from "./apiService";
 import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
 import { OrderEventsPatchResponse } from "./orderEventsMessageHandler";
 
+// Submit new order or update existing order. Provide a `refOrderId` to update an existing order.
 export default class SubmitOrderMessageHandler
   implements
     WebSocketApiMessageHandler<
@@ -18,6 +17,7 @@ export default class SubmitOrderMessageHandler
     limitPrice,
     symbol,
     quantity,
+    refOrderId,
   }: PlaceLimitOrderRequestParams): RawPayloadRequest {
     return newPayload({
       header: {
@@ -33,7 +33,8 @@ export default class SubmitOrderMessageHandler
           {
             tif: "DAY",
             orderType: "LIMIT",
-            limitPrice: limitPrice,
+            refOrderId,
+            limitPrice,
             requestType: "EDIT_ORDER",
             legs: [{ symbol, quantity }],
             tag: "TOSWeb",

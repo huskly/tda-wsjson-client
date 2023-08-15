@@ -1,10 +1,10 @@
-import WsJsonClient from "./client/wsJsonClient.js";
+import WsJsonClient from "./client/wsJsonClient";
+import WsJsonClientAuth from "./client/wsJsonClientAuth";
 import "dotenv/config";
 import debug from "debug";
-import { PlaceLimitOrderRequestParams } from "./client/services/placeOrderMessageHandler.js";
-import { CreateAlertRequestParams } from "./client/services/createAlertMessageHandler.js";
-import { OptionQuotesRequestParams } from "./client/services/optionQuotesMessageHandler.js";
-import WsJsonClientAuth from "./client/wsJsonClientAuth.js";
+import { PlaceLimitOrderRequestParams } from "./client/services/placeOrderMessageHandler";
+import { CreateAlertRequestParams } from "./client/services/createAlertMessageHandler";
+import { OptionQuotesRequestParams } from "./client/services/optionQuotesMessageHandler";
 import fetch from "node-fetch";
 
 const logger = debug("testapp");
@@ -41,7 +41,7 @@ class TestApp {
   async quotes(symbols: string[]) {
     logger(" --- quotes() requesting quotes ---");
     for await (const quote of this.client.quotes(symbols)) {
-      logger("quotes() : " + JSON.stringify(quote));
+      logger("quotes() %O", quote);
     }
   }
 
@@ -74,13 +74,13 @@ class TestApp {
   async instrumentSearch(query: string) {
     logger(" --- instrumentSearch() searching for instrument ---");
     const searchResults = await this.client.searchInstruments(query);
-    logger("instrumentSearch() : " + JSON.stringify(searchResults));
+    logger("instrumentSearch() %O", searchResults);
   }
 
   async optionChain(symbol: string) {
     logger(" --- optionChain() requesting option chain ---");
     const optionChain = await this.client.optionChain(symbol);
-    logger("optionChain() : " + JSON.stringify(optionChain));
+    logger("optionChain() %O", optionChain);
   }
 
   async optionChainDetails(symbol: string, seriesNames: string[]) {
@@ -94,8 +94,9 @@ class TestApp {
 
   async optionQuotes(params: OptionQuotesRequestParams) {
     logger(" --- optionQuotes() requesting option quotes ---");
-    const optionQuotes = await this.client.optionQuotes(params);
-    logger("optionQuotes() : " + JSON.stringify(optionQuotes));
+    for await (const optionQuotes of this.client.optionQuotes(params)) {
+      logger("optionQuotes() %O", optionQuotes);
+    }
   }
 
   async workingOrders() {

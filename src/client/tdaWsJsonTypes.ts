@@ -38,10 +38,10 @@ import {
   OptionChainResponse,
   RawOptionSeriesResponse,
 } from "./services/optionSeriesMessageHandler";
-import { CancelOrderResponse } from "./types/placeOrderTypes";
 import { OptionChainDetailsResponse } from "./services/optionChainDetailsMessageHandler";
 import { RawLoginResponse } from "./services/loginMessageHandler";
 import { OptionQuotesResponse } from "./services/optionQuotesMessageHandler";
+import { CancelOrderResponse } from "./services/cancelOrderMessageHandler";
 
 export type RawPayloadResponseItemBody =
   | RawPayloadResponseQuotesSnapshot
