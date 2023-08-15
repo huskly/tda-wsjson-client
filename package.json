@@ -1,6 +1,6 @@
 {
   "name": "tda-wsjson-client",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "WebSocket client for the TD Ameritrade wsjson API",
   "main": "dist/web.bundle.js",
   "types": "dist/web.d.ts",
@@ -18,7 +18,8 @@
     "./orderEventsMessageHandler": "./dist/client/services/orderEventsMessageHandler.js",
     "./optionSeriesMessageHandler": "./dist/client/services/optionSeriesMessageHandler.js",
     "./userPropertiesMessageHandler": "./dist/client/services/userPropertiesMessageHandler.js",
-    "./instrumentSearchMessageHandler": "./dist/client/services/instrumentSearchMessageHandler.js"
+    "./instrumentSearchMessageHandler": "./dist/client/services/instrumentSearchMessageHandler.js",
+    "./optionChainDetailsMessageHandler": "./dist/client/services/optionChainDetailsMessageHandler.js"
   },
   "scripts": {
     "prepublish": "tsc -p tsconfig.json",
