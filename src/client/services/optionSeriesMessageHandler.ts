@@ -41,17 +41,21 @@ export default class OptionSeriesMessageHandler
   parseResponse(message: RawPayloadResponse): OptionChainResponse {
     const [{ body }] = message.payload;
     const { series } = body as RawOptionSeriesResponse;
-    return {
-      series: series.map((s) => ({
-        underlying: s.underlying,
-        name: s.name,
-        multiplier: s.multiplier,
-        isEuropean: s.isEuropean,
-        lastTradeDate: new Date(s.lastTradeDate),
-        expiration: new Date(s.expiration),
-        settlementType: s.settlementType,
-      })),
-    };
+    if (series) {
+      return {
+        series: series.map((s) => ({
+          underlying: s.underlying,
+          name: s.name,
+          multiplier: s.multiplier,
+          isEuropean: s.isEuropean,
+          lastTradeDate: new Date(s.lastTradeDate),
+          expiration: new Date(s.expiration),
+          settlementType: s.settlementType,
+        })),
+      };
+    } else {
+      return { series: [] };
+    }
   }
 
   buildRequest(symbol: string): RawPayloadRequest {

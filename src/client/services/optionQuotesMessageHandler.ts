@@ -13,14 +13,24 @@ export type OptionQuotesRequestParams = {
 
 type RawOptionQuotesSnapshotBodyResponse = {
   exchanges: string[];
-  items: { symbol: string; values: any[] }[];
+  items: OptionQuoteItem[];
+};
+
+export type OptionQuoteItem = {
+  symbol: string;
+  values: OptionQuoteItemValue;
 };
 
 type RawOptionQuotesPatchBodyResponse = {
   patches: {
     op: string;
     path: string;
-    value: any;
+    value:
+      | {
+          exchanges: string[];
+          items: OptionQuoteItem[];
+        }
+      | number;
   }[];
 };
 
@@ -29,7 +39,7 @@ export type OptionQuotesResponse =
   | OptionQuotesPatchResponse;
 
 export type OptionQuotesSnapshotResponse = {
-  items: { symbol: string; values: any[] }[];
+  items: OptionQuoteItem[];
   service: "quotes/options";
 };
 
@@ -37,9 +47,23 @@ export type OptionQuotesPatchResponse = {
   patches: {
     op: string;
     path: string;
-    value: any;
+    value:
+      | {
+          exchanges: string[];
+          items: OptionQuoteItem[];
+        }
+      | number;
   }[];
   service: "quotes/options";
+};
+
+export type OptionQuoteItemValue = {
+  ASK?: number;
+  BID?: number;
+  DELTA?: number;
+  OPEN_INT?: number;
+  PROBABILITY_ITM?: number;
+  VOLUME?: number;
 };
 
 export default class OptionQuotesMessageHandler
