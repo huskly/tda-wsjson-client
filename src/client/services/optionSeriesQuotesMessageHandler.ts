@@ -16,8 +16,8 @@ export type OptionSeriesQuotesPatchResponse = {
   patches: {
     op: string;
     path: string;
-    value: any;
-  };
+    value: number | { series: OptionSeriesQuote[] };
+  }[];
   service: "optionSeries/quotes";
 };
 
