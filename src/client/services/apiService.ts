@@ -14,4 +14,5 @@ export type ApiService =
   | "alerts/create"
   | "alerts/cancel"
   | "alerts/subscribe"
-  | "alerts/lookup";
+  | "alerts/lookup"
+  | "optionSeries/quotes";

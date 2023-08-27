@@ -23,6 +23,7 @@ export type RawOptionSeriesResponse = {
 
 export type OptionChainResponse = {
   series: OptionChainItem[];
+  service: "optionSeries";
 };
 
 export type OptionChainItem = {
@@ -43,6 +44,7 @@ export default class OptionSeriesMessageHandler
     const { series } = body as RawOptionSeriesResponse;
     if (series) {
       return {
+        service: "optionSeries",
         series: series.map((s) => ({
           underlying: s.underlying,
           name: s.name,
@@ -54,7 +56,7 @@ export default class OptionSeriesMessageHandler
         })),
       };
     } else {
-      return { series: [] };
+      return { series: [], service: "optionSeries" };
     }
   }
 

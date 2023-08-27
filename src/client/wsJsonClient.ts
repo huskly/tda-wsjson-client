@@ -16,8 +16,9 @@ import {
   isLoginResponse,
   isOptionChainResponse,
   isOptionQuotesResponse,
+  isOptionSeriesQuotesResponse,
   isOrderEventsPatchResponse,
-  isOrderEventsSnapshotResponse,
+  isOrderEventsResponse,
   isPlaceOrderResponse,
   isPositionsResponse,
   isQuotesResponse,
@@ -79,6 +80,9 @@ import LoginMessageHandler, {
 } from "./services/loginMessageHandler";
 import SubmitOrderMessageHandler from "./services/submitOrderMessageHandler";
 import WorkingOrdersMessageHandler from "./services/workingOrdersMessageHandler";
+import OptionSeriesQuotesMessageHandler, {
+  OptionSeriesQuotesResponse,
+} from "./services/optionSeriesQuotesMessageHandler";
 
 export const CONNECTION_REQUEST_MESSAGE = {
   ver: "27.*.*",
@@ -105,6 +109,7 @@ const messageHandlers: WebSocketApiMessageHandler<never, any>[] = [
   new ChartMessageHandler(),
   new InstrumentSearchMessageHandler(),
   new OptionSeriesMessageHandler(),
+  new OptionSeriesQuotesMessageHandler(),
   new OrderEventsMessageHandler(),
   new PlaceOrderMessageHandler(),
   new PositionsMessageHandler(),
@@ -233,6 +238,12 @@ export default class WsJsonClient {
       .promise() as Promise<OptionChainResponse>;
   }
 
+  optionChainQuotes(symbol: string): AsyncIterable<OptionSeriesQuotesResponse> {
+    return this.dispatchHandler(OptionSeriesQuotesMessageHandler, symbol)
+      .filter(isOptionSeriesQuotesResponse)
+      .iterable() as AsyncIterable<OptionSeriesQuotesResponse>;
+  }
+
   optionChainDetails(
     request: OptionChainDetailsRequest
   ): Promise<OptionChainDetailsResponse> {
@@ -272,8 +283,6 @@ export default class WsJsonClient {
 
   workingOrders(accountNumber: string): AsyncIterable<OrderEventsResponse> {
     const handler = new WorkingOrdersMessageHandler();
-    const isOrderEventsResponse = (r: ParsedWebSocketResponse) =>
-      isOrderEventsSnapshotResponse(r) || isOrderEventsPatchResponse(r);
     return this.dispatch(handler, accountNumber)
       .filter(isOrderEventsResponse)
       .iterable() as AsyncIterable<OrderEventsResponse>;
