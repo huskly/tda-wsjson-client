@@ -49,6 +49,7 @@ yarn start
 - ✅ Option chains
 - ✅ Alert lookup
 - ✅ Option chain details
+- ✅ Option chain quotes
 - ✅ Option quotes
 - ✅ Order events
 
