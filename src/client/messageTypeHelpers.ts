@@ -10,6 +10,7 @@ import { PositionsResponse } from "./services/positionsMessageHandler";
 import { PlaceOrderSnapshotResponse } from "./services/placeOrderMessageHandler";
 import {
   OrderEventsPatchResponse,
+  OrderEventsResponse,
   OrderEventsSnapshotResponse,
 } from "./services/orderEventsMessageHandler";
 import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler";
@@ -19,6 +20,10 @@ import { OptionChainResponse } from "./services/optionSeriesMessageHandler";
 import { RawLoginResponse } from "./services/loginMessageHandler";
 import { OptionQuotesResponse } from "./services/optionQuotesMessageHandler";
 import { CancelOrderResponse } from "./services/cancelOrderMessageHandler";
+import {
+  OptionSeriesQuotesPatchResponse,
+  OptionSeriesQuotesSnapshotResponse,
+} from "./services/optionSeriesQuotesMessageHandler";
 
 export function isPayloadResponse(
   response: WsJsonRawMessage
@@ -83,16 +88,38 @@ export function isOrderEventsPatchResponse(
   return "patches" in response && response.service === "order_events";
 }
 
+export function isOrderEventsResponse(
+  response: ParsedWebSocketResponse
+): response is OrderEventsResponse {
+  const isSnapshotResponse = (
+    response: ParsedWebSocketResponse
+  ): response is OrderEventsSnapshotResponse =>
+    "orders" in response && response.service === "order_events";
+
+  return isSnapshotResponse(response) || isOrderEventsPatchResponse(response);
+}
+
+// TODO: add support for patch responses
 export function isOptionQuotesResponse(
   response: ParsedWebSocketResponse
 ): response is OptionQuotesResponse {
   return "service" in response && response.service === "quotes/options";
 }
 
-export function isOrderEventsSnapshotResponse(
+export function isOptionSeriesQuotesResponse(
   response: ParsedWebSocketResponse
-): response is OrderEventsSnapshotResponse {
-  return "orders" in response && response.service === "order_events";
+): response is OptionSeriesQuotesSnapshotResponse {
+  const isSnapshotResponse = (
+    response: ParsedWebSocketResponse
+  ): response is OptionSeriesQuotesSnapshotResponse =>
+    "series" in response && response.service === "optionSeries/quotes";
+
+  const isPatchResponse = (
+    response: ParsedWebSocketResponse
+  ): response is OptionSeriesQuotesPatchResponse =>
+    "patches" in response && response.service === "optionSeries/quotes";
+
+  return isSnapshotResponse(response) || isPatchResponse(response);
 }
 
 export function isAlertsResponse(
@@ -110,5 +137,5 @@ export function isInstrumentsResponse(
 export function isOptionChainResponse(
   response: ParsedWebSocketResponse
 ): response is OptionChainResponse {
-  return "series" in response;
+  return "series" in response && response.service === "optionSeries";
 }

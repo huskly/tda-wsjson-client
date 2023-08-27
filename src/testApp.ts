@@ -83,6 +83,14 @@ class TestApp {
     logger("optionChain() %O", optionChain);
   }
 
+  async optionChainQuotes(symbol: string) {
+    logger(" --- optionChainQuotes() requesting option chain quotes ---");
+    const events = this.client.optionChainQuotes(symbol);
+    for await (const event of events) {
+      logger("optionChainQuotes() : " + JSON.stringify(event));
+    }
+  }
+
   async optionChainDetails(symbol: string, seriesNames: string[]) {
     logger(" --- optionChainDetails() requesting option chain details ---");
     const optionChainDetails = await this.client.optionChainDetails({
@@ -124,7 +132,7 @@ async function run() {
   const authClient = new WsJsonClientAuth(clientId, fetch);
   const { client } = await authClient.authenticateWithRetry(token);
   const app = new TestApp(client);
-  await app.workingOrders();
+  await app.optionChainQuotes("ABNB");
 }
 
 run().catch(console.error);
