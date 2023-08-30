@@ -6,7 +6,6 @@ import { PlaceLimitOrderRequestParams } from "./client/services/placeOrderMessag
 import { CreateAlertRequestParams } from "./client/services/createAlertMessageHandler";
 import { OptionQuotesRequestParams } from "./client/services/optionQuotesMessageHandler";
 import fetch from "node-fetch";
-import { isNil, omitBy } from "lodash";
 
 const logger = debug("testapp");
 
@@ -44,7 +43,13 @@ class TestApp {
     for await (const quote of this.client.quotes(symbols)) {
       logger(
         "quotes() %O",
-        quote.quotes.map((q) => omitBy(q, isNil))
+        quote.quotes.map((q) => {
+          if (!q.symbol && q.symbolIndex) {
+            q.symbol = symbols[q.symbolIndex];
+            delete q.symbolIndex;
+          }
+          return q;
+        })
       );
     }
   }
