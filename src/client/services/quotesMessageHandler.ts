@@ -158,10 +158,10 @@ function parsePatchQuotesDataMessage({
       const symbolIndex = +path.split("/")[2];
       const quote = parseQuoteItem({ values: fieldValues });
       return [{ ...quote, symbolIndex }];
-    } else if (!isNumber(value) && "items" in value) {
+    } else if (typeof value === "object" && "items" in value) {
       const { items } = value;
       return items.map(parseQuoteItem);
-    } else if (!isNumber(value)) {
+    } else if (typeof value === "object" && "values" in value) {
       return [parseQuoteItem(value)];
     } else {
       return [];
