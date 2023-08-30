@@ -6,6 +6,7 @@ import { PlaceLimitOrderRequestParams } from "./client/services/placeOrderMessag
 import { CreateAlertRequestParams } from "./client/services/createAlertMessageHandler";
 import { OptionQuotesRequestParams } from "./client/services/optionQuotesMessageHandler";
 import fetch from "node-fetch";
+import { isNil, omitBy } from "lodash";
 
 const logger = debug("testapp");
 
@@ -41,7 +42,10 @@ class TestApp {
   async quotes(symbols: string[]) {
     logger(" --- quotes() requesting quotes ---");
     for await (const quote of this.client.quotes(symbols)) {
-      logger("quotes() %O", quote);
+      logger(
+        "quotes() %O",
+        quote.quotes.map((q) => omitBy(q, isNil))
+      );
     }
   }
 
@@ -132,7 +136,7 @@ async function run() {
   const authClient = new WsJsonClientAuth(clientId, fetch);
   const { client } = await authClient.authenticateWithRetry(token);
   const app = new TestApp(client);
-  await app.optionChainQuotes("ABNB");
+  await app.quotes(["ABNB", "QQQ", "ARKK", "SPY"]);
 }
 
 run().catch(console.error);
