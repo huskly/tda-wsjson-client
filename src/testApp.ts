@@ -148,13 +148,14 @@ async function run() {
     );
   }
   const token = { accessToken, refreshToken, expiresAt: +expiresAt };
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const authClient = new WsJsonClientAuth(clientId, fetch);
-  const { client } = await authClient.authenticateWithRetry(
-    token,
-    (accessToken) => new RealWsJsonClient(accessToken)
+  const authClient = new WsJsonClientAuth(
+    (accessToken) => new RealWsJsonClient(accessToken),
+    clientId,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    fetch
   );
+  const { client } = await authClient.authenticateWithRetry(token);
   const app = new TestApp(client);
   await app.placeLimitOrder({ symbol: "ABNB", quantity: 1, limitPrice: 135 });
 }
