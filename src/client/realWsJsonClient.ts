@@ -316,9 +316,6 @@ export default class RealWsJsonClient implements WsJsonClient {
       .promise() as Promise<UserPropertiesResponse>;
   }
 
-  // This method should probably be kept private but is called in tests. There's no real reason for anyone to call this
-  // directly, except maybe if there's a new service that's not yet implemented by one of the existing MessageHandlers
-  // that you want to create and instantiate yourself. Use at your own risk.
   private dispatch<Req, Res>(
     handler: WebSocketApiMessageHandler<Req, Res>,
     args: Req
