@@ -1,6 +1,4 @@
-import WebSocketApiMessageHandler, {
-  newPayload,
-} from "./webSocketApiMessageHandler";
+import WebSocketApiMessageHandler, { newPayload, } from "./webSocketApiMessageHandler";
 import { PlaceLimitOrderRequestParams } from "./placeOrderMessageHandler";
 import { ApiService } from "./apiService";
 import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
@@ -51,5 +49,7 @@ export default class SubmitOrderMessageHandler
     throw new Error("This should never happen");
   }
 
-  service: ApiService = "place_order";
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  service: ApiService = "unused";
 }

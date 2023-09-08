@@ -95,7 +95,9 @@ export default class PlaceOrderMessageHandler
       PlaceOrderResponse | null
     >
 {
-  parseResponse(message: RawPayloadResponse): PlaceOrderResponse | null {
+  parseResponse(
+    message: RawPayloadResponse
+  ): PlaceOrderSnapshotResponse | null {
     const [{ header, body }] = message.payload;
     switch (header.type) {
       case "snapshot":
@@ -172,18 +174,21 @@ export default class PlaceOrderMessageHandler
     // TODO: This payload may include multiple orders? If so parse all of them
     const descriptionPatch = patches.find(
       ({ op, path }) =>
-        op === "replace" && path.match(/\/orders\/\d\/descriptionToShare/)
+        op === "replace" && path.match(/\/orders\/\d\/confirmation/)
+    );
+    const idPatch = patches.find(
+      ({ op, path }) => op === "replace" && path.match(/\/orders\/\d\/orderId/)
     );
     if (descriptionPatch) {
-      const { value } = descriptionPatch;
-      // eg.: "BUY +1 COIN @37.34 LMT"
-      const parts = value.split(" ");
+      const value = descriptionPatch.value as string;
+      // eg.: "TOSWeb BUY +1 ABNB @138.00 LMT"
+      const parts = value.split(" ").slice(1);
       const parsedOrder = {
-        id: 0,
+        id: idPatch?.value as number,
         symbol: parts[2],
         quantity: +parts[1],
         price: +parts[3].substring(1),
-        orderType: "LIMIT", // TODO: unclear if this is always the case
+        orderType: parts[4],
         side: parts[0] as "BUY" | "SELL",
         cancelable: true,
         orderDateTime: new Date(),
