@@ -1,6 +1,6 @@
-import WsJsonClient, {
+import RealWsJsonClient, {
   CONNECTION_REQUEST_MESSAGE,
-} from "../../client/wsJsonClient";
+} from "../../client/realWsJsonClient";
 import "dotenv/config";
 import WS from "jest-websocket-mock";
 import LoginMessageHandler from "../../client/services/loginMessageHandler";
@@ -104,7 +104,7 @@ describe("wsJsonClientTest", () => {
   it("should connect and log in successfully", async () => {
     const url = "ws://localhost:1234";
     const server = new WS(url, { jsonProtocol: true });
-    const client = new WsJsonClient(accessToken, new WebSocket(url));
+    const client = new RealWsJsonClient(accessToken, new WebSocket(url));
     try {
       await server.connected;
       // explicitly do not await for this promise so that we can send the server replies below
@@ -141,7 +141,7 @@ describe("wsJsonClientTest", () => {
     const fakeMessageHandler = new FakeMessageHandler();
     const responseParser = new ResponseParser([fakeMessageHandler]);
     const webSocket = new WebSocket(url);
-    const client = new WsJsonClient(accessToken, webSocket, responseParser);
+    const client = new RealWsJsonClient(accessToken, webSocket, responseParser);
     try {
       await server.connected;
       // explicitly do not await for this promise so that we can send the server replies below

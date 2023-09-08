@@ -1,11 +1,11 @@
-import WsJsonClient from "./client/wsJsonClient";
 import WsJsonClientAuth from "./client/wsJsonClientAuth";
 import "dotenv/config";
 import debug from "debug";
-import { PlaceLimitOrderRequestParams } from "./client/services/placeOrderMessageHandler";
 import { CreateAlertRequestParams } from "./client/services/createAlertMessageHandler";
 import { OptionQuotesRequestParams } from "./client/services/optionQuotesMessageHandler";
 import fetch from "node-fetch";
+import { WsJsonClient } from "./client/wsJsonClient";
+import RealWsJsonClient from "./client/realWsJsonClient";
 
 const logger = debug("testapp");
 
@@ -21,7 +21,7 @@ class TestApp {
       includeExtendedHours: true,
     };
     for await (const event of this.client.chart(chartRequest)) {
-      logger("chart() : " + JSON.stringify(event));
+      logger("chart() " + JSON.stringify(event));
     }
   }
 
@@ -34,7 +34,7 @@ class TestApp {
   async accountPositions(accountNumber: string) {
     logger(" --- accountPositions() requesting account positions ---");
     for await (const event of this.client.accountPositions(accountNumber)) {
-      logger("accountPositions() : " + JSON.stringify(event));
+      logger("accountPositions() " + JSON.stringify(event));
     }
   }
 
@@ -54,14 +54,6 @@ class TestApp {
     }
   }
 
-  async placeOrder(request: PlaceLimitOrderRequestParams) {
-    logger(" --- placeOrder() placing order ---");
-    const orderEvents = await this.client.placeOrder(request);
-    for await (const event of orderEvents) {
-      logger("placeOrder() : " + JSON.stringify(event));
-    }
-  }
-
   async cancelOrder(orderId: number) {
     logger(" --- cancelOrder() cancelling order ---");
     const cancelResponse = await this.client.cancelOrder(orderId);
@@ -71,7 +63,7 @@ class TestApp {
   async createAlert(request: CreateAlertRequestParams) {
     logger(" --- createAlert() creating alert ---");
     const result = await this.client.createAlert(request);
-    logger("createAlert() : " + JSON.stringify(result));
+    logger("createAlert() " + JSON.stringify(result));
   }
 
   async cancelAlert(alertId: number) {
@@ -96,7 +88,7 @@ class TestApp {
     logger(" --- optionChainQuotes() requesting option chain quotes ---");
     const events = this.client.optionChainQuotes(symbol);
     for await (const event of events) {
-      logger("optionChainQuotes() : " + JSON.stringify(event));
+      logger("optionChainQuotes() " + JSON.stringify(event));
     }
   }
 
@@ -106,7 +98,7 @@ class TestApp {
       symbol,
       seriesNames,
     });
-    logger("optionChainDetails() : " + JSON.stringify(optionChainDetails));
+    logger("optionChainDetails() " + JSON.stringify(optionChainDetails));
   }
 
   async optionQuotes(params: OptionQuotesRequestParams) {
@@ -120,8 +112,28 @@ class TestApp {
     const accountNumber = await this.accountNumber();
     logger(" --- workingOrders() requesting working orders ---");
     for await (const event of this.client.workingOrders(accountNumber)) {
-      logger("workingOrders() : " + JSON.stringify(event));
+      logger("workingOrders() %O", event);
     }
+  }
+
+  async placeLimitOrder({
+    symbol,
+    quantity,
+    limitPrice,
+  }: {
+    symbol: string;
+    quantity: number;
+    limitPrice: number;
+  }) {
+    const accountNumber = await this.accountNumber();
+    logger(" --- placeLimitOrder() placing limit order ---");
+    const placeOrderResponse = await this.client.placeOrder({
+      accountNumber,
+      quantity,
+      symbol,
+      limitPrice,
+    });
+    logger("placeLimitOrder() %O", placeOrderResponse);
   }
 }
 
@@ -136,12 +148,16 @@ async function run() {
     );
   }
   const token = { accessToken, refreshToken, expiresAt: +expiresAt };
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const authClient = new WsJsonClientAuth(clientId, fetch);
+  const authClient = new WsJsonClientAuth(
+    (accessToken) => new RealWsJsonClient(accessToken),
+    clientId,
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    fetch
+  );
   const { client } = await authClient.authenticateWithRetry(token);
   const app = new TestApp(client);
-  await app.quotes(["ABNB", "QQQ", "ARKK", "SPY"]);
+  await app.placeLimitOrder({ symbol: "ABNB", quantity: 1, limitPrice: 135 });
 }
 
 run().catch(console.error);

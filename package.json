@@ -6,6 +6,8 @@
   "types": "dist/web.d.ts",
   "exports": {
     "./wsJsonClient": "./dist/client/wsJsonClient.js",
+    "./realWsJsonClient": "./dist/client/realWsJsonClient.js",
+    "./mockWsJsonClient": "./dist/client/mockWsJsonClient.js",
     "./alertTypes": "./dist/client/types/alertTypes.js",
     "./tdaWsJsonTypes": "./dist/client/tdaWsJsonTypes.js",
     "./wsJsonClientAuth": "./dist/client/wsJsonClientAuth.js",
