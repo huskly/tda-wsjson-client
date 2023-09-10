@@ -1,5 +1,5 @@
 import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
-import { AlertsResponse, RawAlertResponse } from "../types/alertTypes";
+import { CreateAlertResponse, RawAlertResponse } from "../types/alertTypes";
 import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
 import { ApiService } from "./apiService";
 import { newRandomId } from "../util";
@@ -16,9 +16,12 @@ export type CreateAlertRequestParams = {
 
 export default class CreateAlertMessageHandler
   implements
-    WebSocketApiMessageHandler<CreateAlertRequestParams, AlertsResponse | null>
+    WebSocketApiMessageHandler<
+      CreateAlertRequestParams,
+      CreateAlertResponse | null
+    >
 {
-  parseResponse(message: RawPayloadResponse): AlertsResponse | null {
+  parseResponse(message: RawPayloadResponse): CreateAlertResponse | null {
     const [{ body }] = message.payload;
     const { alert } = body as RawAlertCreateResponse;
     if (alert) {
@@ -27,7 +30,7 @@ export default class CreateAlertMessageHandler
       const { id, status } = alert;
       const description = `Alert for ${symbol} ${alert.market.operator} ${triggerPrice}`;
       const alerts = [{ id, symbol, triggerPrice, status, description }];
-      return { alerts };
+      return { alerts, service: "alerts/create" };
     }
     return null;
   }

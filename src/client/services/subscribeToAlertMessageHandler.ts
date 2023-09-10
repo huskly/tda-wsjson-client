@@ -1,7 +1,7 @@
 import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
 import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
 import {
-  AlertsResponse,
+  AlertSubscribeResponse,
   parseAlert,
   RawAlertSubscribeResponse,
 } from "../types/alertTypes";
@@ -15,9 +15,10 @@ export const DEFAULT_ALERT_TYPES = [
 ];
 
 export default class SubscribeToAlertMessageHandler
-  implements WebSocketApiMessageHandler<string[], AlertsResponse | null>
+  implements
+    WebSocketApiMessageHandler<string[], AlertSubscribeResponse | null>
 {
-  parseResponse(message: RawPayloadResponse): AlertsResponse | null {
+  parseResponse(message: RawPayloadResponse): AlertSubscribeResponse | null {
     const [{ body }] = message.payload;
     const { type, result, alert, alertDescription, changedAlert } =
       body as RawAlertSubscribeResponse;
@@ -32,10 +33,12 @@ export default class SubscribeToAlertMessageHandler
         return null;
       case "ChangedAlertResponse":
         return {
+          service: "alerts/subscribe",
           alerts: [parseAlert({ rawAlert: changedAlert! })], // eslint-disable-line @typescript-eslint/no-non-null-assertion
         };
       case "TriggeredAlertResponse":
         return {
+          service: "alerts/subscribe",
           alerts: [
             parseAlert({
               rawAlert: alert!, // eslint-disable-line @typescript-eslint/no-non-null-assertion

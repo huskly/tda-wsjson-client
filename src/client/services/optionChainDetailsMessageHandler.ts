@@ -1,9 +1,5 @@
 import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
-import {
-  ParsedWebSocketResponse,
-  RawPayloadRequest,
-  RawPayloadResponse,
-} from "../tdaWsJsonTypes";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
 import { ApiService } from "./apiService";
 
 export type RawOptionChainDetailsResponse = {
@@ -12,6 +8,7 @@ export type RawOptionChainDetailsResponse = {
 
 export type OptionChainDetailsResponse = {
   seriesDetails: OptionChainDetailsItem[];
+  service: "option_chain/get";
 };
 
 export type OptionChainDetailsItem = {
@@ -50,7 +47,7 @@ export default class OptionChainDetailsMessageHandler
   ): OptionChainDetailsResponse | null {
     const [{ body }] = message.payload;
     const { optionSeries } = body as RawOptionChainDetailsResponse;
-    return { seriesDetails: optionSeries };
+    return { seriesDetails: optionSeries, service: "option_chain/get" };
   }
 
   // param `seriesNames` as returned from `newOptionChainRequest`, eg: "16 JUN 23 100"
@@ -76,10 +73,4 @@ export default class OptionChainDetailsMessageHandler
   }
 
   service: ApiService = "option_chain/get";
-}
-
-export function isOptionChainDetailsResponse(
-  response: ParsedWebSocketResponse
-): response is OptionChainDetailsResponse {
-  return "seriesDetails" in response;
 }

@@ -46,13 +46,18 @@ export type RawLoginResponse = {
   }[];
 };
 
+export type LoginResponse = {
+  service: "login";
+  result: boolean;
+};
+
 export default class LoginMessageHandler
-  implements WebSocketApiMessageHandler<string, boolean>
+  implements WebSocketApiMessageHandler<string, LoginResponse>
 {
-  parseResponse(message: RawPayloadResponse): boolean {
+  parseResponse(message: RawPayloadResponse): LoginResponse {
     const [{ body }] = message.payload;
     const { authenticationStatus } = body as RawLoginResponseBody;
-    return authenticationStatus === "OK";
+    return { result: authenticationStatus === "OK", service: "login" };
   }
 
   buildRequest(accessToken: string): RawPayloadRequest {

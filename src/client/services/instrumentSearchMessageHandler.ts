@@ -23,6 +23,7 @@ type InstrumentSearchRequest = {
 
 export type InstrumentSearchResponse = {
   instruments: InstrumentSearchMatch[];
+  service: "instrument_search";
 };
 
 export default class InstrumentSearchMessageHandler
@@ -35,7 +36,7 @@ export default class InstrumentSearchMessageHandler
   parseResponse(message: RawPayloadResponse): InstrumentSearchResponse {
     const [{ body }] = message.payload;
     const { instruments } = body as RawPayloadResponseInstrumentSearch;
-    return { instruments };
+    return { instruments, service: "instrument_search" };
   }
 
   buildRequest({

@@ -81,7 +81,13 @@ const fakeLoginResponse = {
   ],
 };
 
-class FakeMessageHandler implements WebSocketApiMessageHandler<string, number> {
+class FakeMessageHandler
+  implements
+    WebSocketApiMessageHandler<
+      string,
+      { service: "fake"; result: number } | null
+    >
+{
   buildRequest(value: string): RawPayloadRequest {
     return newPayload({
       header: { service: "fake", id: "fake", ver: 0 },
@@ -89,9 +95,11 @@ class FakeMessageHandler implements WebSocketApiMessageHandler<string, number> {
     });
   }
 
-  parseResponse(message: RawPayloadResponse): number | null {
+  parseResponse(
+    message: RawPayloadResponse
+  ): { service: "fake"; result: number } | null {
     const [{ body }] = message.payload as any;
-    return body.someMagicNumber;
+    return { service: "fake", result: body.someMagicNumber };
   }
 
   // This service doesn't really exist and is just used for testing
@@ -156,8 +164,8 @@ describe("wsJsonClientTest", () => {
       const observable = client.dispatch(fakeMessageHandler, "wowowow");
       await expect(server).toReceiveMessage(fakeRequest);
       server.send(fakeResponse);
-      const response = (await observable.promise()) as Promise<number>;
-      expect(response).toEqual(42);
+      const response = await observable.promise();
+      expect(response).toEqual({ result: 42, service: "fake" });
     } finally {
       client.disconnect();
     }

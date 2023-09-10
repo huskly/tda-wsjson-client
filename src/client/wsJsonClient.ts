@@ -6,7 +6,6 @@ import {
   ChartResponse,
 } from "./services/chartMessageHandler";
 import { InstrumentSearchResponse } from "./services/instrumentSearchMessageHandler";
-import { AlertsResponse } from "./types/alertTypes";
 import { OptionChainResponse } from "./services/optionSeriesMessageHandler";
 import { OptionSeriesQuotesResponse } from "./services/optionSeriesQuotesMessageHandler";
 import {
@@ -25,6 +24,12 @@ import { OrderEventsResponse } from "./services/orderEventsMessageHandler";
 import { CreateAlertRequestParams } from "./services/createAlertMessageHandler";
 import { CancelOrderResponse } from "./services/cancelOrderMessageHandler";
 import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler";
+import {
+  CancelAlertResponse,
+  CreateAlertResponse,
+  LookupAlertsResponse,
+} from "./types/alertTypes";
+import { MarketDepthResponse } from "./services/marketDepthMessageHandler";
 
 export interface WsJsonClient {
   authenticate(): Promise<RawLoginResponseBody | null>;
@@ -43,7 +48,7 @@ export interface WsJsonClient {
 
   searchInstruments(query: string): Promise<InstrumentSearchResponse>;
 
-  lookupAlerts(): AsyncIterable<AlertsResponse>;
+  lookupAlerts(): AsyncIterable<LookupAlertsResponse>;
 
   optionChain(symbol: string): Promise<OptionChainResponse>;
 
@@ -67,13 +72,15 @@ export interface WsJsonClient {
 
   workingOrders(accountNumber: string): AsyncIterable<OrderEventsResponse>;
 
-  createAlert(request: CreateAlertRequestParams): Promise<AlertsResponse>;
+  createAlert(request: CreateAlertRequestParams): Promise<CreateAlertResponse>;
 
-  cancelAlert(alertId: number): Promise<AlertsResponse>;
+  cancelAlert(alertId: number): Promise<CancelAlertResponse>;
 
   cancelOrder(orderId: number): Promise<CancelOrderResponse>;
 
   userProperties(): Promise<UserPropertiesResponse>;
 
   disconnect(): void;
+
+  marketDepth(symbol: string): AsyncIterable<MarketDepthResponse>;
 }

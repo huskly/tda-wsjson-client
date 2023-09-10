@@ -55,6 +55,7 @@ export type RawPayloadResponseQuotesPatch = {
 
 export type QuotesResponse = {
   quotes: Partial<QuotesResponseItem>[];
+  service: "quotes";
 };
 
 export type QuotesResponseItem = {
@@ -117,7 +118,7 @@ function parseSnapshotDataMessage({
   items,
 }: RawPayloadResponseQuotesSnapshot): QuotesResponse {
   const quotes = items.map(parseQuoteItem);
-  return { quotes };
+  return { quotes, service: "quotes" };
 }
 
 function parseQuoteItem({
@@ -169,6 +170,6 @@ function parsePatchQuotesDataMessage({
   });
   const finalQuotes = compact(quotes);
   return !isEmpty(finalQuotes)
-    ? { quotes: finalQuotes.map((q) => omitBy(q, isNil)) }
+    ? { quotes: finalQuotes.map((q) => omitBy(q, isNil)), service: "quotes" }
     : null;
 }

@@ -1,13 +1,16 @@
 import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
-import { AlertsResponse, RawAlertCancelResponse } from "../types/alertTypes";
+import {
+  CancelAlertResponse,
+  RawAlertCancelResponse,
+} from "../types/alertTypes";
 import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
 import { debugLog } from "../util";
 import { ApiService } from "./apiService";
 
 export default class CancelAlertMessageHandler
-  implements WebSocketApiMessageHandler<number, AlertsResponse | null>
+  implements WebSocketApiMessageHandler<number, CancelAlertResponse | null>
 {
-  parseResponse(message: RawPayloadResponse): AlertsResponse | null {
+  parseResponse(message: RawPayloadResponse): CancelAlertResponse | null {
     const [{ body }] = message.payload;
     const { alertId, result } = body as RawAlertCancelResponse;
     if (result === "Alert cancelled") {

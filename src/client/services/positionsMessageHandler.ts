@@ -72,6 +72,7 @@ export interface AccountPosition {
 
 export type PositionsResponse = {
   positions: DeepPartial<AccountPosition>[];
+  service: "positions";
 };
 
 export default class PositionsMessageHandler
@@ -108,6 +109,7 @@ export default class PositionsMessageHandler
           // Ignore positions with zero quantity (we don't care about it since
           // it's already been closed)
           positions: positions.filter((p) => positionNetQuantity(p) > 0),
+          service: "positions",
         };
       }
       case "patch":

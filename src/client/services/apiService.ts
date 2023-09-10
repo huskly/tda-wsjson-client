@@ -15,4 +15,6 @@ export type ApiService =
   | "alerts/cancel"
   | "alerts/subscribe"
   | "alerts/lookup"
-  | "optionSeries/quotes";
+  | "optionSeries/quotes"
+  | "market_depth"
+  | "fake"; // testing only
