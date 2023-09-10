@@ -52,12 +52,13 @@ yarn start
 - ✅ Option chain quotes
 - ✅ Option quotes
 - ✅ Order events
+- ✅ Market depth
 
 # Not yet implemented
 
 - ❌ Instrument order events
 - ❌ Alert subscription
-- ❌ And many others 😀
+- ❌ And many more 😀
 
 # Usage
 
