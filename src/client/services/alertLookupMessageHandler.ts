@@ -1,7 +1,7 @@
 import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
 import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
 import {
-  AlertsResponse,
+  LookupAlertsResponse,
   parseAlert,
   RawAlertResponse,
 } from "../types/alertTypes";
@@ -13,17 +13,17 @@ export type RawAlertLookupResponse = {
 };
 
 export default class AlertLookupMessageHandler
-  implements WebSocketApiMessageHandler<never, AlertsResponse | null>
+  implements WebSocketApiMessageHandler<never, LookupAlertsResponse | null>
 {
   parseResponse({
     payload: [{ body }],
-  }: RawPayloadResponse): AlertsResponse | null {
+  }: RawPayloadResponse): LookupAlertsResponse | null {
     const { alerts } = body as RawAlertLookupResponse;
     if (!isEmpty(alerts)) {
       const parsedAlerts = alerts.map((alert) =>
         parseAlert({ rawAlert: alert })
       );
-      return { alerts: parsedAlerts };
+      return { alerts: parsedAlerts, service: "alerts/lookup" };
     } else {
       return null;
     }

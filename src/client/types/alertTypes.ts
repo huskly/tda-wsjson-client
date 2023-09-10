@@ -8,8 +8,24 @@ export type PriceAlert = {
   status?: AlertStatus;
 };
 
-export type AlertsResponse = {
+export type CreateAlertResponse = {
   alerts: PriceAlert[];
+  service: "alerts/create";
+};
+
+export type LookupAlertsResponse = {
+  alerts: PriceAlert[];
+  service: "alerts/lookup";
+};
+
+export type AlertSubscribeResponse = {
+  alerts: PriceAlert[];
+  service: "alerts/subscribe";
+};
+
+export type CancelAlertResponse = {
+  alerts: PriceAlert[];
+  service: "alerts/cancel";
 };
 
 export type RawAlertResponse = {

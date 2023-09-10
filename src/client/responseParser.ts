@@ -6,13 +6,13 @@ import { ApiService } from "./services/apiService";
 import { keyBy } from "lodash";
 
 export default class ResponseParser {
-  private readonly serviceRegistry: Record<
+  private readonly messageHandlerRegistry: Record<
     ApiService,
     WebSocketApiMessageHandler<any, any>
   >;
 
   constructor(services: WebSocketApiMessageHandler<any, any>[]) {
-    this.serviceRegistry = keyBy(services, (s) => s.service) as Record<
+    this.messageHandlerRegistry = keyBy(services, (s) => s.service) as Record<
       ApiService,
       WebSocketApiMessageHandler<any, any>
     >;
@@ -23,9 +23,9 @@ export default class ResponseParser {
     if (isPayloadResponse(message)) {
       const [{ header }] = message.payload;
       const { service } = header;
-      const serviceHandler = this.serviceRegistry[service];
-      if (serviceHandler) {
-        return serviceHandler.parseResponse(message);
+      const handler = this.messageHandlerRegistry[service];
+      if (handler) {
+        return handler.parseResponse(message);
       } else {
         debugLog(`Don't know how to handle message with service=${service}`);
         return null;

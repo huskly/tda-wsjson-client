@@ -5,6 +5,7 @@ import WebSocketApiMessageHandler, {
 import { ApiService } from "./apiService";
 
 export type UserPropertiesResponse = {
+  service: "user_properties";
   defaultAccountCode: string;
   nickname: string;
   plDisplayMethod: string;
@@ -30,7 +31,8 @@ export default class UserPropertiesMessageHandler
   implements WebSocketApiMessageHandler<never, UserPropertiesResponse>
 {
   parseResponse(message: RawPayloadResponse): UserPropertiesResponse {
-    return message.payload[0].body as UserPropertiesResponse;
+    const body = message.payload[0].body;
+    return { ...body, service: "user_properties" } as UserPropertiesResponse;
   }
 
   buildRequest(_: void): RawPayloadRequest {

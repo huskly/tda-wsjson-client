@@ -29,6 +29,7 @@ export type RawPayloadResponseChart =
 export type ChartResponse = {
   candles: PriceItem[];
   symbol: string;
+  service: "chart";
 };
 
 export type OHLC = {
@@ -78,7 +79,7 @@ export default class ChartMessageHandler
         volume: volumes[i],
       });
     }
-    return { symbol, candles: data };
+    return { symbol, candles: data, service: "chart" };
   }
 
   buildRequest({

@@ -31,10 +31,11 @@ class TestApp {
     return defaultAccountCode;
   }
 
-  async accountPositions(accountNumber: string) {
+  async accountPositions() {
+    const accountNumber = await this.accountNumber();
     logger(" --- accountPositions() requesting account positions ---");
     for await (const event of this.client.accountPositions(accountNumber)) {
-      logger("accountPositions() " + JSON.stringify(event));
+      logger("accountPositions() %O", event);
     }
   }
 
@@ -135,6 +136,13 @@ class TestApp {
     });
     logger("placeLimitOrder() %O", placeOrderResponse);
   }
+
+  async marketDepth(symbol: string) {
+    logger(` --- marketDepth() requesting market depth for ${symbol} ---`);
+    for await (const quote of this.client.marketDepth(symbol)) {
+      logger("marketDepth() %O", quote);
+    }
+  }
 }
 
 async function run() {
@@ -157,7 +165,7 @@ async function run() {
   );
   const { client } = await authClient.authenticateWithRetry(token);
   const app = new TestApp(client);
-  await app.placeLimitOrder({ symbol: "ABNB", quantity: 1, limitPrice: 135 });
+  await app.marketDepth("/NQ");
 }
 
 run().catch(console.error);

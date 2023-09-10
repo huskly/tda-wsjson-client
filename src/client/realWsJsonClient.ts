@@ -1,5 +1,6 @@
 import WebSocket from "isomorphic-ws";
 import {
+  MessageHandlerBaseResponse,
   ParsedWebSocketResponse,
   RawPayloadResponse,
   WsJsonRawMessage,
@@ -7,28 +8,11 @@ import {
 import { Constructor, debugLog, findByTypeOrThrow } from "./util";
 import MulticastIterator from "obgen/multicastIterator";
 import BufferedIterator from "obgen/bufferedIterator";
-import {
-  isAlertsResponse,
-  isCancelOrderResponse,
-  isChartResponse,
-  isConnectionResponse,
-  isInstrumentsResponse,
-  isLoginResponse,
-  isOptionChainResponse,
-  isOptionQuotesResponse,
-  isOptionSeriesQuotesResponse,
-  isOrderEventsPatchResponse,
-  isOrderEventsResponse,
-  isPlaceOrderResponse,
-  isPositionsResponse,
-  isQuotesResponse,
-  isUserPropertiesResponse,
-} from "./messageTypeHelpers";
+import { isConnectionResponse, isLoginResponse } from "./messageTypeHelpers";
 import { deferredWrap } from "obgen";
 import debug from "debug";
 import Observable from "obgen/observable";
 import OptionChainDetailsMessageHandler, {
-  isOptionChainDetailsResponse,
   OptionChainDetailsRequest,
   OptionChainDetailsResponse,
 } from "./services/optionChainDetailsMessageHandler";
@@ -56,7 +40,6 @@ import OptionSeriesMessageHandler, {
   OptionChainResponse,
 } from "./services/optionSeriesMessageHandler";
 import OrderEventsMessageHandler, {
-  OrderEventsPatchResponse,
   OrderEventsResponse,
 } from "./services/orderEventsMessageHandler";
 import PositionsMessageHandler, {
@@ -74,7 +57,6 @@ import PlaceOrderMessageHandler, {
 } from "./services/placeOrderMessageHandler";
 import WebSocketApiMessageHandler from "./services/webSocketApiMessageHandler";
 import ResponseParser from "./responseParser";
-import { AlertsResponse } from "./types/alertTypes";
 import LoginMessageHandler, {
   RawLoginResponse,
   RawLoginResponseBody,
@@ -85,6 +67,14 @@ import OptionSeriesQuotesMessageHandler, {
   OptionSeriesQuotesResponse,
 } from "./services/optionSeriesQuotesMessageHandler";
 import { WsJsonClient } from "./wsJsonClient";
+import MarketDepthMessageHandler, {
+  MarketDepthResponse,
+} from "./services/marketDepthMessageHandler";
+import {
+  CancelAlertResponse,
+  CreateAlertResponse,
+  LookupAlertsResponse,
+} from "./types/alertTypes";
 
 export const CONNECTION_REQUEST_MESSAGE = {
   ver: "27.*.*",
@@ -120,6 +110,7 @@ const messageHandlers: WebSocketApiMessageHandler<never, any>[] = [
   new OptionChainDetailsMessageHandler(),
   new LoginMessageHandler(),
   new SubmitOrderMessageHandler(),
+  new MarketDepthMessageHandler(),
 ];
 
 export default class RealWsJsonClient implements WsJsonClient {
@@ -170,8 +161,7 @@ export default class RealWsJsonClient implements WsJsonClient {
   private onMessage(
     data: string,
     resolve: (value: RawLoginResponseBody) => void,
-    // eslint-disable-line @typescript-eslint/no-explicit-any
-    reject: (reason?: any) => void
+    reject: (reason?: string) => void
   ) {
     const { responseParser, buffer, accessToken } = this;
     const message = JSON.parse(data) as WsJsonRawMessage;
@@ -206,123 +196,115 @@ export default class RealWsJsonClient implements WsJsonClient {
   }
 
   quotes(symbols: string[]): AsyncIterable<QuotesResponse> {
-    return this.dispatchHandler(QuotesMessageHandler, symbols)
-      .filter(isQuotesResponse)
-      .iterable() as AsyncIterable<QuotesResponse>;
+    return this.dispatchHandler(QuotesMessageHandler, symbols).iterable();
   }
 
   accountPositions(accountNumber: string): AsyncIterable<PositionsResponse> {
-    return this.dispatchHandler(PositionsMessageHandler, accountNumber)
-      .filter(isPositionsResponse)
-      .iterable() as AsyncIterable<PositionsResponse>;
+    return this.dispatchHandler(
+      PositionsMessageHandler,
+      accountNumber
+    ).iterable();
   }
 
   chart(request: ChartRequestParams): AsyncIterable<ChartResponse> {
-    return this.dispatchHandler(ChartMessageHandler, request)
-      .filter(isChartResponse)
-      .iterable() as AsyncIterable<ChartResponse>;
+    return this.dispatchHandler(ChartMessageHandler, request).iterable();
   }
 
   searchInstruments(query: string): Promise<InstrumentSearchResponse> {
-    return this.dispatchHandler(InstrumentSearchMessageHandler, { query })
-      .filter(isInstrumentsResponse)
-      .promise() as Promise<InstrumentSearchResponse>;
+    return this.dispatchHandler(InstrumentSearchMessageHandler, {
+      query,
+    }).promise();
   }
 
-  lookupAlerts(): AsyncIterable<AlertsResponse> {
-    return this.dispatchHandler(AlertLookupMessageHandler, null as never)
-      .filter(isAlertsResponse)
-      .iterable() as AsyncIterable<AlertsResponse>;
+  lookupAlerts(): AsyncIterable<LookupAlertsResponse> {
+    return this.dispatchHandler(
+      AlertLookupMessageHandler,
+      null as never
+    ).iterable();
   }
 
   optionChain(symbol: string): Promise<OptionChainResponse> {
-    return this.dispatchHandler(OptionSeriesMessageHandler, symbol)
-      .filter(isOptionChainResponse)
-      .promise() as Promise<OptionChainResponse>;
+    return this.dispatchHandler(OptionSeriesMessageHandler, symbol).promise();
   }
 
   optionChainQuotes(symbol: string): AsyncIterable<OptionSeriesQuotesResponse> {
-    return this.dispatchHandler(OptionSeriesQuotesMessageHandler, symbol)
-      .filter(isOptionSeriesQuotesResponse)
-      .iterable() as AsyncIterable<OptionSeriesQuotesResponse>;
+    return this.dispatchHandler(
+      OptionSeriesQuotesMessageHandler,
+      symbol
+    ).iterable();
   }
 
   optionChainDetails(
     request: OptionChainDetailsRequest
   ): Promise<OptionChainDetailsResponse> {
-    return this.dispatchHandler(OptionChainDetailsMessageHandler, request)
-      .filter(isOptionChainDetailsResponse)
-      .promise() as Promise<OptionChainDetailsResponse>;
+    return this.dispatchHandler(
+      OptionChainDetailsMessageHandler,
+      request
+    ).promise();
   }
 
   optionQuotes(
     request: OptionQuotesRequestParams
   ): AsyncIterable<OptionQuotesResponse> {
-    return this.dispatchHandler(OptionQuotesMessageHandler, request)
-      .filter(isOptionQuotesResponse)
-      .iterable() as AsyncIterable<OptionQuotesResponse>;
+    return this.dispatchHandler(OptionQuotesMessageHandler, request).iterable();
   }
 
   async placeOrder(
     request: PlaceLimitOrderRequestParams
   ): Promise<PlaceOrderSnapshotResponse> {
     // 1. place order
-    await this.dispatchHandler(PlaceOrderMessageHandler, request)
-      .filter(isPlaceOrderResponse)
-      .promise();
+    await this.dispatchHandler(PlaceOrderMessageHandler, request).promise();
     // 2. submit order
     // noinspection ES6MissingAwait
-    return this.dispatchHandler(SubmitOrderMessageHandler, request)
-      .filter(isPlaceOrderResponse)
-      .promise() as Promise<PlaceOrderSnapshotResponse>;
+    return this.dispatchHandler(SubmitOrderMessageHandler, request).promise();
   }
 
   replaceOrder(
     request: Required<PlaceLimitOrderRequestParams>
   ): Promise<OrderEventsResponse> {
-    return this.dispatchHandler(SubmitOrderMessageHandler, request)
-      .filter(isOrderEventsPatchResponse)
-      .promise() as Promise<OrderEventsPatchResponse>;
+    return this.dispatchHandler(SubmitOrderMessageHandler, request).promise();
   }
 
   workingOrders(accountNumber: string): AsyncIterable<OrderEventsResponse> {
     const handler = new WorkingOrdersMessageHandler();
-    return this.dispatch(handler, accountNumber)
-      .filter(isOrderEventsResponse)
-      .iterable() as AsyncIterable<OrderEventsResponse>;
+    return this.dispatch(handler, accountNumber).iterable();
   }
 
-  createAlert(request: CreateAlertRequestParams): Promise<AlertsResponse> {
-    return this.dispatchHandler(CreateAlertMessageHandler, request)
-      .filter(isAlertsResponse)
-      .promise() as Promise<AlertsResponse>;
+  createAlert(request: CreateAlertRequestParams): Promise<CreateAlertResponse> {
+    return this.dispatchHandler(CreateAlertMessageHandler, request).promise();
   }
 
-  cancelAlert(alertId: number): Promise<AlertsResponse> {
-    return this.dispatchHandler(CancelAlertMessageHandler, alertId)
-      .filter(isAlertsResponse)
-      .promise() as Promise<AlertsResponse>;
+  cancelAlert(alertId: number): Promise<CancelAlertResponse> {
+    return this.dispatchHandler(CancelAlertMessageHandler, alertId).promise();
   }
 
   cancelOrder(orderId: number): Promise<CancelOrderResponse> {
-    return this.dispatchHandler(CancelOrderMessageHandler, orderId)
-      .filter(isCancelOrderResponse)
-      .promise() as Promise<CancelOrderResponse>;
+    return this.dispatchHandler(CancelOrderMessageHandler, orderId).promise();
   }
 
   userProperties(): Promise<UserPropertiesResponse> {
-    return this.dispatchHandler(UserPropertiesMessageHandler, null as never)
-      .filter(isUserPropertiesResponse)
-      .promise() as Promise<UserPropertiesResponse>;
+    return this.dispatchHandler(
+      UserPropertiesMessageHandler,
+      null as never
+    ).promise();
   }
 
-  private dispatch<Req, Res>(
+  marketDepth(symbol: string): AsyncIterable<MarketDepthResponse> {
+    return this.dispatchHandler(
+      MarketDepthMessageHandler,
+      symbol
+    ).iterable() as AsyncIterable<MarketDepthResponse>;
+  }
+
+  private dispatch<Req, Res extends MessageHandlerBaseResponse | null>(
     handler: WebSocketApiMessageHandler<Req, Res>,
     args: Req
-  ): Observable<ParsedWebSocketResponse> {
+  ): Observable<NonNullable<Res>> {
     this.ensureConnected();
     this.sendMessage(handler.buildRequest(args));
-    return deferredWrap(() => this.iterator);
+    return deferredWrap(() => this.iterator).filter(
+      ({ service }) => service === handler.service
+    ) as Observable<NonNullable<Res>>;
   }
 
   // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -335,8 +317,7 @@ export default class RealWsJsonClient implements WsJsonClient {
   private handleLoginResponse(
     message: RawLoginResponse,
     resolve: (value: RawLoginResponseBody) => void,
-    // eslint-disable-line @typescript-eslint/no-explicit-any
-    reject: (reason?: any) => void
+    reject: (reason?: string) => void
   ) {
     const handler = findByTypeOrThrow(messageHandlers, LoginMessageHandler);
     const successful = handler.parseResponse(message as RawPayloadResponse);
@@ -350,12 +331,12 @@ export default class RealWsJsonClient implements WsJsonClient {
     }
   }
 
-  private dispatchHandler<Req, Res>(
-    handler: Constructor<WebSocketApiMessageHandler<Req, Res>>,
+  private dispatchHandler<Req, Res extends MessageHandlerBaseResponse | null>(
+    handlerCtor: Constructor<WebSocketApiMessageHandler<Req, Res>>,
     arg: Req
-  ): Observable<ParsedWebSocketResponse> {
-    const service = findByTypeOrThrow(messageHandlers, handler);
-    return this.dispatch(service, arg);
+  ): Observable<NonNullable<Res>> {
+    const handler = findByTypeOrThrow(messageHandlers, handlerCtor);
+    return this.dispatch(handler, arg);
   }
 
   disconnect() {

@@ -1,7 +1,6 @@
 import { WsJsonClient } from "./wsJsonClient";
 import { PositionsResponse } from "./services/positionsMessageHandler";
 import { RawLoginResponseBody } from "./services/loginMessageHandler";
-import { AlertsResponse } from "./types/alertTypes";
 import { CancelOrderResponse } from "./services/cancelOrderMessageHandler";
 import {
   ChartRequestParams,
@@ -26,10 +25,17 @@ import { OrderEventsResponse } from "./services/orderEventsMessageHandler";
 import { QuotesResponse } from "./services/quotesMessageHandler";
 import { InstrumentSearchResponse } from "./services/instrumentSearchMessageHandler";
 import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler";
+import {
+  CancelAlertResponse,
+  CreateAlertResponse,
+  LookupAlertsResponse,
+} from "./types/alertTypes";
+import { MarketDepthResponse } from "./services/marketDepthMessageHandler";
 
 export default class MockWsJsonClient implements WsJsonClient {
   async *accountPositions(_: string): AsyncIterable<PositionsResponse> {
     return yield {
+      service: "positions",
       positions: [],
     };
   }
@@ -38,8 +44,9 @@ export default class MockWsJsonClient implements WsJsonClient {
     return Promise.resolve(null);
   }
 
-  cancelAlert(_: number): Promise<AlertsResponse> {
+  cancelAlert(_: number): Promise<CancelAlertResponse> {
     return Promise.resolve({
+      service: "alerts/cancel",
       alerts: [],
     });
   }
@@ -55,13 +62,15 @@ export default class MockWsJsonClient implements WsJsonClient {
 
   async *chart(_: ChartRequestParams): AsyncIterable<ChartResponse> {
     return yield {
+      service: "chart",
       symbol: "",
       candles: [],
     };
   }
 
-  createAlert(_: CreateAlertRequestParams): Promise<AlertsResponse> {
+  createAlert(_: CreateAlertRequestParams): Promise<CreateAlertResponse> {
     return Promise.resolve({
+      service: "alerts/create",
       alerts: [],
     });
   }
@@ -80,8 +89,9 @@ export default class MockWsJsonClient implements WsJsonClient {
     return false;
   }
 
-  async *lookupAlerts(): AsyncIterable<AlertsResponse> {
+  async *lookupAlerts(): AsyncIterable<LookupAlertsResponse> {
     return yield {
+      service: "alerts/lookup",
       alerts: [],
     };
   }
@@ -97,6 +107,7 @@ export default class MockWsJsonClient implements WsJsonClient {
     _: OptionChainDetailsRequest
   ): Promise<OptionChainDetailsResponse> {
     return Promise.resolve({
+      service: "option_chain/get",
       seriesDetails: [],
     });
   }
@@ -130,6 +141,7 @@ export default class MockWsJsonClient implements WsJsonClient {
 
   async *quotes(_: string[]): AsyncIterable<QuotesResponse> {
     return yield {
+      service: "quotes",
       quotes: [],
     };
   }
@@ -145,12 +157,14 @@ export default class MockWsJsonClient implements WsJsonClient {
 
   searchInstruments(_: string): Promise<InstrumentSearchResponse> {
     return Promise.resolve({
+      service: "instrument_search",
       instruments: [],
     });
   }
 
   userProperties(): Promise<UserPropertiesResponse> {
     return Promise.resolve({
+      service: "user_properties",
       defaultAccountCode: "foo",
       nickname: "foo",
       plDisplayMethod: "foo",
@@ -177,6 +191,14 @@ export default class MockWsJsonClient implements WsJsonClient {
     return yield {
       orders: [],
       service: "order_events",
+    };
+  }
+
+  async *marketDepth(_: string): AsyncIterable<MarketDepthResponse> {
+    return yield {
+      bidQuotes: [],
+      askQuotes: [],
+      service: "market_depth",
     };
   }
 }

@@ -1,48 +1,25 @@
 import {
-  AlertsResponse,
   RawAlertCancelResponse,
   RawAlertSubscribeResponse,
 } from "./types/alertTypes";
+import { RawOrderEventsResponse } from "./services/orderEventsMessageHandler";
 import {
-  OrderEventsPatchResponse,
-  OrderEventsSnapshotResponse,
-  RawOrderEventsResponse,
-} from "./services/orderEventsMessageHandler";
-import {
-  PlaceOrderPatchResponse,
-  PlaceOrderSnapshotResponse,
   RawPlaceOrderPatchResponse,
   RawPlaceOrderSnapshotResponse,
 } from "./services/placeOrderMessageHandler";
 import { RawAlertLookupResponse } from "./services/alertLookupMessageHandler";
-import {
-  PositionsResponse,
-  RawPositionsResponse,
-} from "./services/positionsMessageHandler";
+import { RawPositionsResponse } from "./services/positionsMessageHandler";
 import { ApiService } from "./services/apiService";
 import {
-  QuotesResponse,
   RawPayloadResponseQuotesPatch,
   RawPayloadResponseQuotesSnapshot,
 } from "./services/quotesMessageHandler";
-import {
-  InstrumentSearchResponse,
-  RawPayloadResponseInstrumentSearch,
-} from "./services/instrumentSearchMessageHandler";
-import {
-  ChartResponse,
-  RawPayloadResponseChart,
-} from "./services/chartMessageHandler";
+import { RawPayloadResponseInstrumentSearch } from "./services/instrumentSearchMessageHandler";
+import { RawPayloadResponseChart } from "./services/chartMessageHandler";
 import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler";
-import {
-  OptionChainResponse,
-  RawOptionSeriesResponse,
-} from "./services/optionSeriesMessageHandler";
-import { OptionChainDetailsResponse } from "./services/optionChainDetailsMessageHandler";
+import { RawOptionSeriesResponse } from "./services/optionSeriesMessageHandler";
 import { RawLoginResponse } from "./services/loginMessageHandler";
-import { OptionQuotesResponse } from "./services/optionQuotesMessageHandler";
-import { CancelOrderResponse } from "./services/cancelOrderMessageHandler";
-import { OptionSeriesQuotesResponse } from "./services/optionSeriesQuotesMessageHandler";
+import { RawPayloadMarketDepthResponse } from "./services/marketDepthMessageHandler";
 
 export type RawPayloadResponseItemBody =
   | RawPayloadResponseQuotesSnapshot
@@ -57,7 +34,8 @@ export type RawPayloadResponseItemBody =
   | RawAlertSubscribeResponse
   | RawPositionsResponse
   | RawOrderEventsResponse
-  | RawOptionSeriesResponse;
+  | RawOptionSeriesResponse
+  | RawPayloadMarketDepthResponse;
 
 export type RawPayloadResponseItemHeader = {
   service: ApiService;
@@ -100,21 +78,8 @@ export type WsJsonRawMessage =
   | RawLoginResponse
   | RawPayloadResponse;
 
-// todo change to an interface implemented by services
-export type ParsedWebSocketResponse =
-  | QuotesResponse
-  | InstrumentSearchResponse
-  | CancelOrderResponse
-  | ConnectionResponse
-  | ChartResponse
-  | UserPropertiesResponse
-  | AlertsResponse
-  | PositionsResponse
-  | OrderEventsSnapshotResponse
-  | OrderEventsPatchResponse
-  | PlaceOrderSnapshotResponse
-  | PlaceOrderPatchResponse
-  | OptionChainResponse
-  | OptionChainDetailsResponse
-  | OptionQuotesResponse
-  | OptionSeriesQuotesResponse;
+export type MessageHandlerBaseResponse = {
+  service: ApiService;
+};
+
+export type ParsedWebSocketResponse = MessageHandlerBaseResponse;

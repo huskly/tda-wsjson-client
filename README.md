@@ -1,6 +1,6 @@
 # TD Ameritrade WsJson API client
 
-This is a node and browser API client for the (undocumented) TDAmeritrade WebSocket API.
+This is a node and browser API client for the (undocumented) TD Ameritrade WebSocket API.
 
 🚧 Work in progress 🚧
 
@@ -8,30 +8,29 @@ This is a node and browser API client for the (undocumented) TDAmeritrade WebSoc
 
 - Node 16+
 
-Create a `.env` file and set your TDAmeritrade oauth access token:
+Create a `.env` file and set your TD Ameritrade oauth access token:
 
 ```
+CLIENT_ID=your-client-id
 ACCESS_TOKEN=your-access-token
+REFRESH_TOKEN=your-refresh-token
+TOKEN_EXPIRES_AT=your-token-expires-at
 ```
 
 # Building for Node
 
 ```
-
 yarn install
 yarn build
-
 ```
 
 # Running the example app
 
 ```
-
 cd example
 yarn install
 yarn link tda-wsjson-client
 yarn start
-
 ```
 
 # Supported APIs
@@ -52,12 +51,13 @@ yarn start
 - ✅ Option chain quotes
 - ✅ Option quotes
 - ✅ Order events
+- ✅ Market depth
 
 # Not yet implemented
 
 - ❌ Instrument order events
 - ❌ Alert subscription
-- ❌ And many others 😀
+- ❌ And many more 😀
 
 # Usage
 
