@@ -48,7 +48,7 @@ export type RawLoginResponse = {
 
 export type LoginResponse = {
   service: "login";
-  result: boolean;
+  successful: boolean;
 };
 
 export default class LoginMessageHandler
@@ -57,7 +57,8 @@ export default class LoginMessageHandler
   parseResponse(message: RawPayloadResponse): LoginResponse {
     const [{ body }] = message.payload;
     const { authenticationStatus } = body as RawLoginResponseBody;
-    return { result: authenticationStatus === "OK", service: "login" };
+    const successful = authenticationStatus === "OK";
+    return { successful, service: "login" };
   }
 
   buildRequest(accessToken: string): RawPayloadRequest {
