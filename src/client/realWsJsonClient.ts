@@ -320,9 +320,9 @@ export default class RealWsJsonClient implements WsJsonClient {
     reject: (reason?: string) => void
   ) {
     const handler = findByTypeOrThrow(messageHandlers, LoginMessageHandler);
-    const successful = handler.parseResponse(message as RawPayloadResponse);
+    const loginResponse = handler.parseResponse(message as RawPayloadResponse);
     const [{ body }] = message.payload;
-    if (successful) {
+    if (loginResponse.successful) {
       this.state = ChannelState.CONNECTED;
       resolve(body);
     } else {

@@ -1,11 +1,12 @@
-import WsJsonClientAuth from "./client/wsJsonClientAuth";
+import WsJsonClientAuth from "../client/wsJsonClientAuth";
 import "dotenv/config";
 import debug from "debug";
-import { CreateAlertRequestParams } from "./client/services/createAlertMessageHandler";
-import { OptionQuotesRequestParams } from "./client/services/optionQuotesMessageHandler";
+import { CreateAlertRequestParams } from "../client/services/createAlertMessageHandler";
+import { OptionQuotesRequestParams } from "../client/services/optionQuotesMessageHandler";
 import fetch from "node-fetch";
-import { WsJsonClient } from "./client/wsJsonClient";
-import RealWsJsonClient from "./client/realWsJsonClient";
+import { WsJsonClient } from "../client/wsJsonClient";
+import RealWsJsonClient from "../client/realWsJsonClient";
+import MarketDepthStateUpdater from "./marketDepthStateUpdater";
 
 const logger = debug("testapp");
 
@@ -138,9 +139,12 @@ class TestApp {
   }
 
   async marketDepth(symbol: string) {
+    const stateUpdater = new MarketDepthStateUpdater();
     logger(` --- marketDepth() requesting market depth for ${symbol} ---`);
-    for await (const quote of this.client.marketDepth(symbol)) {
-      logger("marketDepth() %O", quote);
+    for await (const message of this.client.marketDepth(symbol)) {
+      stateUpdater.handleMessage(message);
+      logger("ask quotes: %O", stateUpdater.askQuotes);
+      logger("bid quotes: %O", stateUpdater.bidQuotes);
     }
   }
 }
