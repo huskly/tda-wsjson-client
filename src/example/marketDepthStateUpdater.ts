@@ -1,6 +1,8 @@
 import { MarketDepthResponse } from "../client/services/marketDepthMessageHandler";
 
-type MarketDepthQuote = { [name: string]: { price: number; size: number } };
+type MarketDepthQuote = {
+  [name: string]: { price?: number; size?: number; name?: string };
+};
 
 export default class MarketDepthStateUpdater {
   readonly askQuotes: MarketDepthQuote = {};
@@ -10,18 +12,24 @@ export default class MarketDepthStateUpdater {
 
   handleMessage(message: MarketDepthResponse) {
     const { askQuotes, bidQuotes } = message;
-    askQuotes.forEach(({ name, price, size }) => {
-      if (price) {
-        this.askQuotes[name] = { price, size };
+    askQuotes.forEach(({ index, name, price, size }, i) => {
+      if (index !== undefined) {
+        const quote = this.askQuotes[index];
+        if (price !== undefined) quote.price = price;
+        if (name !== undefined) quote.name = name;
+        if (size !== undefined) quote.size = size;
       } else {
-        this.askQuotes[name].size = size;
+        this.askQuotes[i] = { price, size, name };
       }
     });
-    bidQuotes.forEach(({ name, price, size }) => {
-      if (price) {
-        this.bidQuotes[name] = { price, size };
+    bidQuotes.forEach(({ index, name, price, size }, i) => {
+      if (index !== undefined) {
+        const quote = this.bidQuotes[index];
+        if (price !== undefined) quote.price = price;
+        if (name !== undefined) quote.name = name;
+        if (size !== undefined) quote.size = size;
       } else {
-        this.bidQuotes[name].size = size;
+        this.bidQuotes[i] = { price, size, name };
       }
     });
   }

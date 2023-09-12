@@ -142,6 +142,7 @@ class TestApp {
     const stateUpdater = new MarketDepthStateUpdater();
     logger(` --- marketDepth() requesting market depth for ${symbol} ---`);
     for await (const message of this.client.marketDepth(symbol)) {
+      logger("message %O", message);
       stateUpdater.handleMessage(message);
       logger("ask quotes: %O", stateUpdater.askQuotes);
       logger("bid quotes: %O", stateUpdater.bidQuotes);

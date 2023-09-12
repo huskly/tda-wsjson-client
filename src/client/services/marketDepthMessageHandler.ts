@@ -5,10 +5,13 @@ import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
 import { ApiService } from "./apiService";
 
 type MarketDepthQuote = {
-  name: string;
+  name?: string;
   price?: number;
-  size: number;
+  size?: number;
+  index?: number;
 };
+
+type MarketDepthPatch = { op: string; path: string; value?: any };
 
 export type RawPayloadMarketDepthResponse = {
   askQuotes: MarketDepthQuote[];
@@ -53,7 +56,7 @@ export default class MarketDepthMessageHandler
   }
 
   private parsePatchResponse(
-    patches?: { op: string; path: string; value?: any }[]
+    patches?: MarketDepthPatch[]
   ): MarketDepthResponse | null {
     const patch = patches?.[0];
     if (patch?.op === "replace" && patch?.path === "") {
@@ -66,17 +69,12 @@ export default class MarketDepthMessageHandler
     const askQuotes: MarketDepthQuote[] = [];
     patches
       ?.filter(({ op }) => op === "replace")
-      .forEach(({ path, value }) => {
-        const pathParts = path.split("/");
-        const name = pathParts[2];
-        const prop = pathParts[3];
-        if (prop === "size") {
-          const size = value;
-          if (path.includes("bidQuotes")) {
-            bidQuotes.push({ name, size });
-          } else if (path.includes("askQuotes")) {
-            askQuotes.push({ name, size });
-          }
+      .forEach((patch) => {
+        const quote = parseQuote(patch);
+        if (patch.path.includes("bidQuotes")) {
+          bidQuotes.push(quote);
+        } else if (patch.path.includes("askQuotes")) {
+          askQuotes.push(quote);
         } else {
           console.warn("Don't know how to handle market depth patch", patch);
         }
@@ -85,4 +83,30 @@ export default class MarketDepthMessageHandler
   }
 
   service: ApiService = "market_depth";
+}
+
+function parseQuote(patch: MarketDepthPatch): MarketDepthQuote {
+  const { path, value } = patch;
+  const pathParts = path.split("/");
+  const index = +pathParts[2];
+  const prop = pathParts[3];
+  const quote: MarketDepthQuote = { index };
+  switch (prop) {
+    case "size": {
+      quote.size = value;
+      break;
+    }
+    case "price": {
+      quote.price = value;
+      break;
+    }
+    case "name": {
+      quote.name = value;
+      break;
+    }
+    default:
+      console.warn("Don't know how to handle market depth patch", patch);
+      break;
+  }
+  return quote;
 }
