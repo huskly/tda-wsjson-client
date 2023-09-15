@@ -31,6 +31,7 @@ import {
   LookupAlertsResponse,
 } from "./types/alertTypes";
 import { MarketDepthResponse } from "./services/marketDepthMessageHandler";
+import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler";
 
 export default class MockWsJsonClient implements WsJsonClient {
   async *accountPositions(_: string): AsyncIterable<PositionsResponse> {
@@ -200,5 +201,17 @@ export default class MockWsJsonClient implements WsJsonClient {
       askQuotes: [],
       service: "market_depth",
     };
+  }
+
+  watchlist(watchlistId: number): Promise<GetWatchlistResponse> {
+    return Promise.resolve({
+      service: "watchlist/get",
+      watchlist: {
+        id: watchlistId,
+        name: "foo",
+        type: "STATIC",
+        symbols: ["AAPL", "GOOG", "MSFT"],
+      },
+    });
   }
 }

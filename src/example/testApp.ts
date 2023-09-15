@@ -148,6 +148,12 @@ class TestApp {
       logger("bid quotes: %O", stateUpdater.bidQuotes);
     }
   }
+
+  async getWatchlist(watchlistId: number) {
+    logger(" --- getWatchlist() get watchlist ---");
+    const watchlist = await this.client.watchlist(watchlistId);
+    logger("getWatchlist() %O", watchlist);
+  }
 }
 
 async function run() {
@@ -170,7 +176,8 @@ async function run() {
   );
   const { client } = await authClient.authenticateWithRetry(token);
   const app = new TestApp(client);
-  await app.marketDepth("/NQ");
+  await app.getWatchlist(-3);
+  await app.getWatchlist(126216147);
 }
 
 run().catch(console.error);
