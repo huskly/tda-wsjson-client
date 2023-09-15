@@ -30,6 +30,7 @@ import {
   LookupAlertsResponse,
 } from "./types/alertTypes";
 import { MarketDepthResponse } from "./services/marketDepthMessageHandler";
+import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler";
 
 export interface WsJsonClient {
   authenticate(): Promise<RawLoginResponseBody | null>;
@@ -83,4 +84,6 @@ export interface WsJsonClient {
   disconnect(): void;
 
   marketDepth(symbol: string): AsyncIterable<MarketDepthResponse>;
+
+  watchlist(watchlistId: number): Promise<GetWatchlistResponse>;
 }

@@ -75,6 +75,9 @@ import {
   CreateAlertResponse,
   LookupAlertsResponse,
 } from "./types/alertTypes";
+import GetWatchlistMessageHandler, {
+  GetWatchlistResponse,
+} from "./services/getWatchlistMessageHandler";
 
 export const CONNECTION_REQUEST_MESSAGE = {
   ver: "27.*.*",
@@ -111,6 +114,7 @@ const messageHandlers: WebSocketApiMessageHandler<never, any>[] = [
   new LoginMessageHandler(),
   new SubmitOrderMessageHandler(),
   new MarketDepthMessageHandler(),
+  new GetWatchlistMessageHandler(),
 ];
 
 export default class RealWsJsonClient implements WsJsonClient {
@@ -280,6 +284,13 @@ export default class RealWsJsonClient implements WsJsonClient {
 
   cancelOrder(orderId: number): Promise<CancelOrderResponse> {
     return this.dispatchHandler(CancelOrderMessageHandler, orderId).promise();
+  }
+
+  watchlist(watchlistId: number): Promise<GetWatchlistResponse> {
+    return this.dispatchHandler(
+      GetWatchlistMessageHandler,
+      watchlistId
+    ).promise();
   }
 
   userProperties(): Promise<UserPropertiesResponse> {

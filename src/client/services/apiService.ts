@@ -17,4 +17,5 @@ export type ApiService =
   | "alerts/lookup"
   | "optionSeries/quotes"
   | "market_depth"
+  | "watchlist/get"
   | "fake"; // testing only
