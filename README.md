@@ -52,6 +52,7 @@ yarn start
 - ✅ Option quotes
 - ✅ Order events
 - ✅ Market depth
+- ✅ Get watchlist
 
 # Not yet implemented
 
