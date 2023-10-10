@@ -125,7 +125,23 @@ export default class RealWsJsonClient implements WsJsonClient {
   constructor(
     private readonly accessToken: string,
     private readonly socket = new WebSocket(
-      "wss://services.thinkorswim.com/Services/WsJson"
+      "wss://services.thinkorswim.com/Services/WsJson",
+      {
+        headers: {
+          Pragma: "no-cache",
+          Origin: "https://trade.thinkorswim.com",
+          "Accept-Language": "en-US,en;q=0.9,pt-BR;q=0.8,pt;q=0.7,es;q=0.6",
+          "Sec-WebSocket-Key": "MlZmMN1jaOpKsmb/eJSHCg==",
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
+          Upgrade: "websocket",
+          "Cache-Control": "no-cache",
+          Connection: "Upgrade",
+          "Sec-WebSocket-Version": "13",
+          "Sec-WebSocket-Extensions":
+            "permessage-deflate; client_max_window_bits",
+        },
+      }
     ),
     private readonly responseParser = new ResponseParser(
       messageHandlers as WebSocketApiMessageHandler<any, any>[]
