@@ -176,8 +176,7 @@ async function run() {
   );
   const { client } = await authClient.authenticateWithRetry(token);
   const app = new TestApp(client);
-  await app.getWatchlist(-3);
-  await app.getWatchlist(126216147);
+  await app.optionChainQuotes("ABNB");
 }
 
 run().catch(console.error);

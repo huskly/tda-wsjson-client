@@ -172,7 +172,8 @@ export default class RealWsJsonClient implements WsJsonClient {
         this.sendMessage(CONNECTION_REQUEST_MESSAGE);
       }
       socket.onopen = () => this.sendMessage(CONNECTION_REQUEST_MESSAGE);
-      socket.onclose = () => debugLog("connection closed");
+      socket.onclose = (event) =>
+        debugLog("connection closed: ", event?.reason);
       socket.onmessage = ({ data }) =>
         this.onMessage(data as string, resolve, reject);
     });
