@@ -5,7 +5,7 @@ import {
   RawPayloadResponse,
   WsJsonRawMessage,
 } from "./tdaWsJsonTypes";
-import { Constructor, debugLog, findByTypeOrThrow } from "./util";
+import { Constructor, debugLog, findByTypeOrThrow, throwError } from "./util";
 import MulticastIterator from "obgen/multicastIterator";
 import BufferedIterator from "obgen/bufferedIterator";
 import { isConnectionResponse, isLoginResponse } from "./messageTypeHelpers";
@@ -92,7 +92,7 @@ export enum ChannelState {
   ERROR,
 }
 
-const logger = debug("ws");
+const logger = debug("realWsJsonClient");
 
 const messageHandlers: WebSocketApiMessageHandler<never, any>[] = [
   new CancelAlertMessageHandler(),
@@ -121,9 +121,9 @@ export default class RealWsJsonClient implements WsJsonClient {
   private buffer = new BufferedIterator<ParsedWebSocketResponse>();
   private iterator = new MulticastIterator(this.buffer);
   private state = ChannelState.DISCONNECTED;
+  private accessToken?: string;
 
   constructor(
-    private readonly accessToken: string,
     private readonly socket = new WebSocket(
       "wss://services.thinkorswim.com/Services/WsJson",
       {
@@ -148,7 +148,10 @@ export default class RealWsJsonClient implements WsJsonClient {
     )
   ) {}
 
-  async authenticate(): Promise<RawLoginResponseBody | null> {
+  async authenticate(
+    accessToken: string
+  ): Promise<RawLoginResponseBody | null> {
+    this.accessToken = accessToken;
     const { state } = this;
     switch (state) {
       case ChannelState.DISCONNECTED:
@@ -189,6 +192,9 @@ export default class RealWsJsonClient implements WsJsonClient {
     logger("⬅️\treceived %O", message);
     if (isConnectionResponse(message)) {
       const handler = findByTypeOrThrow(messageHandlers, LoginMessageHandler);
+      if (!accessToken) {
+        throwError("access token is required, cannot authenticate");
+      }
       this.sendMessage(handler.buildRequest(accessToken));
     } else if (isLoginResponse(message)) {
       this.handleLoginResponse(message, resolve, reject);

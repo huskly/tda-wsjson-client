@@ -33,7 +33,7 @@ import { MarketDepthResponse } from "./services/marketDepthMessageHandler";
 import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler";
 
 export interface WsJsonClient {
-  authenticate(): Promise<RawLoginResponseBody | null>;
+  authenticate(accessToken: string): Promise<RawLoginResponseBody | null>;
 
   isConnected(): boolean;
 
