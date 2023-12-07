@@ -42,8 +42,18 @@ import { ChannelState } from "./realWsJsonClient";
 
 const logger = debug("wsClientProxy");
 
-type ProxiedResponse = { request: string; args: any[]; response: unknown };
+export const ALL_REQUESTS = ["authenticate", "optionChainQuotes"] as const;
+type RequestType = typeof ALL_REQUESTS;
+type Request = RequestType[number];
 
+export type ProxiedRequest = {
+  request: Request;
+  args: any[];
+};
+
+export type ProxiedResponse = ProxiedRequest & { response: unknown };
+
+// A WsJsonClient proxy implementation that proxies requests to a WebSocket server using the provided `proxyUrl`.
 export default class WsJsonClientProxy implements WsJsonClient {
   private state = ChannelState.DISCONNECTED;
   private buffer = new BufferedIterator<ProxiedResponse>();
@@ -92,17 +102,9 @@ export default class WsJsonClientProxy implements WsJsonClient {
   private doAuthenticate(
     accessToken: string
   ): Promise<RawLoginResponseBody | null> {
-    const msg = JSON.stringify({
-      request: "authenticate",
-      args: [accessToken],
-    });
-    this.ensureConnected();
-    this.socket!.send(msg);
+    this.sendMessage({ request: "authenticate", args: [accessToken] });
     return deferredWrap(() => this.iterator)
-      .filter(({ request }) => {
-        logger("filtering deferredWrap %s", request);
-        return request === "authenticate";
-      })
+      .filter(({ request }) => request === "authenticate")
       .map(({ response }) => response)
       .promise() as Promise<RawLoginResponseBody | null>;
   }
@@ -158,12 +160,7 @@ export default class WsJsonClientProxy implements WsJsonClient {
   }
 
   optionChainQuotes(symbol: string): AsyncIterable<OptionSeriesQuotesResponse> {
-    const msg = JSON.stringify({
-      request: "optionChainQuotes",
-      args: [symbol],
-    });
-    this.ensureConnected();
-    this.socket!.send(msg);
+    this.sendMessage({ request: "optionChainQuotes", args: [symbol] });
     return deferredWrap(() => this.iterator)
       .filter(({ request }) => request === "optionChainQuotes")
       .map(({ response }) => response)
@@ -206,5 +203,10 @@ export default class WsJsonClientProxy implements WsJsonClient {
 
   workingOrders(_: string): AsyncIterable<OrderEventsResponse> {
     throwError("not implemented");
+  }
+
+  private sendMessage(request: ProxiedRequest) {
+    this.ensureConnected();
+    this.socket!.send(JSON.stringify(request));
   }
 }

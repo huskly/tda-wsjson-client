@@ -4,6 +4,7 @@ import { IncomingMessage, ServerResponse } from "http";
 import { readFileSync } from "fs";
 import { WsJsonClient } from "../client/wsJsonClient";
 import debug from "debug";
+import { ProxiedRequest } from "../client/wsJsonClientProxy";
 
 const logger = debug("wsServerProxy");
 
@@ -33,15 +34,20 @@ export default class WsJsonServerProxy {
     wss.on("connection", (ws) => {
       ws.on("error", console.error);
       ws.on("message", async (data: string) => {
-        const msg = JSON.parse(data);
+        const msg = JSON.parse(data) as ProxiedRequest;
         logger("⬅️\treceived %O", msg);
         const { request, args } = msg;
-        if (request === "authenticate") {
-          const authResult = await client.authenticate(args[0]);
-          ws.send(JSON.stringify({ ...msg, response: authResult }));
-        } else if (request === "optionChainQuotes") {
-          for await (const quote of client.optionChainQuotes(args[0])) {
-            ws.send(JSON.stringify({ ...msg, response: quote }));
+        switch (request) {
+          case "authenticate": {
+            const authResult = await client.authenticate(args[0]);
+            ws.send(JSON.stringify({ ...msg, response: authResult }));
+            break;
+          }
+          case "optionChainQuotes": {
+            for await (const quote of client.optionChainQuotes(args[0])) {
+              ws.send(JSON.stringify({ ...msg, response: quote }));
+            }
+            break;
           }
         }
       });
