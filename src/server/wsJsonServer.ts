@@ -10,9 +10,11 @@ import { Disposable } from "./disposable";
 
 const logger = debug("wsJsonServer");
 
-// A WebSocket server that proxies requests to a WsJsonClient client. Incoming messages must be in JSON format and have
-// a "request" property that matches a method on the WsJsonClient interface and an "args" property that is an array of
-// arguments to pass to the method. The response is then forwarded back to the client as a JSON string.
+/**
+ * A WebSocket server that proxies requests to a WsJsonClient client. Incoming messages must be in JSON format and have
+ * a "request" property that matches a method on the WsJsonClient interface and an "args" property that is an array of
+ * arguments to pass to the method. The response is then forwarded back to the client as a JSON string.
+ */
 export default class WsJsonServer implements Disposable {
   private readonly server: Server<
     typeof IncomingMessage,
@@ -22,7 +24,7 @@ export default class WsJsonServer implements Disposable {
   private proxies: WsJsonServerProxy[] = [];
 
   constructor(
-    private readonly clientFactory: () => WsJsonClient,
+    private readonly wsJsonClientFactory: () => WsJsonClient,
     private readonly port = 8080
   ) {
     this.server = createServer({
@@ -33,10 +35,10 @@ export default class WsJsonServer implements Disposable {
   }
 
   start() {
-    const { wss, server, port, clientFactory, proxies } = this;
+    const { wss, server, port, wsJsonClientFactory, proxies } = this;
     wss.on("connection", (ws) => {
       logger("client connected");
-      proxies.push(new WsJsonServerProxy(ws, clientFactory));
+      proxies.push(new WsJsonServerProxy(ws, wsJsonClientFactory));
     });
     server.listen(port);
   }

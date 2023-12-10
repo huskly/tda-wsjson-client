@@ -6,21 +6,27 @@ import { Disposable } from "./disposable";
 
 const logger = debug("wsJsonServerProxy");
 
+/**
+ * Sits in between two WebSocket connections and proxies messages between them. The client `downstream` connection is
+ * expected to send ProxiedRequest JSON messages with a "request" property that matches a method on the WsJsonClient interface and an
+ * "args" property that is an array of arguments to pass to the method. The response from the `upstream`
+ * connection is then forwarded back to the `downstream` as a JSON string.
+ */
 export default class WsJsonServerProxy implements Disposable {
-  private client?: WsJsonClient;
+  private upstream?: WsJsonClient;
 
   constructor(
-    private readonly ws: ws,
-    private readonly clientFactory: () => WsJsonClient
+    private readonly downstream: ws,
+    private readonly wsJsonClientFactory: () => WsJsonClient
   ) {
-    ws.on("error", console.error);
-    ws.on("message", (data: string) => this.onClientMessage(data));
+    downstream.on("error", console.error);
+    downstream.on("message", (data: string) => this.onClientMessage(data));
     logger("connected and ready to accept messages");
   }
 
   disconnect() {
-    this.client?.disconnect();
-    this.ws.close();
+    this.upstream?.disconnect();
+    this.downstream.close();
   }
 
   private onClientMessage = async (data: string) => {
@@ -29,9 +35,9 @@ export default class WsJsonServerProxy implements Disposable {
     const { request, args } = msg;
     switch (request) {
       case "authenticate": {
-        this.client = this.clientFactory();
+        this.upstream = this.wsJsonClientFactory();
         try {
-          const authResult = await this.client.authenticate(args![0]);
+          const authResult = await this.upstream.authenticate(args![0]);
           this.proxyResponse({ ...msg, response: authResult });
         } catch (e) {
           this.proxyResponse({ ...msg, response: e });
@@ -39,7 +45,7 @@ export default class WsJsonServerProxy implements Disposable {
         break;
       }
       case "optionChainQuotes": {
-        for await (const quote of this.client!.optionChainQuotes(args![0])) {
+        for await (const quote of this.upstream!.optionChainQuotes(args![0])) {
           this.proxyResponse({ ...msg, response: quote });
         }
         break;
@@ -48,6 +54,6 @@ export default class WsJsonServerProxy implements Disposable {
   };
 
   private proxyResponse(msg: ProxiedResponse) {
-    this.ws.send(JSON.stringify(msg));
+    this.downstream.send(JSON.stringify(msg));
   }
 }
