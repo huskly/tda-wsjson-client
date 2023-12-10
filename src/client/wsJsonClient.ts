@@ -31,8 +31,9 @@ import {
 } from "./types/alertTypes";
 import { MarketDepthResponse } from "./services/marketDepthMessageHandler";
 import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler";
+import { Disposable } from "../server/disposable";
 
-export interface WsJsonClient {
+export interface WsJsonClient extends Disposable {
   authenticate(accessToken: string): Promise<RawLoginResponseBody | null>;
 
   isConnected(): boolean;
@@ -80,8 +81,6 @@ export interface WsJsonClient {
   cancelOrder(orderId: number): Promise<CancelOrderResponse>;
 
   userProperties(): Promise<UserPropertiesResponse>;
-
-  disconnect(): void;
 
   marketDepth(symbol: string): AsyncIterable<MarketDepthResponse>;
 

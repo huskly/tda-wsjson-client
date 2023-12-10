@@ -6,13 +6,14 @@ import { WsJsonClient } from "../client/wsJsonClient";
 import debug from "debug";
 import WsJsonServerProxy from "./wsJsonServerProxy";
 import { isEmpty } from "lodash";
+import { Disposable } from "./disposable";
 
 const logger = debug("wsJsonServer");
 
 // A WebSocket server that proxies requests to a WsJsonClient client. Incoming messages must be in JSON format and have
 // a "request" property that matches a method on the WsJsonClient interface and an "args" property that is an array of
 // arguments to pass to the method. The response is then forwarded back to the client as a JSON string.
-export default class WsJsonServer {
+export default class WsJsonServer implements Disposable {
   private readonly server: Server<
     typeof IncomingMessage,
     typeof ServerResponse
@@ -40,7 +41,7 @@ export default class WsJsonServer {
     server.listen(port);
   }
 
-  stop() {
+  disconnect() {
     const { proxies } = this;
     while (!isEmpty(proxies)) {
       proxies.pop()?.disconnect();

@@ -2,10 +2,11 @@ import ws from "ws";
 import debug from "debug";
 import { ProxiedRequest, ProxiedResponse } from "../client/wsJsonClientProxy";
 import { WsJsonClient } from "../client/wsJsonClient";
+import { Disposable } from "./disposable";
 
 const logger = debug("wsJsonServerProxy");
 
-export default class WsJsonServerProxy {
+export default class WsJsonServerProxy implements Disposable {
   private client?: WsJsonClient;
 
   constructor(
@@ -18,6 +19,7 @@ export default class WsJsonServerProxy {
   }
 
   disconnect() {
+    this.client?.disconnect();
     this.ws.close();
   }
 
