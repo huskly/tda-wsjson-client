@@ -5,8 +5,8 @@ import { CreateAlertRequestParams } from "../client/services/createAlertMessageH
 import { OptionQuotesRequestParams } from "../client/services/optionQuotesMessageHandler";
 import fetch from "node-fetch";
 import { WsJsonClient } from "../client/wsJsonClient";
-import RealWsJsonClient from "../client/realWsJsonClient";
 import MarketDepthStateUpdater from "./marketDepthStateUpdater";
+import WsJsonClientProxy from "../client/wsJsonClientProxy";
 
 const logger = debug("testapp");
 
@@ -168,7 +168,11 @@ async function run() {
   }
   const token = { accessToken, refreshToken, expiresAt: +expiresAt };
   const authClient = new WsJsonClientAuth(
-    (accessToken) => new RealWsJsonClient(accessToken),
+    () =>
+      new WsJsonClientProxy("wss://localhost:8080", {
+        rejectUnauthorized: false,
+      }),
+    // new RealWsJsonClient(),
     clientId,
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

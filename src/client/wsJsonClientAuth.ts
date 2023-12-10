@@ -1,11 +1,14 @@
 import { OAuth2Client, OAuth2Token } from "@badgateway/oauth2-client";
 import { WsJsonClient } from "./wsJsonClient";
+import debug from "debug";
+
+const logger = debug("wsJsonClientAuth");
 
 export default class WsJsonClientAuth {
   private readonly oauthClient: OAuth2Client;
 
   constructor(
-    private readonly wsJsonClientFactory: (accessToken: string) => WsJsonClient,
+    private readonly wsJsonClientFactory: () => WsJsonClient,
     clientId: string,
     originalFetch: typeof fetch
   ) {
@@ -22,9 +25,9 @@ export default class WsJsonClientAuth {
   }
 
   async authenticateWithRetry(token: OAuth2Token): Promise<AuthResult> {
-    const client = this.wsJsonClientFactory(token.accessToken);
+    const client = this.wsJsonClientFactory();
     try {
-      await client.authenticate();
+      await client.authenticate(token.accessToken);
       return { token, client };
     } catch (e) {
       return await this.refreshToken(token);
@@ -32,11 +35,12 @@ export default class WsJsonClientAuth {
   }
 
   async refreshToken(token: OAuth2Token): Promise<AuthResult> {
+    logger("attempting token refresh");
     const { oauthClient } = this;
     try {
       const newToken = await oauthClient.refreshToken(token);
-      const client = this.wsJsonClientFactory(newToken.accessToken);
-      await client.authenticate();
+      const client = this.wsJsonClientFactory();
+      await client.authenticate(newToken.accessToken);
       // oauthClient.refreshToken() doesn't return the refresh token so we need to re-add it
       const refreshedToken = { ...newToken, refreshToken: token.refreshToken };
       return { token: refreshedToken, client };
