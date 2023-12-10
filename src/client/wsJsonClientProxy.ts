@@ -43,13 +43,17 @@ import { isString } from "lodash";
 
 const logger = debug("wsClientProxy");
 
-export const ALL_REQUESTS = ["authenticate", "optionChainQuotes"] as const;
+export const ALL_REQUESTS = [
+  "authenticate",
+  "optionChainQuotes",
+  "disconnect",
+] as const;
 type RequestType = typeof ALL_REQUESTS;
 type Request = RequestType[number];
 
 export type ProxiedRequest = {
   request: Request;
-  args: any[];
+  args?: any[];
 };
 
 export type ProxiedResponse = ProxiedRequest & { response: unknown };
@@ -133,7 +137,9 @@ export default class WsJsonClientProxy implements WsJsonClient {
     throwError("not implemented");
   }
 
-  disconnect(): void {}
+  disconnect(): void {
+    this.sendMessage({ request: "disconnect" });
+  }
 
   ensureConnected(): void {
     if (this.state !== ChannelState.CONNECTED) {
