@@ -20,17 +20,8 @@
     "allowJs": true,
     "moduleResolution": "nodenext",
     "module": "nodenext",
-    "lib": [
-      "es2020",
-      "dom"
-    ]
+    "lib": ["es2020", "dom"]
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "./node_modules",
-    "dist",
-    "src/test/**/*"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["./node_modules", "dist", "src/test/**/*"]
 }
