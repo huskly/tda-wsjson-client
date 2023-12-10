@@ -19,9 +19,18 @@
     "strict": true,
     "allowJs": true,
     "moduleResolution": "nodenext",
-    "module": "commonjs",
-    "lib": ["es2020", "dom"]
+    "module": "nodenext",
+    "lib": [
+      "es2020",
+      "dom"
+    ]
   },
-  "include": ["src/**/*"],
-  "exclude": ["./node_modules", "dist", "src/test/**/*"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "./node_modules",
+    "dist",
+    "src/test/**/*"
+  ]
 }
