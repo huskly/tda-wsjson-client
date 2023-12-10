@@ -11,15 +11,16 @@ const logger = debug("wsServerProxy");
 // A WebSocket server that proxies requests to a WsJsonClient client. Incoming messages must be in JSON format and have
 // a "request" property that matches a method on the WsJsonClient interface and an "args" property that is an array of
 // arguments to pass to the method. The response is then forwarded back to the client as a JSON string.
-export default class WsJsonServerProxy {
+export default class WsJsonServer {
   private readonly server: Server<
     typeof IncomingMessage,
     typeof ServerResponse
   >;
   private readonly wss: ws.Server<typeof ws, typeof IncomingMessage>;
+  private client?: WsJsonClient;
 
   constructor(
-    private readonly client: WsJsonClient,
+    private readonly clientFactory: () => WsJsonClient,
     private readonly port = 8080
   ) {
     this.server = createServer({
@@ -30,7 +31,7 @@ export default class WsJsonServerProxy {
   }
 
   start() {
-    const { wss, server, client } = this;
+    const { wss, server, clientFactory } = this;
     wss.on("connection", (ws) => {
       ws.on("error", console.error);
       ws.on("message", async (data: string) => {
@@ -39,12 +40,17 @@ export default class WsJsonServerProxy {
         const { request, args } = msg;
         switch (request) {
           case "authenticate": {
-            const authResult = await client.authenticate(args[0]);
-            ws.send(JSON.stringify({ ...msg, response: authResult }));
+            this.client = clientFactory();
+            try {
+              const authResult = await this.client.authenticate(args[0]);
+              ws.send(JSON.stringify({ ...msg, response: authResult }));
+            } catch (e) {
+              ws.send(JSON.stringify({ ...msg, response: e }));
+            }
             break;
           }
           case "optionChainQuotes": {
-            for await (const quote of client.optionChainQuotes(args[0])) {
+            for await (const quote of this.client!.optionChainQuotes(args[0])) {
               ws.send(JSON.stringify({ ...msg, response: quote }));
             }
             break;

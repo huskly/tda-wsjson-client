@@ -1,5 +1,8 @@
 import { OAuth2Client, OAuth2Token } from "@badgateway/oauth2-client";
 import { WsJsonClient } from "./wsJsonClient";
+import debug from "debug";
+
+const logger = debug("wsJsonClientAuth");
 
 export default class WsJsonClientAuth {
   private readonly oauthClient: OAuth2Client;
@@ -32,6 +35,7 @@ export default class WsJsonClientAuth {
   }
 
   async refreshToken(token: OAuth2Token): Promise<AuthResult> {
+    logger("attempting token refresh");
     const { oauthClient } = this;
     try {
       const newToken = await oauthClient.refreshToken(token);

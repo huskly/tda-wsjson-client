@@ -1,5 +1,5 @@
-import WsJsonServerProxy from "../server/wsJsonServerProxy";
+import WsJsonServer from "../server/wsJsonServer";
 import RealWsJsonClient from "../client/realWsJsonClient";
 
-const proxy = new WsJsonServerProxy(new RealWsJsonClient());
+const proxy = new WsJsonServer(() => new RealWsJsonClient());
 proxy.start();

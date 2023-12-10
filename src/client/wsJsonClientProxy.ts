@@ -39,6 +39,7 @@ import { deferredWrap } from "obgen";
 import { throwError } from "./util";
 import debug from "debug";
 import { ChannelState } from "./realWsJsonClient";
+import { isString } from "lodash";
 
 const logger = debug("wsClientProxy");
 
@@ -84,7 +85,14 @@ export default class WsJsonClientProxy implements WsJsonClient {
       socket.onopen = () => {
         logger("proxy ws connection opened");
         this.state = ChannelState.CONNECTED;
-        resolve(this.doAuthenticate(accessToken));
+        this.doAuthenticate(accessToken).then((res) => {
+          logger("proxy ws authentication response: %O", res);
+          if (isString(res) && res.includes("NOT_AUTHORIZED")) {
+            reject(res);
+          } else {
+            resolve(res);
+          }
+        });
       };
       socket.onclose = (event) => {
         this.state = ChannelState.DISCONNECTED;
