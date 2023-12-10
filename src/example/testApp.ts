@@ -168,11 +168,7 @@ async function run() {
   }
   const token = { accessToken, refreshToken, expiresAt: +expiresAt };
   const authClient = new WsJsonClientAuth(
-    () =>
-      new WsJsonClientProxy("wss://localhost:8080", {
-        rejectUnauthorized: false,
-      }),
-    // new RealWsJsonClient(),
+    () => new WsJsonClientProxy("ws://localhost:8080"), // or new RealWsJsonClient(),
     clientId,
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
