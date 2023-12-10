@@ -362,6 +362,7 @@ export default class RealWsJsonClient implements WsJsonClient {
     } else {
       this.state = ChannelState.ERROR;
       reject(`Login failed: ${body.message}`);
+      this.disconnect();
     }
   }
 

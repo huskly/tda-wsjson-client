@@ -4,7 +4,7 @@ import { IncomingMessage, ServerResponse } from "http";
 import { readFileSync } from "fs";
 import { WsJsonClient } from "../client/wsJsonClient";
 import debug from "debug";
-import { ProxiedRequest } from "../client/wsJsonClientProxy";
+import { ProxiedRequest, ProxiedResponse } from "../client/wsJsonClientProxy";
 
 const logger = debug("wsServerProxy");
 
@@ -31,35 +31,42 @@ export default class WsJsonServer {
   }
 
   start() {
-    const { wss, server, clientFactory } = this;
-    wss.on("connection", (ws) => {
-      ws.on("error", console.error);
-      ws.on("message", async (data: string) => {
-        const msg = JSON.parse(data) as ProxiedRequest;
-        logger("⬅️\treceived %O", msg);
-        const { request, args } = msg;
-        switch (request) {
-          case "authenticate": {
-            this.client = clientFactory();
-            try {
-              const authResult = await this.client.authenticate(args[0]);
-              ws.send(JSON.stringify({ ...msg, response: authResult }));
-            } catch (e) {
-              ws.send(JSON.stringify({ ...msg, response: e }));
-            }
-            break;
-          }
-          case "optionChainQuotes": {
-            for await (const quote of this.client!.optionChainQuotes(args[0])) {
-              ws.send(JSON.stringify({ ...msg, response: quote }));
-            }
-            break;
-          }
-        }
-      });
-      logger("connected and ready to accept messages");
-    });
+    const { wss, server, port } = this;
+    wss.on("connection", (ws) => this.onClientConnected(ws));
+    server.listen(port);
+  }
 
-    server.listen(this.port);
+  private onClientConnected(ws: ws) {
+    ws.on("error", console.error);
+    ws.on("message", (data: string) => this.onClientMessage(ws, data));
+    logger("connected and ready to accept messages");
+  }
+
+  private onClientMessage = async (ws: ws, data: string) => {
+    const msg = JSON.parse(data) as ProxiedRequest;
+    logger("⬅️\treceived %O", msg);
+    const { request, args } = msg;
+    switch (request) {
+      case "authenticate": {
+        this.client = this.clientFactory();
+        try {
+          const authResult = await this.client.authenticate(args[0]);
+          this.proxyResponse(ws, { ...msg, response: authResult });
+        } catch (e) {
+          this.proxyResponse(ws, { ...msg, response: e });
+        }
+        break;
+      }
+      case "optionChainQuotes": {
+        for await (const quote of this.client!.optionChainQuotes(args[0])) {
+          this.proxyResponse(ws, { ...msg, response: quote });
+        }
+        break;
+      }
+    }
+  };
+
+  private proxyResponse(ws: ws, msg: ProxiedResponse) {
+    ws.send(JSON.stringify(msg));
   }
 }
