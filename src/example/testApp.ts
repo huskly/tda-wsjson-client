@@ -176,7 +176,11 @@ async function run() {
   );
   const { client } = await authClient.authenticateWithRetry(token);
   const app = new TestApp(client);
-  await app.optionChainQuotes("ABNB");
+  await Promise.all([
+    app.quotes(["ABNB", "UBER"]),
+    app.accountPositions(),
+    app.optionChain("TSLA"),
+  ]);
 }
 
 run().catch(console.error);

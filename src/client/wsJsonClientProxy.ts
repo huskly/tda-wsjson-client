@@ -36,10 +36,10 @@ import WebSocket from "isomorphic-ws";
 import MulticastIterator from "obgen/multicastIterator";
 import BufferedIterator from "obgen/bufferedIterator";
 import { deferredWrap } from "obgen";
-import { throwError } from "./util";
 import debug from "debug";
 import { ChannelState } from "./realWsJsonClient";
 import { isString } from "lodash";
+import Observable from "obgen/observable";
 
 const logger = debug("wsClientProxy");
 
@@ -47,13 +47,31 @@ export const ALL_REQUESTS = [
   "authenticate",
   "optionChainQuotes",
   "disconnect",
+  "quotes",
+  "accountPositions",
+  "chart",
+  "searchInstruments",
+  "lookupAlerts",
+  "optionChain",
+  "optionChainQuotes",
+  "optionChainDetails",
+  "optionQuotes",
+  "placeOrder",
+  "replaceOrder",
+  "workingOrders",
+  "createAlert",
+  "cancelAlert",
+  "cancelOrder",
+  "userProperties",
+  "marketDepth",
+  "watchlist",
 ] as const;
 type RequestType = typeof ALL_REQUESTS;
-type Request = RequestType[number];
+export type Request = RequestType[number];
 
 export type ProxiedRequest = {
   request: Request;
-  args?: any[];
+  args?: any;
 };
 
 export type ProxiedResponse = ProxiedRequest & { response: unknown };
@@ -69,10 +87,6 @@ export default class WsJsonClientProxy implements WsJsonClient {
     private readonly proxyUrl: string,
     private readonly options?: any
   ) {}
-
-  accountPositions(_: string): AsyncIterable<PositionsResponse> {
-    throwError("not implemented");
-  }
 
   async authenticate(
     accessToken: string
@@ -114,27 +128,33 @@ export default class WsJsonClientProxy implements WsJsonClient {
   private doAuthenticate(
     accessToken: string
   ): Promise<RawLoginResponseBody | null> {
-    this.sendMessage({ request: "authenticate", args: [accessToken] });
-    return deferredWrap(() => this.iterator)
-      .filter(({ request }) => request === "authenticate")
-      .map(({ response }) => response)
-      .promise() as Promise<RawLoginResponseBody | null>;
+    return this.dispatch<RawLoginResponseBody | null>(
+      "authenticate",
+      accessToken
+    ).promise();
   }
 
-  cancelAlert(_: number): Promise<CancelAlertResponse> {
-    throwError("not implemented");
+  accountPositions(accountNumber: string): AsyncIterable<PositionsResponse> {
+    return this.dispatch<PositionsResponse>(
+      "accountPositions",
+      accountNumber
+    ).iterable();
   }
 
-  cancelOrder(_: number): Promise<CancelOrderResponse> {
-    throwError("not implemented");
+  cancelAlert(alertId: number): Promise<CancelAlertResponse> {
+    return this.dispatch<CancelAlertResponse>("cancelAlert", alertId).promise();
   }
 
-  chart(_: ChartRequestParams): AsyncIterable<ChartResponse> {
-    throwError("not implemented");
+  cancelOrder(orderId: number): Promise<CancelOrderResponse> {
+    return this.dispatch<CancelOrderResponse>("cancelOrder", orderId).promise();
   }
 
-  createAlert(_: CreateAlertRequestParams): Promise<CreateAlertResponse> {
-    throwError("not implemented");
+  chart(request: ChartRequestParams): AsyncIterable<ChartResponse> {
+    return this.dispatch<ChartResponse>("chart", request).iterable();
+  }
+
+  createAlert(request: CreateAlertRequestParams): Promise<CreateAlertResponse> {
+    return this.dispatch<CreateAlertResponse>("createAlert", request).promise();
   }
 
   disconnect(): void {
@@ -156,71 +176,98 @@ export default class WsJsonClientProxy implements WsJsonClient {
   }
 
   lookupAlerts(): AsyncIterable<LookupAlertsResponse> {
-    throwError("not implemented");
+    return this.dispatch<LookupAlertsResponse>("lookupAlerts").iterable();
   }
 
-  marketDepth(_: string): AsyncIterable<MarketDepthResponse> {
-    throwError("not implemented");
+  marketDepth(symbol: string): AsyncIterable<MarketDepthResponse> {
+    return this.dispatch<MarketDepthResponse>("marketDepth", symbol).iterable();
   }
 
-  optionChain(_: string): Promise<OptionChainResponse> {
-    throwError("not implemented");
+  optionChain(symbol: string): Promise<OptionChainResponse> {
+    return this.dispatch<OptionChainResponse>("optionChain", symbol).promise();
   }
 
   optionChainDetails(
-    _: OptionChainDetailsRequest
+    request: OptionChainDetailsRequest
   ): Promise<OptionChainDetailsResponse> {
-    throwError("not implemented");
+    return this.dispatch<OptionChainDetailsResponse>(
+      "optionChainDetails",
+      request
+    ).promise();
   }
 
   optionChainQuotes(symbol: string): AsyncIterable<OptionSeriesQuotesResponse> {
-    this.sendMessage({ request: "optionChainQuotes", args: [symbol] });
-    return deferredWrap(() => this.iterator)
-      .filter(({ request }) => request === "optionChainQuotes")
-      .map(({ response }) => response)
-      .iterable() as AsyncIterable<OptionSeriesQuotesResponse>;
+    return this.dispatch<OptionSeriesQuotesResponse>(
+      "optionChainQuotes",
+      symbol
+    ).iterable();
   }
 
   optionQuotes(
-    _: OptionQuotesRequestParams
+    request: OptionQuotesRequestParams
   ): AsyncIterable<OptionQuotesResponse> {
-    throwError("not implemented");
+    return this.dispatch<OptionQuotesResponse>(
+      "optionQuotes",
+      request
+    ).iterable();
   }
 
   placeOrder(
-    _: PlaceLimitOrderRequestParams
+    request: PlaceLimitOrderRequestParams
   ): Promise<PlaceOrderSnapshotResponse> {
-    throwError("not implemented");
+    return this.dispatch<PlaceOrderSnapshotResponse>(
+      "placeOrder",
+      request
+    ).promise();
   }
 
-  quotes(_: string[]): AsyncIterable<QuotesResponse> {
-    throwError("not implemented");
+  quotes(symbols: string[]): AsyncIterable<QuotesResponse> {
+    return this.dispatch<QuotesResponse>("quotes", symbols).iterable();
   }
 
   replaceOrder(
-    _: Required<PlaceLimitOrderRequestParams>
+    request: Required<PlaceLimitOrderRequestParams>
   ): Promise<OrderEventsResponse> {
-    throwError("not implemented");
+    return this.dispatch<OrderEventsResponse>(
+      "replaceOrder",
+      request
+    ).promise();
   }
 
-  searchInstruments(_: string): Promise<InstrumentSearchResponse> {
-    throwError("not implemented");
+  searchInstruments(query: string): Promise<InstrumentSearchResponse> {
+    return this.dispatch<InstrumentSearchResponse>(
+      "searchInstruments",
+      query
+    ).promise();
   }
 
   userProperties(): Promise<UserPropertiesResponse> {
-    throwError("not implemented");
+    return this.dispatch<UserPropertiesResponse>("userProperties").promise();
   }
 
-  watchlist(_: number): Promise<GetWatchlistResponse> {
-    throwError("not implemented");
+  watchlist(watchlistId: number): Promise<GetWatchlistResponse> {
+    return this.dispatch<GetWatchlistResponse>(
+      "watchlist",
+      watchlistId
+    ).promise();
   }
 
-  workingOrders(_: string): AsyncIterable<OrderEventsResponse> {
-    throwError("not implemented");
+  workingOrders(accountNumber: string): AsyncIterable<OrderEventsResponse> {
+    return this.dispatch<OrderEventsResponse>(
+      "workingOrders",
+      accountNumber
+    ).iterable();
   }
 
   private sendMessage(request: ProxiedRequest) {
     this.ensureConnected();
     this.socket!.send(JSON.stringify(request));
+  }
+
+  private dispatch<T>(req: Request, args?: any): Observable<T> {
+    this.sendMessage({ request: req, args });
+    return deferredWrap<ProxiedResponse>(() => this.iterator)
+      .filter(({ request }) => request === req)
+      .map(({ response }) => response as T);
   }
 }
