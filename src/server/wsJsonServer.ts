@@ -1,7 +1,6 @@
 import ws from "ws";
-import { createServer, Server as HttpsServer } from "https";
+import { Server as HttpsServer } from "https";
 import { IncomingMessage, Server as HttpServer, ServerResponse } from "http";
-import { readFileSync } from "fs";
 import { WsJsonClient } from "../client/wsJsonClient";
 import debug from "debug";
 import WsJsonServerProxy from "./wsJsonServerProxy";
@@ -9,10 +8,6 @@ import { isEmpty } from "lodash";
 import { Disposable } from "./disposable";
 
 const logger = debug("wsJsonServer");
-const DEFAULT_HTTPS_SERVER = createServer({
-  cert: readFileSync("./cert.pem"),
-  key: readFileSync("./key.pem"),
-});
 const DEFAULT_PORT = 8080;
 type DefaultHttpsServer = HttpsServer<
   typeof IncomingMessage,
@@ -34,9 +29,7 @@ export default class WsJsonServer implements Disposable {
 
   constructor(
     private readonly wsJsonClientFactory: () => WsJsonClient,
-    private readonly server:
-      | DefaultHttpsServer
-      | DefaultHttpServer = DEFAULT_HTTPS_SERVER,
+    private readonly server: DefaultHttpsServer | DefaultHttpServer,
     private readonly port = DEFAULT_PORT
   ) {
     this.wss = new ws.WebSocketServer({ server: this.server });
