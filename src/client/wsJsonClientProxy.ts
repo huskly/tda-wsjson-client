@@ -98,7 +98,9 @@ export default class WsJsonClientProxy implements WsJsonClient {
     const { buffer, socket } = this;
     return new Promise((resolve, reject) => {
       socket.onmessage = ({ data }) => {
-        buffer.emit(JSON.parse(data as string) as ProxiedResponse);
+        // make sure date objects are reconstructed across the wire
+        const parsedMsg = JSON.parse(data as string, dateReviver);
+        buffer.emit(parsedMsg as ProxiedResponse);
       };
       socket.onopen = () => {
         logger("proxy ws connection opened");
@@ -270,4 +272,15 @@ export default class WsJsonClientProxy implements WsJsonClient {
       .filter(({ request }) => request === req)
       .map(({ response }) => response as T);
   }
+}
+
+function dateReviver(_: string, value: any): any {
+  if (typeof value === "string") {
+    // Regular expression to check if the string matches ISO 8601 date format
+    const isoDateRegex = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z$/;
+    if (isoDateRegex.test(value)) {
+      return new Date(value);
+    }
+  }
+  return value; // return the value unchanged if not a date string
 }
