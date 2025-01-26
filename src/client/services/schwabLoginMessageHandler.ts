@@ -1,10 +1,7 @@
 import WebSocketApiMessageHandler, {
   newPayload,
 } from "../services/webSocketApiMessageHandler.js";
-import {
-  RawPayloadRequest,
-  RawPayloadResponse,
-} from "../tdaWsJsonTypes.js";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
 import { ApiService } from "../services/apiService.js";
 
 export type SchwabLoginResponse = {

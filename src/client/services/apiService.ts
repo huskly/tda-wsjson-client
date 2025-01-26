@@ -20,6 +20,3 @@ export type ApiService =
   | "market_depth"
   | "watchlist/get"
   | "fake"; // testing only
-
-// make node happy
-export const __internalMarker = true

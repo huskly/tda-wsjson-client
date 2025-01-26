@@ -1,6 +1,9 @@
 import ws from "ws";
 import debug from "debug";
-import { ProxiedRequest, ProxiedResponse } from "../client/wsJsonClientProxy.js";
+import {
+  ProxiedRequest,
+  ProxiedResponse,
+} from "../client/wsJsonClientProxy.js";
 import { WsJsonClient } from "../client/wsJsonClient.js";
 import { Disposable } from "./disposable.js";
 

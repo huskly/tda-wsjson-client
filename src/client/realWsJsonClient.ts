@@ -5,8 +5,17 @@ import {
   RawPayloadResponse,
   WsJsonRawMessage,
 } from "./tdaWsJsonTypes.js";
-import { Constructor, debugLog, findByTypeOrThrow, throwError } from "./util.js";
-import { isConnectionResponse, isLoginResponse, isSchwabLoginResponse } from "./messageTypeHelpers.js";
+import {
+  Constructor,
+  debugLog,
+  findByTypeOrThrow,
+  throwError,
+} from "./util.js";
+import {
+  isConnectionResponse,
+  isLoginResponse,
+  isSchwabLoginResponse,
+} from "./messageTypeHelpers.js";
 import { deferredWrap } from "obgen";
 import debug from "debug";
 import { Observable, BufferedIterator, MulticastIterator } from "obgen";
@@ -191,7 +200,10 @@ export default class RealWsJsonClient implements WsJsonClient {
     const message = JSON.parse(data) as WsJsonRawMessage;
     logger("⬅️\treceived %O", message);
     if (isConnectionResponse(message)) {
-      const handler = findByTypeOrThrow(messageHandlers, SchwabLoginMessageHandler);
+      const handler = findByTypeOrThrow(
+        messageHandlers,
+        SchwabLoginMessageHandler
+      );
       if (!accessToken) {
         throwError("access token is required, cannot authenticate");
       }
@@ -355,7 +367,10 @@ export default class RealWsJsonClient implements WsJsonClient {
     resolve: (value: RawLoginResponseBody) => void,
     reject: (reason?: string) => void
   ) {
-    const handler = findByTypeOrThrow(messageHandlers, SchwabLoginMessageHandler);
+    const handler = findByTypeOrThrow(
+      messageHandlers,
+      SchwabLoginMessageHandler
+    );
     const loginResponse = handler.parseResponse(message as RawPayloadResponse);
     const [{ body }] = message.payload;
     if (loginResponse.authenticated) {
