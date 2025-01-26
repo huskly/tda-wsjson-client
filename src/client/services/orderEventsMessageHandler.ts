@@ -1,8 +1,8 @@
-import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
-import { ApiService } from "./apiService";
-import { compact, isEmpty, isObject } from "lodash";
-import { throwError } from "../util";
+import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { ApiService } from "./apiService.js";
+import { compact, isEmpty, isObject } from "lodash-es";
+import { throwError } from "../util.js";
 
 export type OrderPatch = {
   op: string;

@@ -1,9 +1,9 @@
-import { ParsedWebSocketResponse, WsJsonRawMessage } from "./tdaWsJsonTypes";
-import { debugLog } from "./util";
-import { isPayloadResponse } from "./messageTypeHelpers";
-import WebSocketApiMessageHandler from "./services/webSocketApiMessageHandler";
-import { ApiService } from "./services/apiService";
-import { keyBy } from "lodash";
+import { ParsedWebSocketResponse, WsJsonRawMessage } from "./tdaWsJsonTypes.js";
+import { debugLog } from "./util.js";
+import { isPayloadResponse } from "./messageTypeHelpers.js";
+import WebSocketApiMessageHandler from "./services/webSocketApiMessageHandler.js";
+import { ApiService } from "./services/apiService.js";
+import { keyBy } from "lodash-es";
 
 export default class ResponseParser {
   private readonly messageHandlerRegistry: Record<

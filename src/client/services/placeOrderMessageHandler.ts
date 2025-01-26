@@ -1,9 +1,9 @@
 import WebSocketApiMessageHandler, {
   newPayload,
-} from "./webSocketApiMessageHandler";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
-import { ApiService } from "./apiService";
-import { OrderEvent, OrderPatch } from "./orderEventsMessageHandler";
+} from "./webSocketApiMessageHandler.js";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { ApiService } from "./apiService.js";
+import { OrderEvent, OrderPatch } from "./orderEventsMessageHandler.js";
 
 export type PlaceLimitOrderRequestParams = {
   accountNumber: string;

@@ -1,12 +1,12 @@
 import WebSocketApiMessageHandler, {
   newPayload,
-} from "./webSocketApiMessageHandler";
+} from "./webSocketApiMessageHandler.js";
 import {
   RawPayloadRequest,
   RawPayloadResponse,
   RawPayloadResponseItemHeader,
-} from "../tdaWsJsonTypes";
-import { ApiService } from "./apiService";
+} from "../tdaWsJsonTypes.js";
+import { ApiService } from "./apiService.js";
 
 export type RawLoginResponseBody = {
   message?: string;
@@ -65,10 +65,9 @@ export default class LoginMessageHandler
     return newPayload({
       header: { service: "login", id: "login", ver: 0 },
       params: {
-        accessToken,
+        token: accessToken,
         domain: "TOS",
         platform: "PROD",
-        token: "",
         tag: "TOSWeb",
       },
     });

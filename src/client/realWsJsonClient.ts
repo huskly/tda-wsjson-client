@@ -4,80 +4,79 @@ import {
   ParsedWebSocketResponse,
   RawPayloadResponse,
   WsJsonRawMessage,
-} from "./tdaWsJsonTypes";
-import { Constructor, debugLog, findByTypeOrThrow, throwError } from "./util";
-import MulticastIterator from "obgen/multicastIterator";
-import BufferedIterator from "obgen/bufferedIterator";
-import { isConnectionResponse, isLoginResponse } from "./messageTypeHelpers";
+} from "./tdaWsJsonTypes.js";
+import { Constructor, debugLog, findByTypeOrThrow, throwError } from "./util.js";
+import { isConnectionResponse, isLoginResponse, isSchwabLoginResponse } from "./messageTypeHelpers.js";
 import { deferredWrap } from "obgen";
 import debug from "debug";
-import Observable from "obgen/observable";
+import { Observable, BufferedIterator, MulticastIterator } from "obgen";
 import OptionChainDetailsMessageHandler, {
   OptionChainDetailsRequest,
   OptionChainDetailsResponse,
-} from "./services/optionChainDetailsMessageHandler";
-import CancelAlertMessageHandler from "./services/cancelAlertMessageHandler";
+} from "./services/optionChainDetailsMessageHandler.js";
+import CancelAlertMessageHandler from "./services/cancelAlertMessageHandler.js";
 import CreateAlertMessageHandler, {
   CreateAlertRequestParams,
-} from "./services/createAlertMessageHandler";
-import AlertLookupMessageHandler from "./services/alertLookupMessageHandler";
-import SubscribeToAlertMessageHandler from "./services/subscribeToAlertMessageHandler";
+} from "./services/createAlertMessageHandler.js";
+import AlertLookupMessageHandler from "./services/alertLookupMessageHandler.js";
+import SubscribeToAlertMessageHandler from "./services/subscribeToAlertMessageHandler.js";
 import OptionQuotesMessageHandler, {
   OptionQuotesRequestParams,
   OptionQuotesResponse,
-} from "./services/optionQuotesMessageHandler";
+} from "./services/optionQuotesMessageHandler.js";
 import ChartMessageHandler, {
   ChartRequestParams,
   ChartResponse,
-} from "./services/chartMessageHandler";
+} from "./services/chartMessageHandler.js";
 import InstrumentSearchMessageHandler, {
   InstrumentSearchResponse,
-} from "./services/instrumentSearchMessageHandler";
+} from "./services/instrumentSearchMessageHandler.js";
 import CancelOrderMessageHandler, {
   CancelOrderResponse,
-} from "./services/cancelOrderMessageHandler";
+} from "./services/cancelOrderMessageHandler.js";
 import OptionSeriesMessageHandler, {
   OptionChainResponse,
-} from "./services/optionSeriesMessageHandler";
+} from "./services/optionSeriesMessageHandler.js";
 import OrderEventsMessageHandler, {
   OrderEventsResponse,
-} from "./services/orderEventsMessageHandler";
+} from "./services/orderEventsMessageHandler.js";
 import PositionsMessageHandler, {
   PositionsResponse,
-} from "./services/positionsMessageHandler";
+} from "./services/positionsMessageHandler.js";
 import QuotesMessageHandler, {
   QuotesResponse,
-} from "./services/quotesMessageHandler";
+} from "./services/quotesMessageHandler.js";
 import UserPropertiesMessageHandler, {
   UserPropertiesResponse,
-} from "./services/userPropertiesMessageHandler";
+} from "./services/userPropertiesMessageHandler.js";
 import PlaceOrderMessageHandler, {
   PlaceLimitOrderRequestParams,
   PlaceOrderSnapshotResponse,
-} from "./services/placeOrderMessageHandler";
-import WebSocketApiMessageHandler from "./services/webSocketApiMessageHandler";
-import ResponseParser from "./responseParser";
+} from "./services/placeOrderMessageHandler.js";
+import WebSocketApiMessageHandler from "./services/webSocketApiMessageHandler.js";
+import ResponseParser from "./responseParser.js";
 import LoginMessageHandler, {
   RawLoginResponse,
   RawLoginResponseBody,
-} from "./services/loginMessageHandler";
-import SubmitOrderMessageHandler from "./services/submitOrderMessageHandler";
-import WorkingOrdersMessageHandler from "./services/workingOrdersMessageHandler";
+} from "./services/loginMessageHandler.js";
+import SubmitOrderMessageHandler from "./services/submitOrderMessageHandler.js";
+import WorkingOrdersMessageHandler from "./services/workingOrdersMessageHandler.js";
 import OptionSeriesQuotesMessageHandler, {
   OptionSeriesQuotesResponse,
-} from "./services/optionSeriesQuotesMessageHandler";
-import { WsJsonClient } from "./wsJsonClient";
+} from "./services/optionSeriesQuotesMessageHandler.js";
+import { WsJsonClient } from "./wsJsonClient.js";
 import MarketDepthMessageHandler, {
   MarketDepthResponse,
-} from "./services/marketDepthMessageHandler";
+} from "./services/marketDepthMessageHandler.js";
 import {
   CancelAlertResponse,
   CreateAlertResponse,
   LookupAlertsResponse,
-} from "./types/alertTypes";
+} from "./types/alertTypes.js";
 import GetWatchlistMessageHandler, {
   GetWatchlistResponse,
-} from "./services/getWatchlistMessageHandler";
+} from "./services/getWatchlistMessageHandler.js";
+import SchwabLoginMessageHandler from "./services/schwabLoginMessageHandler.js";
 
 export const CONNECTION_REQUEST_MESSAGE = {
   ver: "27.*.*",
@@ -112,6 +111,7 @@ const messageHandlers: WebSocketApiMessageHandler<never, any>[] = [
   new UserPropertiesMessageHandler(),
   new OptionChainDetailsMessageHandler(),
   new LoginMessageHandler(),
+  new SchwabLoginMessageHandler(),
   new SubmitOrderMessageHandler(),
   new MarketDepthMessageHandler(),
   new GetWatchlistMessageHandler(),
@@ -125,7 +125,7 @@ export default class RealWsJsonClient implements WsJsonClient {
 
   constructor(
     private readonly socket = new WebSocket(
-      "wss://services.thinkorswim.com/Services/WsJson",
+      "wss://thinkorswim-services.schwab.com/Services/WsJson",
       {
         headers: {
           Pragma: "no-cache",
@@ -191,13 +191,15 @@ export default class RealWsJsonClient implements WsJsonClient {
     const message = JSON.parse(data) as WsJsonRawMessage;
     logger("⬅️\treceived %O", message);
     if (isConnectionResponse(message)) {
-      const handler = findByTypeOrThrow(messageHandlers, LoginMessageHandler);
+      const handler = findByTypeOrThrow(messageHandlers, SchwabLoginMessageHandler);
       if (!accessToken) {
         throwError("access token is required, cannot authenticate");
       }
       this.sendMessage(handler.buildRequest(accessToken));
     } else if (isLoginResponse(message)) {
       this.handleLoginResponse(message, resolve, reject);
+    } else if (isSchwabLoginResponse(message)) {
+      this.handleSchwabLoginResponse(message, resolve, reject);
     } else {
       const parsedResponse = responseParser.parseResponse(message);
       if (parsedResponse) {
@@ -346,6 +348,26 @@ export default class RealWsJsonClient implements WsJsonClient {
     logger("➡️\tsending %O", data);
     const msg = JSON.stringify(data);
     this.socket?.send(msg);
+  }
+
+  private handleSchwabLoginResponse(
+    message: RawLoginResponse,
+    resolve: (value: RawLoginResponseBody) => void,
+    reject: (reason?: string) => void
+  ) {
+    const handler = findByTypeOrThrow(messageHandlers, SchwabLoginMessageHandler);
+    const loginResponse = handler.parseResponse(message as RawPayloadResponse);
+    const [{ body }] = message.payload;
+    if (loginResponse.authenticated) {
+      this.state = ChannelState.CONNECTED;
+      logger("Schwab login successful, token=%s", body.token);
+      this.accessToken = body.token;
+      resolve(body);
+    } else {
+      this.state = ChannelState.ERROR;
+      reject(`Login failed: ${body.message}`);
+      this.disconnect();
+    }
   }
 
   private handleLoginResponse(

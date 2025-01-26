@@ -1,11 +1,11 @@
-import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
+import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
 import {
   AlertSubscribeResponse,
   parseAlert,
   RawAlertSubscribeResponse,
-} from "../types/alertTypes";
-import { ApiService } from "./apiService";
+} from "../types/alertTypes.js";
+import { ApiService } from "./apiService.js";
 
 export const DEFAULT_ALERT_TYPES = [
   "CHANGED_ALERT",

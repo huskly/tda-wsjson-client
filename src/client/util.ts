@@ -1,4 +1,4 @@
-import { AccountPosition } from "./services/positionsMessageHandler";
+import { AccountPosition } from "./services/positionsMessageHandler.js";
 
 export declare type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends (infer U)[]

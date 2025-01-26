@@ -1,37 +1,37 @@
-import { WsJsonClient } from "./wsJsonClient";
-import { PositionsResponse } from "./services/positionsMessageHandler";
-import { RawLoginResponseBody } from "./services/loginMessageHandler";
-import { CancelOrderResponse } from "./services/cancelOrderMessageHandler";
+import { WsJsonClient } from "./wsJsonClient.js";
+import { PositionsResponse } from "./services/positionsMessageHandler.js";
+import { RawLoginResponseBody } from "./services/loginMessageHandler.js";
+import { CancelOrderResponse } from "./services/cancelOrderMessageHandler.js";
 import {
   ChartRequestParams,
   ChartResponse,
-} from "./services/chartMessageHandler";
-import { CreateAlertRequestParams } from "./services/createAlertMessageHandler";
-import { OptionChainResponse } from "./services/optionSeriesMessageHandler";
+} from "./services/chartMessageHandler.js";
+import { CreateAlertRequestParams } from "./services/createAlertMessageHandler.js";
+import { OptionChainResponse } from "./services/optionSeriesMessageHandler.js";
 import {
   OptionChainDetailsRequest,
   OptionChainDetailsResponse,
-} from "./services/optionChainDetailsMessageHandler";
-import { OptionSeriesQuotesResponse } from "./services/optionSeriesQuotesMessageHandler";
+} from "./services/optionChainDetailsMessageHandler.js";
+import { OptionSeriesQuotesResponse } from "./services/optionSeriesQuotesMessageHandler.js";
 import {
   OptionQuotesRequestParams,
   OptionQuotesResponse,
-} from "./services/optionQuotesMessageHandler";
+} from "./services/optionQuotesMessageHandler.js";
 import {
   PlaceLimitOrderRequestParams,
   PlaceOrderSnapshotResponse,
-} from "./services/placeOrderMessageHandler";
-import { OrderEventsResponse } from "./services/orderEventsMessageHandler";
-import { QuotesResponse } from "./services/quotesMessageHandler";
-import { InstrumentSearchResponse } from "./services/instrumentSearchMessageHandler";
-import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler";
+} from "./services/placeOrderMessageHandler.js";
+import { OrderEventsResponse } from "./services/orderEventsMessageHandler.js";
+import { QuotesResponse } from "./services/quotesMessageHandler.js";
+import { InstrumentSearchResponse } from "./services/instrumentSearchMessageHandler.js";
+import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler.js";
 import {
   CancelAlertResponse,
   CreateAlertResponse,
   LookupAlertsResponse,
-} from "./types/alertTypes";
-import { MarketDepthResponse } from "./services/marketDepthMessageHandler";
-import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler";
+} from "./types/alertTypes.js";
+import { MarketDepthResponse } from "./services/marketDepthMessageHandler.js";
+import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler.js";
 
 export default class MockWsJsonClient implements WsJsonClient {
   async *accountPositions(_: string): AsyncIterable<PositionsResponse> {

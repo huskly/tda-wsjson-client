@@ -2,8 +2,8 @@ import {
   ConnectionResponse,
   RawPayloadResponse,
   WsJsonRawMessage,
-} from "./tdaWsJsonTypes";
-import { RawLoginResponse } from "./services/loginMessageHandler";
+} from "./tdaWsJsonTypes.js";
+import { RawLoginResponse } from "./services/loginMessageHandler.js";
 
 export function isPayloadResponse(
   response: WsJsonRawMessage
@@ -24,4 +24,13 @@ export function isLoginResponse(
   const [{ header }] = message.payload;
   const { service } = header;
   return service === "login";
+}
+
+export function isSchwabLoginResponse(
+  message: WsJsonRawMessage
+): message is RawLoginResponse {
+  if (!isPayloadResponse(message)) return false;
+  const [{ header }] = message.payload;
+  const { service } = header;
+  return service === "login/schwab";
 }

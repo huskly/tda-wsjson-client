@@ -1,9 +1,9 @@
 import WebSocketApiMessageHandler, {
   newPayload,
-} from "./webSocketApiMessageHandler";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
-import { ApiService } from "./apiService";
-import { isObject } from "lodash";
+} from "./webSocketApiMessageHandler.js";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { ApiService } from "./apiService.js";
+import { isObject } from "lodash-es";
 
 export type GetWatchListResponseItem = {
   id: number;

@@ -1,25 +1,25 @@
 import {
   RawAlertCancelResponse,
   RawAlertSubscribeResponse,
-} from "./types/alertTypes";
-import { RawOrderEventsResponse } from "./services/orderEventsMessageHandler";
+} from "./types/alertTypes.js";
+import { RawOrderEventsResponse } from "./services/orderEventsMessageHandler.js";
 import {
   RawPlaceOrderPatchResponse,
   RawPlaceOrderSnapshotResponse,
-} from "./services/placeOrderMessageHandler";
-import { RawAlertLookupResponse } from "./services/alertLookupMessageHandler";
-import { RawPositionsResponse } from "./services/positionsMessageHandler";
-import { ApiService } from "./services/apiService";
+} from "./services/placeOrderMessageHandler.js";
+import { RawAlertLookupResponse } from "./services/alertLookupMessageHandler.js";
+import { RawPositionsResponse } from "./services/positionsMessageHandler.js";
+import { ApiService } from "./services/apiService.js";
 import {
   RawPayloadResponseQuotesPatch,
   RawPayloadResponseQuotesSnapshot,
-} from "./services/quotesMessageHandler";
-import { RawPayloadResponseInstrumentSearch } from "./services/instrumentSearchMessageHandler";
-import { RawPayloadResponseChart } from "./services/chartMessageHandler";
-import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler";
-import { RawOptionSeriesResponse } from "./services/optionSeriesMessageHandler";
-import { RawLoginResponse } from "./services/loginMessageHandler";
-import { RawPayloadMarketDepthResponse } from "./services/marketDepthMessageHandler";
+} from "./services/quotesMessageHandler.js";
+import { RawPayloadResponseInstrumentSearch } from "./services/instrumentSearchMessageHandler.js";
+import { RawPayloadResponseChart } from "./services/chartMessageHandler.js";
+import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler.js";
+import { RawOptionSeriesResponse } from "./services/optionSeriesMessageHandler.js";
+import { RawLoginResponse } from "./services/loginMessageHandler.js";
+import { RawPayloadMarketDepthResponse } from "./services/marketDepthMessageHandler.js";
 
 export type RawPayloadResponseItemBody =
   | RawPayloadResponseQuotesSnapshot

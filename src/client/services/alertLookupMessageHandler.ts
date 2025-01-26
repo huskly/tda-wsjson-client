@@ -1,12 +1,12 @@
-import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
+import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
 import {
   LookupAlertsResponse,
   parseAlert,
   RawAlertResponse,
-} from "../types/alertTypes";
-import { isEmpty } from "lodash";
-import { ApiService } from "./apiService";
+} from "../types/alertTypes.js";
+import { isEmpty } from "lodash-es";
+import { ApiService } from "./apiService.js";
 
 export type RawAlertLookupResponse = {
   alerts: RawAlertResponse[];

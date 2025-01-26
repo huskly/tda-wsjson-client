@@ -1,6 +1,6 @@
 # TD Ameritrade WsJson API client
 
-This is a node and browser API client for the (undocumented) TD Ameritrade WebSocket API.
+This is a node and browser API client for the (undocumented) Schwab WebSocket API.
 
 🚧 Work in progress 🚧
 
@@ -8,7 +8,7 @@ This is a node and browser API client for the (undocumented) TD Ameritrade WebSo
 
 - Node 16+
 
-Create a `.env` file and set your TD Ameritrade oauth access token:
+Create a `.env` file and set your Schwab oauth access token:
 
 ```
 CLIENT_ID=your-client-id
@@ -27,7 +27,7 @@ yarn build
 # Running the example app
 
 ```
-cd example
+cd src/example
 yarn install
 yarn link tda-wsjson-client
 yarn start
@@ -79,8 +79,8 @@ for await (const event of client.chart(chartRequest)) {
 }
 ```
 
-For more sample usage check out https://github.com/felipecsl/tda-wsjson-client/blob/master/src/testApp.ts and
-https://github.com/felipecsl/tda-wsjson-client/blob/master/example/src/App.tsx
+For more sample usage check out https://github.com/huskly/tda-wsjson-client/blob/master/src/testApp.ts and
+https://github.com/huskly/tda-wsjson-client/blob/master/example/src/App.tsx
 
 # Running tests
 

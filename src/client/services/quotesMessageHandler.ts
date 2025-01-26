@@ -1,9 +1,9 @@
 import WebSocketApiMessageHandler, {
   newPayload,
-} from "./webSocketApiMessageHandler";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
-import { compact, isEmpty, isNil, isNumber, omitBy } from "lodash";
-import { ApiService } from "./apiService";
+} from "./webSocketApiMessageHandler.js";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { compact, isEmpty, isNil, isNumber, omitBy } from "lodash-es";
+import { ApiService } from "./apiService.js";
 
 const ALL_FIELDS = [
   "MARK",

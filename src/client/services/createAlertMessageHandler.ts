@@ -1,8 +1,8 @@
-import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
-import { CreateAlertResponse, RawAlertResponse } from "../types/alertTypes";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
-import { ApiService } from "./apiService";
-import { newRandomId } from "../util";
+import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
+import { CreateAlertResponse, RawAlertResponse } from "../types/alertTypes.js";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { ApiService } from "./apiService.js";
+import { newRandomId } from "../util.js";
 
 type RawAlertCreateResponse = {
   alert: RawAlertResponse;

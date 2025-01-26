@@ -1,4 +1,4 @@
-import { MarketDepthResponse } from "../client/services/marketDepthMessageHandler";
+import { MarketDepthResponse } from "../client/services/marketDepthMessageHandler.js";
 
 type MarketDepthQuote = {
   [name: string]: { price?: number; size?: number; name?: string };

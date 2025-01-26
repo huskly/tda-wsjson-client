@@ -1,11 +1,11 @@
 import ws from "ws";
 import { Server as HttpsServer } from "https";
 import { IncomingMessage, Server as HttpServer, ServerResponse } from "http";
-import { WsJsonClient } from "../client/wsJsonClient";
+import { WsJsonClient } from "../client/wsJsonClient.js";
 import debug from "debug";
-import WsJsonServerProxy from "./wsJsonServerProxy";
-import { isEmpty } from "lodash";
-import { Disposable } from "./disposable";
+import WsJsonServerProxy from "./wsJsonServerProxy.js";
+import { isEmpty } from "lodash-es";
+import { Disposable } from "./disposable.js";
 
 const logger = debug("wsJsonServer");
 const DEFAULT_PORT = 8080;

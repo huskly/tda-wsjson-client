@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": "./",
     "outDir": "dist",
-    "target": "es2020",
+    "target": "ESNext",
     "declaration": true,
     "declarationMap": true,
     "downlevelIteration": true,
@@ -20,6 +20,7 @@
     "allowJs": true,
     "moduleResolution": "nodenext",
     "module": "nodenext",
+    "rootDir": "./src",
     "lib": ["es2020", "dom"]
   },
   "include": ["src/**/*"],

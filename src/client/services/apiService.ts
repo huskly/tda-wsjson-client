@@ -1,5 +1,6 @@
 export type ApiService =
   | "login"
+  | "login/schwab"
   | "cancel_order"
   | "chart"
   | "order_events"
@@ -19,3 +20,6 @@ export type ApiService =
   | "market_depth"
   | "watchlist/get"
   | "fake"; // testing only
+
+// make node happy
+export const __internalMarker = true

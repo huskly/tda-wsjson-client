@@ -1,8 +1,8 @@
 import WebSocketApiMessageHandler, {
   newPayload,
-} from "./webSocketApiMessageHandler";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
-import { ApiService } from "./apiService";
+} from "./webSocketApiMessageHandler.js";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { ApiService } from "./apiService.js";
 
 export type OptionSeriesQuote = {
   name: string;

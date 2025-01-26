@@ -1,12 +1,12 @@
-import WsJsonClientAuth from "../client/wsJsonClientAuth";
+import WsJsonClientAuth from "../client/wsJsonClientAuth.js";
 import "dotenv/config";
 import debug from "debug";
-import { CreateAlertRequestParams } from "../client/services/createAlertMessageHandler";
-import { OptionQuotesRequestParams } from "../client/services/optionQuotesMessageHandler";
+import { CreateAlertRequestParams } from "../client/services/createAlertMessageHandler.js";
+import { OptionQuotesRequestParams } from "../client/services/optionQuotesMessageHandler.js";
 import fetch from "node-fetch";
-import { WsJsonClient } from "../client/wsJsonClient";
-import MarketDepthStateUpdater from "./marketDepthStateUpdater";
-import WsJsonClientProxy from "../client/wsJsonClientProxy";
+import { WsJsonClient } from "../client/wsJsonClient.js";
+import MarketDepthStateUpdater from "./marketDepthStateUpdater.js";
+import RealWsJsonClient from "../client/realWsJsonClient.js";
 
 const logger = debug("testapp");
 
@@ -168,7 +168,7 @@ async function run() {
   }
   const token = { accessToken, refreshToken, expiresAt: +expiresAt };
   const authClient = new WsJsonClientAuth(
-    () => new WsJsonClientProxy("ws://localhost:8080"), // or new RealWsJsonClient(),
+    () => new RealWsJsonClient(),
     clientId,
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore

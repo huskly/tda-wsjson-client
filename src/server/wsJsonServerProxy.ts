@@ -1,8 +1,8 @@
 import ws from "ws";
 import debug from "debug";
-import { ProxiedRequest, ProxiedResponse } from "../client/wsJsonClientProxy";
-import { WsJsonClient } from "../client/wsJsonClient";
-import { Disposable } from "./disposable";
+import { ProxiedRequest, ProxiedResponse } from "../client/wsJsonClientProxy.js";
+import { WsJsonClient } from "../client/wsJsonClient.js";
+import { Disposable } from "./disposable.js";
 
 const logger = debug("wsJsonServerProxy");
 

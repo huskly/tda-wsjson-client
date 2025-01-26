@@ -1,9 +1,9 @@
 import WebSocketApiMessageHandler, {
   newPayload,
-} from "./webSocketApiMessageHandler";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
-import { debugLog, DeepPartial, positionNetQuantity } from "../util";
-import { ApiService } from "./apiService";
+} from "./webSocketApiMessageHandler.js";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { debugLog, DeepPartial, positionNetQuantity } from "../util.js";
+import { ApiService } from "./apiService.js";
 
 export type RawPositionsResponse = {
   items: {

@@ -3,8 +3,8 @@ import {
   RawPayloadRequest,
   RawPayloadRequestItem,
   RawPayloadResponse,
-} from "../tdaWsJsonTypes";
-import { ApiService } from "./apiService";
+} from "../tdaWsJsonTypes.js";
+import { ApiService } from "./apiService.js";
 
 // Service interface definition for implementing support for new message types
 export default interface WebSocketApiMessageHandler<

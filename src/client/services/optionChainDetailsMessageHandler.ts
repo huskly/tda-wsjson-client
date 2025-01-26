@@ -1,6 +1,6 @@
-import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
-import { ApiService } from "./apiService";
+import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { ApiService } from "./apiService.js";
 
 export type RawOptionChainDetailsResponse = {
   optionSeries: OptionChainDetailsItem[];

@@ -1,7 +1,7 @@
-import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
-import { newRandomId } from "../util";
-import { ApiService } from "./apiService";
+import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { newRandomId } from "../util.js";
+import { ApiService } from "./apiService.js";
 
 export type RawPayloadResponseInstrumentSearch = {
   instruments: {

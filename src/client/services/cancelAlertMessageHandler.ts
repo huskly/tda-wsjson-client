@@ -1,11 +1,11 @@
-import WebSocketApiMessageHandler from "./webSocketApiMessageHandler";
+import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
 import {
   CancelAlertResponse,
   RawAlertCancelResponse,
-} from "../types/alertTypes";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
-import { debugLog } from "../util";
-import { ApiService } from "./apiService";
+} from "../types/alertTypes.js";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { debugLog } from "../util.js";
+import { ApiService } from "./apiService.js";
 
 export default class CancelAlertMessageHandler
   implements WebSocketApiMessageHandler<number, CancelAlertResponse | null>

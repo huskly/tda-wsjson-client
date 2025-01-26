@@ -1,37 +1,37 @@
-import { RawLoginResponseBody } from "./services/loginMessageHandler";
-import { QuotesResponse } from "./services/quotesMessageHandler";
-import { PositionsResponse } from "./services/positionsMessageHandler";
+import { RawLoginResponseBody } from "./services/loginMessageHandler.js";
+import { QuotesResponse } from "./services/quotesMessageHandler.js";
+import { PositionsResponse } from "./services/positionsMessageHandler.js";
 import {
   ChartRequestParams,
   ChartResponse,
-} from "./services/chartMessageHandler";
-import { InstrumentSearchResponse } from "./services/instrumentSearchMessageHandler";
-import { OptionChainResponse } from "./services/optionSeriesMessageHandler";
-import { OptionSeriesQuotesResponse } from "./services/optionSeriesQuotesMessageHandler";
+} from "./services/chartMessageHandler.js";
+import { InstrumentSearchResponse } from "./services/instrumentSearchMessageHandler.js";
+import { OptionChainResponse } from "./services/optionSeriesMessageHandler.js";
+import { OptionSeriesQuotesResponse } from "./services/optionSeriesQuotesMessageHandler.js";
 import {
   OptionChainDetailsRequest,
   OptionChainDetailsResponse,
-} from "./services/optionChainDetailsMessageHandler";
+} from "./services/optionChainDetailsMessageHandler.js";
 import {
   OptionQuotesRequestParams,
   OptionQuotesResponse,
-} from "./services/optionQuotesMessageHandler";
+} from "./services/optionQuotesMessageHandler.js";
 import {
   PlaceLimitOrderRequestParams,
   PlaceOrderSnapshotResponse,
-} from "./services/placeOrderMessageHandler";
-import { OrderEventsResponse } from "./services/orderEventsMessageHandler";
-import { CreateAlertRequestParams } from "./services/createAlertMessageHandler";
-import { CancelOrderResponse } from "./services/cancelOrderMessageHandler";
-import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler";
+} from "./services/placeOrderMessageHandler.js";
+import { OrderEventsResponse } from "./services/orderEventsMessageHandler.js";
+import { CreateAlertRequestParams } from "./services/createAlertMessageHandler.js";
+import { CancelOrderResponse } from "./services/cancelOrderMessageHandler.js";
+import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler.js";
 import {
   CancelAlertResponse,
   CreateAlertResponse,
   LookupAlertsResponse,
-} from "./types/alertTypes";
-import { MarketDepthResponse } from "./services/marketDepthMessageHandler";
-import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler";
-import { Disposable } from "../server/disposable";
+} from "./types/alertTypes.js";
+import { MarketDepthResponse } from "./services/marketDepthMessageHandler.js";
+import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler.js";
+import { Disposable } from "../server/disposable.js";
 
 export interface WsJsonClient extends Disposable {
   authenticate(accessToken: string): Promise<RawLoginResponseBody | null>;

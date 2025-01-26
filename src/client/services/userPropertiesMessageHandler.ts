@@ -1,8 +1,8 @@
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
 import WebSocketApiMessageHandler, {
   newPayload,
-} from "./webSocketApiMessageHandler";
-import { ApiService } from "./apiService";
+} from "./webSocketApiMessageHandler.js";
+import { ApiService } from "./apiService.js";
 
 export type UserPropertiesResponse = {
   service: "user_properties";

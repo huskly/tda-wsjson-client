@@ -1,45 +1,43 @@
-import { WsJsonClient } from "./wsJsonClient";
-import { PositionsResponse } from "./services/positionsMessageHandler";
-import { RawLoginResponseBody } from "./services/loginMessageHandler";
+import { WsJsonClient } from "./wsJsonClient.js";
+import { PositionsResponse } from "./services/positionsMessageHandler.js";
+import { RawLoginResponseBody } from "./services/loginMessageHandler.js";
 import {
   CancelAlertResponse,
   CreateAlertResponse,
   LookupAlertsResponse,
-} from "./types/alertTypes";
-import { CancelOrderResponse } from "./services/cancelOrderMessageHandler";
+} from "./types/alertTypes.js";
+import { CancelOrderResponse } from "./services/cancelOrderMessageHandler.js";
 import {
   ChartRequestParams,
   ChartResponse,
-} from "./services/chartMessageHandler";
-import { CreateAlertRequestParams } from "./services/createAlertMessageHandler";
-import { MarketDepthResponse } from "./services/marketDepthMessageHandler";
-import { OptionChainResponse } from "./services/optionSeriesMessageHandler";
+} from "./services/chartMessageHandler.js";
+import { CreateAlertRequestParams } from "./services/createAlertMessageHandler.js";
+import { MarketDepthResponse } from "./services/marketDepthMessageHandler.js";
+import { OptionChainResponse } from "./services/optionSeriesMessageHandler.js";
 import {
   OptionChainDetailsRequest,
   OptionChainDetailsResponse,
-} from "./services/optionChainDetailsMessageHandler";
-import { OptionSeriesQuotesResponse } from "./services/optionSeriesQuotesMessageHandler";
+} from "./services/optionChainDetailsMessageHandler.js";
+import { OptionSeriesQuotesResponse } from "./services/optionSeriesQuotesMessageHandler.js";
 import {
   OptionQuotesRequestParams,
   OptionQuotesResponse,
-} from "./services/optionQuotesMessageHandler";
+} from "./services/optionQuotesMessageHandler.js";
 import {
   PlaceLimitOrderRequestParams,
   PlaceOrderSnapshotResponse,
-} from "./services/placeOrderMessageHandler";
-import { QuotesResponse } from "./services/quotesMessageHandler";
-import { OrderEventsResponse } from "./services/orderEventsMessageHandler";
-import { InstrumentSearchResponse } from "./services/instrumentSearchMessageHandler";
-import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler";
-import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler";
+} from "./services/placeOrderMessageHandler.js";
+import { QuotesResponse } from "./services/quotesMessageHandler.js";
+import { OrderEventsResponse } from "./services/orderEventsMessageHandler.js";
+import { InstrumentSearchResponse } from "./services/instrumentSearchMessageHandler.js";
+import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler.js";
+import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler.js";
 import WebSocket from "isomorphic-ws";
-import MulticastIterator from "obgen/multicastIterator";
-import BufferedIterator from "obgen/bufferedIterator";
 import { deferredWrap } from "obgen";
 import debug from "debug";
-import { ChannelState } from "./realWsJsonClient";
-import { isString } from "lodash";
-import Observable from "obgen/observable";
+import { ChannelState } from "./realWsJsonClient.js";
+import { isString } from "lodash-es";
+import { Observable, BufferedIterator, MulticastIterator } from "obgen";
 
 const logger = debug("wsClientProxy");
 

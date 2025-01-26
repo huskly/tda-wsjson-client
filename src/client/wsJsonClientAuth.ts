@@ -1,5 +1,5 @@
 import { OAuth2Client, OAuth2Token } from "@badgateway/oauth2-client";
-import { WsJsonClient } from "./wsJsonClient";
+import { WsJsonClient } from "./wsJsonClient.js";
 import debug from "debug";
 
 const logger = debug("wsJsonClientAuth");
@@ -13,7 +13,7 @@ export default class WsJsonClientAuth {
     originalFetch: typeof fetch
   ) {
     this.oauthClient = new OAuth2Client({
-      server: "https://auth.tdameritrade.com/",
+      server: "https://trade.thinkorswim.com/",
       clientId,
       clientSecret: "",
       tokenEndpoint: "https://api.tdameritrade.com/v1/oauth2/token",

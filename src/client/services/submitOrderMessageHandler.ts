@@ -1,10 +1,10 @@
 import WebSocketApiMessageHandler, {
   newPayload,
-} from "./webSocketApiMessageHandler";
-import { PlaceLimitOrderRequestParams } from "./placeOrderMessageHandler";
-import { ApiService } from "./apiService";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes";
-import { OrderEventsPatchResponse } from "./orderEventsMessageHandler";
+} from "./webSocketApiMessageHandler.js";
+import { PlaceLimitOrderRequestParams } from "./placeOrderMessageHandler.js";
+import { ApiService } from "./apiService.js";
+import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { OrderEventsPatchResponse } from "./orderEventsMessageHandler.js";
 
 // Submit new order or update existing order. Provide a `refOrderId` to update an existing order.
 export default class SubmitOrderMessageHandler
