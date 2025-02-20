@@ -1,12 +1,12 @@
-import WsJsonClientAuth from "../client/wsJsonClientAuth.js";
-import "dotenv/config";
 import debug from "debug";
+import "dotenv/config";
+import RealWsJsonClient from "../client/realWsJsonClient.js";
 import { CreateAlertRequestParams } from "../client/services/createAlertMessageHandler.js";
 import { OptionQuotesRequestParams } from "../client/services/optionQuotesMessageHandler.js";
-import fetch from "node-fetch";
 import { WsJsonClient } from "../client/wsJsonClient.js";
+import WsJsonClientAuth from "../client/wsJsonClientAuth.js";
 import MarketDepthStateUpdater from "./marketDepthStateUpdater.js";
-import RealWsJsonClient from "../client/realWsJsonClient.js";
+import { getAuthCode } from "./browserOauth.js";
 
 const logger = debug("testapp");
 
@@ -157,30 +157,15 @@ class TestApp {
 }
 
 async function run() {
-  const clientId = process.env.CLIENT_ID;
-  const accessToken = process.env.ACCESS_TOKEN;
-  const refreshToken = process.env.REFRESH_TOKEN;
-  const expiresAt = process.env.TOKEN_EXPIRES_AT;
-  if (!clientId || !accessToken || !refreshToken || !expiresAt) {
-    throw new Error(
-      "Please provide CLIENT_ID, ACCESS_TOKEN, REFRESH_TOKEN and TOKEN_EXPIRES_AT environment variables"
-    );
-  }
-  const token = { accessToken, refreshToken, expiresAt: +expiresAt };
-  const authClient = new WsJsonClientAuth(
-    () => new RealWsJsonClient(),
-    clientId,
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    fetch
-  );
-  const { client } = await authClient.authenticateWithRetry(token);
+  const authCode = await getAuthCode();
+  const authClient = new WsJsonClientAuth(() => new RealWsJsonClient());
+  const client = await authClient.authenticateWithRetry(authCode);
   const app = new TestApp(client);
   await Promise.all([
-    // app.quotes(["ABNB", "UBER"]),
-    // app.accountPositions(),
+    app.quotes(["ABNB", "UBER"]),
+    app.accountPositions(),
     app.optionChain("TSLA"),
-    // app.optionChainQuotes("AAPL"),
+    app.optionChainQuotes("AAPL"),
   ]);
 }
 

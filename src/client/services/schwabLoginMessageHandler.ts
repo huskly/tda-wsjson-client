@@ -7,6 +7,7 @@ import { ApiService } from "../services/apiService.js";
 export type SchwabLoginResponse = {
   service: "login/schwab";
   token: string;
+  refreshToken: string;
   authenticated: boolean;
 };
 
@@ -38,15 +39,24 @@ export default class SchwabLoginMessageHandler
 {
   parseResponse(message: RawPayloadResponse): SchwabLoginResponse {
     const [{ body }] = message.payload;
-    const { authenticated, token } = body as RawSchwabLoginResponseBody;
-    return { authenticated, token, service: "login/schwab" };
+    const {
+      authenticated,
+      token,
+      accessTokenInfo: { refreshToken },
+    } = body as RawSchwabLoginResponseBody;
+    return {
+      authenticated,
+      refreshToken,
+      token,
+      service: "login/schwab",
+    };
   }
 
-  buildRequest(accessToken: string): RawPayloadRequest {
+  buildRequest(authCode: string): RawPayloadRequest {
     return newPayload({
       header: { service: "login/schwab", id: "login/schwab", ver: 0 },
       params: {
-        authCode: accessToken,
+        authCode,
         clientId: "TOSWeb",
         redirectUri: "https://trade.thinkorswim.com/oauth",
         tag: "TOSWeb",

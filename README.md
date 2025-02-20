@@ -8,15 +8,6 @@ This is a node and browser API client for the (undocumented) Schwab WebSocket AP
 
 - Node 16+
 
-Create a `.env` file and set your Schwab oauth access token:
-
-```
-CLIENT_ID=your-client-id
-ACCESS_TOKEN=your-access-token
-REFRESH_TOKEN=your-refresh-token
-TOKEN_EXPIRES_AT=your-token-expires-at
-```
-
 # Building for Node
 
 ```
@@ -27,10 +18,8 @@ yarn build
 # Running the example app
 
 ```
-cd src/example
 yarn install
-yarn link tda-wsjson-client
-yarn start
+node dist/example/testApp.js
 ```
 
 # Supported APIs

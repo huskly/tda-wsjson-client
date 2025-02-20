@@ -130,7 +130,11 @@ export default class RealWsJsonClient implements WsJsonClient {
   private buffer = new BufferedIterator<ParsedWebSocketResponse>();
   private iterator = new MulticastIterator(this.buffer);
   private state = ChannelState.DISCONNECTED;
+  private authCode?: string;
+  // @ts-ignore
   private accessToken?: string;
+  // @ts-ignore
+  private refreshToken?: string;
 
   constructor(
     private readonly socket = new WebSocket(
@@ -157,10 +161,8 @@ export default class RealWsJsonClient implements WsJsonClient {
     )
   ) {}
 
-  async authenticate(
-    accessToken: string
-  ): Promise<RawLoginResponseBody | null> {
-    this.accessToken = accessToken;
+  async authenticate(authCode: string): Promise<RawLoginResponseBody | null> {
+    this.authCode = authCode;
     const { state } = this;
     switch (state) {
       case ChannelState.DISCONNECTED:
@@ -196,7 +198,7 @@ export default class RealWsJsonClient implements WsJsonClient {
     resolve: (value: RawLoginResponseBody) => void,
     reject: (reason?: string) => void
   ) {
-    const { responseParser, buffer, accessToken } = this;
+    const { responseParser, buffer, authCode } = this;
     const message = JSON.parse(data) as WsJsonRawMessage;
     logger("⬅️\treceived %O", message);
     if (isConnectionResponse(message)) {
@@ -204,10 +206,10 @@ export default class RealWsJsonClient implements WsJsonClient {
         messageHandlers,
         SchwabLoginMessageHandler
       );
-      if (!accessToken) {
-        throwError("access token is required, cannot authenticate");
+      if (!authCode) {
+        throwError("auth code is required, cannot authenticate");
       }
-      this.sendMessage(handler.buildRequest(accessToken));
+      this.sendMessage(handler.buildRequest(authCode));
     } else if (isLoginResponse(message)) {
       this.handleLoginResponse(message, resolve, reject);
     } else if (isSchwabLoginResponse(message)) {
@@ -377,6 +379,7 @@ export default class RealWsJsonClient implements WsJsonClient {
       this.state = ChannelState.CONNECTED;
       logger("Schwab login successful, token=%s", body.token);
       this.accessToken = body.token;
+      this.refreshToken = loginResponse.refreshToken;
       resolve(body);
     } else {
       this.state = ChannelState.ERROR;
