@@ -1,12 +1,12 @@
-# TD Ameritrade WsJson API client
+# thinkorswim WsJson API client
 
-This is a node and browser API client for the (undocumented) Schwab WebSocket API.
+This is a node and browser API client for the (undocumented) thinkorswim WebSocket API.
 
 🚧 Work in progress 🚧
 
 # Prerequisites
 
-- Node 16+
+- Node 18+
 
 # Building for Node
 
@@ -68,8 +68,7 @@ for await (const event of client.chart(chartRequest)) {
 }
 ```
 
-For more sample usage check out https://github.com/huskly/tda-wsjson-client/blob/master/src/testApp.ts and
-https://github.com/huskly/tda-wsjson-client/blob/master/example/src/App.tsx
+For more sample usage check out https://github.com/huskly/tos-wsjson-client/blob/master/src/example/testApp.ts
 
 # Running tests
 

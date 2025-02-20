@@ -1,7 +1,7 @@
 import debug from "debug";
 import { WsJsonClient } from "./wsJsonClient.js";
 
-// @ts-ignore
+// @ts-expect-error
 const logger = debug("wsJsonClientAuth");
 
 export default class WsJsonClientAuth {

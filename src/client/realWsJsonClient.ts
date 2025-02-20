@@ -131,9 +131,9 @@ export default class RealWsJsonClient implements WsJsonClient {
   private iterator = new MulticastIterator(this.buffer);
   private state = ChannelState.DISCONNECTED;
   private authCode?: string;
-  // @ts-ignore
+  // @ts-expect-error
   private accessToken?: string;
-  // @ts-ignore
+  // @ts-expect-error
   private refreshToken?: string;
 
   constructor(
