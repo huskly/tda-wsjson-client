@@ -35,7 +35,7 @@
     "bundle": "esbuild dist/client/tdaWsJsonClient.js --bundle --outfile=dist/app.bundle.js --minify --sourcemap --target=es2020",
     "check_prettier": "prettier --check .",
     "lint": "eslint .",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test": "jest",
     "ci": "yarn check_prettier && yarn build && yarn lint && yarn test"
   },
   "dependencies": {
