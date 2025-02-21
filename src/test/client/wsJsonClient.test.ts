@@ -13,6 +13,7 @@ import {
   RawPayloadRequest,
   RawPayloadResponse,
 } from "../../client/tdaWsJsonTypes";
+import GenericIncomingMessageHandler from "../../client/services/genericIncomingMessageHandler";
 
 const accessToken = "something-secret";
 const refreshToken = "something-secret-refresh";
@@ -148,7 +149,9 @@ describe("wsJsonClientTest", () => {
     const url = "ws://localhost:1235";
     const server = new WS(url, { jsonProtocol: true });
     const fakeMessageHandler = new FakeMessageHandler();
-    const responseParser = new ResponseParser([fakeMessageHandler]);
+    const responseParser = new ResponseParser(
+      new GenericIncomingMessageHandler()
+    );
     const webSocket = new WebSocket(url);
     const client = new RealWsJsonClient(webSocket, responseParser);
     try {
@@ -166,7 +169,10 @@ describe("wsJsonClientTest", () => {
       await expect(server).toReceiveMessage(fakeRequest);
       server.send(fakeResponse);
       const response = await observable.promise();
-      expect(response).toEqual({ result: 42, service: "fake" });
+      expect(response).toEqual({
+        body: { someMagicNumber: 42 },
+        service: "fake",
+      });
     } finally {
       client.disconnect();
     }
