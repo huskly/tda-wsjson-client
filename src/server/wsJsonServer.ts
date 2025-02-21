@@ -1,4 +1,4 @@
-import ws from "ws";
+import { WebSocketServer } from "ws";
 import { Server as HttpsServer } from "https";
 import { IncomingMessage, Server as HttpServer, ServerResponse } from "http";
 import { WsJsonClient } from "../client/wsJsonClient.js";
@@ -24,7 +24,7 @@ type DefaultHttpServer = HttpServer<
  * arguments to pass to the method. The response is then forwarded back to the client as a JSON string.
  */
 export default class WsJsonServer implements Disposable {
-  private readonly wss: ws.Server<typeof ws, typeof IncomingMessage>;
+  private readonly wss: WebSocketServer;
   private proxies: WsJsonServerProxy[] = [];
 
   constructor(
@@ -32,7 +32,7 @@ export default class WsJsonServer implements Disposable {
     private readonly server: DefaultHttpsServer | DefaultHttpServer,
     private readonly port = DEFAULT_PORT
   ) {
-    this.wss = new ws.WebSocketServer({ server: this.server });
+    this.wss = new WebSocketServer({ server: this.server });
   }
 
   start() {
