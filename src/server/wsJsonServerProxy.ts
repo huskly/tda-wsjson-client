@@ -37,7 +37,8 @@ export default class WsJsonServerProxy implements Disposable {
     logger("⬅️\treceived %O", msg);
     const { request } = msg;
     switch (request) {
-      case "authenticate": {
+      case "authenticateWithAccessToken":
+      case "authenticateWithAuthCode": {
         this.upstream = this.wsJsonClientFactory();
         return await this.relayPromise(msg);
       }

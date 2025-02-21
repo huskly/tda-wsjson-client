@@ -2,16 +2,21 @@ import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { PuppeteerExtra } from "puppeteer-extra";
 
-export async function getAuthCode() {
+export async function getAuthCode(username: string, password: string) {
   (puppeteer as unknown as PuppeteerExtra).use(StealthPlugin());
 
   return new Promise<string>(async (resolve) => {
     const browser = await (puppeteer as unknown as PuppeteerExtra).launch({
       headless: false, // or 'new' in the latest Puppeteer to get partial headless mode
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      userDataDir: "./puppeteer-data",
     });
 
     const page = await browser.newPage();
+    await page.setUserAgent(
+      "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36"
+    );
+    await page.setViewport({ width: 800, height: 650 });
     await page.setRequestInterception(true);
 
     console.log(
@@ -35,8 +40,51 @@ export async function getAuthCode() {
       request.continue();
     });
 
-    await page.goto("https://trade.thinkorswim.com/");
-
+    await page.goto("https://trade.thinkorswim.com/", {
+      waitUntil: "networkidle2",
+    });
+    page.waitForNavigation();
+    await page.reload({ waitUntil: "networkidle2" });
+    // add a random delay between 2-4 seconds
+    await new Promise((resolve) => setTimeout(resolve, randomDelay(2, 4)));
+    let frames = page.frames();
+    let targetFrame = frames.find((frame) =>
+      frame.url().includes("sws-gateway-nr.thinkorswim.com")
+    );
+    if (!targetFrame) {
+      throw new Error("Target frame not found");
+    }
+    const loginIdInput = await targetFrame.$("#loginIdInput");
+    if (!loginIdInput) {
+      throw new Error("Login ID input not found");
+    }
+    await loginIdInput.type(username, { delay: 100 });
+    await new Promise((resolve) => setTimeout(resolve, randomDelay(1, 2)));
+    let continueBtn = await targetFrame.$("#continueBtn");
+    if (!continueBtn) {
+      throw new Error("Continue button not found");
+    }
+    await continueBtn.click();
+    page.waitForNavigation();
+    await new Promise((resolve) => setTimeout(resolve, randomDelay(2, 4)));
+    frames = page.frames();
+    targetFrame = frames.find((frame) =>
+      frame.url().includes("sws-gateway-nr.thinkorswim.com")
+    );
+    if (!targetFrame) {
+      throw new Error("Target frame not found");
+    }
+    const passwordInput = await targetFrame.$("#passwordInput");
+    if (!passwordInput) {
+      throw new Error("Password input not found");
+    }
+    await passwordInput.type(password, { delay: 100 });
+    continueBtn = await targetFrame.$("#continueBtn");
+    if (!continueBtn) {
+      throw new Error("Continue button not found");
+    }
+    await continueBtn.click();
+    page.waitForNavigation();
     // Wait until we pick up the code
     while (!oauthCode) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -45,4 +93,11 @@ export async function getAuthCode() {
     await browser.close();
     resolve(oauthCode);
   });
+}
+
+function randomDelay(minSeconds: number, maxSeconds: number): number {
+  return (
+    Math.floor(Math.random() * (maxSeconds - minSeconds) * 1000) +
+    minSeconds * 1000
+  );
 }

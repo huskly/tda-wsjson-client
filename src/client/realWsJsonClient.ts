@@ -8,6 +8,7 @@ import {
 import {
   Constructor,
   debugLog,
+  ensure,
   findByTypeOrThrow,
   throwError,
 } from "./util.js";
@@ -86,6 +87,7 @@ import GetWatchlistMessageHandler, {
   GetWatchlistResponse,
 } from "./services/getWatchlistMessageHandler.js";
 import SchwabLoginMessageHandler from "./services/schwabLoginMessageHandler.js";
+import { writeFileSync, readFileSync, existsSync } from "node:fs";
 
 export const CONNECTION_REQUEST_MESSAGE = {
   ver: "27.*.*",
@@ -130,11 +132,11 @@ export default class RealWsJsonClient implements WsJsonClient {
   private buffer = new BufferedIterator<ParsedWebSocketResponse>();
   private iterator = new MulticastIterator(this.buffer);
   private state = ChannelState.DISCONNECTED;
-  private authCode?: string;
-  // @ts-expect-error
-  private accessToken?: string;
-  // @ts-expect-error
-  private refreshToken?: string;
+  private credentials: {
+    authCode?: string;
+    accessToken?: string;
+    refreshToken?: string;
+  } = {};
 
   constructor(
     private readonly socket = new WebSocket(
@@ -161,8 +163,28 @@ export default class RealWsJsonClient implements WsJsonClient {
     )
   ) {}
 
-  async authenticate(authCode: string): Promise<RawLoginResponseBody | null> {
-    this.authCode = authCode;
+  async authenticateWithAccessToken({
+    accessToken,
+    refreshToken,
+  }: {
+    accessToken: string;
+    refreshToken: string;
+  }): Promise<RawLoginResponseBody | null> {
+    ensure(accessToken, "access token is required");
+    ensure(refreshToken, "refresh token is required");
+    this.credentials = { accessToken, refreshToken };
+    return await this.handshake();
+  }
+
+  async authenticateWithAuthCode(
+    authCode: string
+  ): Promise<RawLoginResponseBody | null> {
+    ensure(authCode, "auth code is required");
+    this.credentials = { authCode };
+    return await this.handshake();
+  }
+
+  private async handshake(): Promise<RawLoginResponseBody | null> {
     const { state } = this;
     switch (state) {
       case ChannelState.DISCONNECTED:
@@ -178,7 +200,6 @@ export default class RealWsJsonClient implements WsJsonClient {
         return Promise.reject("Illegal state, ws connection failed previously");
     }
   }
-
   private doConnect(): Promise<RawLoginResponseBody> {
     const { socket } = this;
     return new Promise((resolve, reject) => {
@@ -198,18 +219,11 @@ export default class RealWsJsonClient implements WsJsonClient {
     resolve: (value: RawLoginResponseBody) => void,
     reject: (reason?: string) => void
   ) {
-    const { responseParser, buffer, authCode } = this;
+    const { responseParser, buffer } = this;
     const message = JSON.parse(data) as WsJsonRawMessage;
     logger("⬅️\treceived %O", message);
     if (isConnectionResponse(message)) {
-      const handler = findByTypeOrThrow(
-        messageHandlers,
-        SchwabLoginMessageHandler
-      );
-      if (!authCode) {
-        throwError("auth code is required, cannot authenticate");
-      }
-      this.sendMessage(handler.buildRequest(authCode));
+      this.authenticate();
     } else if (isLoginResponse(message)) {
       this.handleLoginResponse(message, resolve, reject);
     } else if (isSchwabLoginResponse(message)) {
@@ -219,6 +233,26 @@ export default class RealWsJsonClient implements WsJsonClient {
       if (parsedResponse) {
         buffer.emit(parsedResponse);
       }
+    }
+  }
+
+  private authenticate() {
+    const {
+      credentials: { authCode, accessToken },
+    } = this;
+    if (accessToken) {
+      // if we already have an access token, we can just authenticate with it
+      const handler = findByTypeOrThrow(messageHandlers, LoginMessageHandler);
+      this.sendMessage(handler.buildRequest(accessToken));
+    } else if (authCode) {
+      // exchange the auth code for an access token
+      const handler = findByTypeOrThrow(
+        messageHandlers,
+        SchwabLoginMessageHandler
+      );
+      this.sendMessage(handler.buildRequest(authCode));
+    } else {
+      throwError("no credentials provided, cannot authenticate");
     }
   }
 
@@ -364,6 +398,36 @@ export default class RealWsJsonClient implements WsJsonClient {
     this.socket?.send(msg);
   }
 
+  private updateDotEnvCredentials() {
+    const {
+      credentials: { accessToken, refreshToken },
+    } = this;
+    const envPath = ".env";
+    let envContent = "";
+    if (existsSync(envPath)) {
+      envContent = readFileSync(envPath, "utf-8");
+      // Remove any existing token lines
+      envContent = envContent
+        .split("\n")
+        .filter(
+          (line) =>
+            !line.startsWith("TOS_ACCESS_TOKEN=") &&
+            !line.startsWith("TOS_REFRESH_TOKEN=")
+        )
+        .join("\n");
+    }
+
+    // Append the new token values
+    const tokenLines = [
+      `TOS_ACCESS_TOKEN=${accessToken}`,
+      `TOS_REFRESH_TOKEN=${refreshToken}`,
+    ].join("\n");
+
+    // Ensure there's a newline between existing content and new tokens
+    const newContent = envContent.trim() + "\n" + tokenLines + "\n";
+    writeFileSync(envPath, newContent);
+  }
+
   private handleSchwabLoginResponse(
     message: RawLoginResponse,
     resolve: (value: RawLoginResponseBody) => void,
@@ -378,8 +442,11 @@ export default class RealWsJsonClient implements WsJsonClient {
     if (loginResponse.authenticated) {
       this.state = ChannelState.CONNECTED;
       logger("Schwab login successful, token=%s", body.token);
-      this.accessToken = body.token;
-      this.refreshToken = loginResponse.refreshToken;
+      this.credentials.accessToken = body.token;
+      if (loginResponse.refreshToken) {
+        this.credentials.refreshToken = loginResponse.refreshToken;
+      }
+      this.updateDotEnvCredentials();
       resolve(body);
     } else {
       this.state = ChannelState.ERROR;
@@ -398,6 +465,7 @@ export default class RealWsJsonClient implements WsJsonClient {
     const [{ body }] = message.payload;
     if (loginResponse.successful) {
       this.state = ChannelState.CONNECTED;
+      this.updateDotEnvCredentials();
       resolve(body);
     } else {
       this.state = ChannelState.ERROR;

@@ -34,15 +34,24 @@ import { MarketDepthResponse } from "./services/marketDepthMessageHandler.js";
 import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler.js";
 
 export default class MockWsJsonClient implements WsJsonClient {
+  authenticateWithAuthCode(
+    _authCode: string
+  ): Promise<RawLoginResponseBody | null> {
+    throw new Error("Method not implemented.");
+  }
+
+  authenticateWithAccessToken(_: {
+    accessToken: string;
+    refreshToken: string;
+  }): Promise<RawLoginResponseBody | null> {
+    throw new Error("Method not implemented.");
+  }
+
   async *accountPositions(_: string): AsyncIterable<PositionsResponse> {
     return yield {
       service: "positions",
       positions: [],
     };
-  }
-
-  authenticate(): Promise<RawLoginResponseBody | null> {
-    return Promise.resolve(null);
   }
 
   cancelAlert(_: number): Promise<CancelAlertResponse> {

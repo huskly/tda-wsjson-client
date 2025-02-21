@@ -4,7 +4,6 @@ import RealWsJsonClient from "../client/realWsJsonClient.js";
 import { CreateAlertRequestParams } from "../client/services/createAlertMessageHandler.js";
 import { OptionQuotesRequestParams } from "../client/services/optionQuotesMessageHandler.js";
 import { WsJsonClient } from "../client/wsJsonClient.js";
-import WsJsonClientAuth from "../client/wsJsonClientAuth.js";
 import MarketDepthStateUpdater from "./marketDepthStateUpdater.js";
 import { getAuthCode } from "./browserOauth.js";
 
@@ -157,15 +156,27 @@ class TestApp {
 }
 
 async function run() {
-  const authCode = await getAuthCode();
-  const authClient = new WsJsonClientAuth(() => new RealWsJsonClient());
-  const client = await authClient.authenticateWithRetry(authCode);
+  const accessToken = process.env.TOS_ACCESS_TOKEN!;
+  const refreshToken = process.env.TOS_REFRESH_TOKEN!;
+  const username = process.env.TOS_USERNAME!;
+  const password = process.env.TOS_PASSWORD!;
+  const client = new RealWsJsonClient();
+  if (accessToken && refreshToken) {
+    await client.authenticateWithAccessToken({ accessToken, refreshToken });
+  } else if (username && password) {
+    const authCode = await getAuthCode(username, password);
+    await client.authenticateWithAuthCode(authCode);
+  } else {
+    throw new Error(
+      "TOS_ACCESS_TOKEN or TOS_USERNAME and TOS_PASSWORD env vars must be set"
+    );
+  }
   const app = new TestApp(client);
   await Promise.all([
-    app.quotes(["ABNB", "UBER"]),
+    // app.quotes(["ABNB", "UBER"]),
     app.accountPositions(),
-    app.optionChain("TSLA"),
-    app.optionChainQuotes("AAPL"),
+    // app.optionChain("TSLA"),
+    // app.optionChainQuotes("AAPL"),
   ]);
 }
 

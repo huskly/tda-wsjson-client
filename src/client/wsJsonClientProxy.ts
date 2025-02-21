@@ -42,7 +42,8 @@ import { Observable, BufferedIterator, MulticastIterator } from "obgen";
 const logger = debug("wsClientProxy");
 
 export const ALL_REQUESTS = [
-  "authenticate",
+  "authenticateWithAuthCode",
+  "authenticateWithAccessToken",
   "optionChainQuotes",
   "disconnect",
   "quotes",
@@ -86,8 +87,22 @@ export default class WsJsonClientProxy implements WsJsonClient {
     private readonly options?: any
   ) {}
 
-  async authenticate(
-    accessToken: string
+  authenticateWithAuthCode(
+    authCode: string
+  ): Promise<RawLoginResponseBody | null> {
+    return this.authenticate("authenticateWithAuthCode", authCode);
+  }
+
+  authenticateWithAccessToken(args: {
+    accessToken: string;
+    refreshToken: string;
+  }): Promise<RawLoginResponseBody | null> {
+    return this.authenticate("authenticateWithAccessToken", args);
+  }
+
+  private authenticate(
+    method: "authenticateWithAuthCode" | "authenticateWithAccessToken",
+    args: string | { accessToken: string; refreshToken: string }
   ): Promise<RawLoginResponseBody | null> {
     this.socket = new WebSocket(this.proxyUrl, this.options);
     this.state = ChannelState.CONNECTING;
@@ -103,7 +118,7 @@ export default class WsJsonClientProxy implements WsJsonClient {
       socket.onopen = () => {
         logger("proxy ws connection opened");
         this.state = ChannelState.CONNECTED;
-        this.doAuthenticate(accessToken).then((res) => {
+        this.doAuthenticate(method, args).then((res) => {
           logger("proxy ws authentication response: %O", res);
           if (isString(res) && res.includes("NOT_AUTHORIZED")) {
             reject(res);
@@ -126,12 +141,10 @@ export default class WsJsonClientProxy implements WsJsonClient {
   }
 
   private doAuthenticate(
-    accessToken: string
+    method: "authenticateWithAuthCode" | "authenticateWithAccessToken",
+    args: string | { accessToken: string; refreshToken: string }
   ): Promise<RawLoginResponseBody | null> {
-    return this.dispatch<RawLoginResponseBody | null>(
-      "authenticate",
-      accessToken
-    ).promise();
+    return this.dispatch<RawLoginResponseBody | null>(method, args).promise();
   }
 
   accountPositions(accountNumber: string): AsyncIterable<PositionsResponse> {

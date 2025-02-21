@@ -34,7 +34,14 @@ import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler.js";
 import { Disposable } from "../server/disposable.js";
 
 export interface WsJsonClient extends Disposable {
-  authenticate(accessToken: string): Promise<RawLoginResponseBody | null>;
+  authenticateWithAuthCode(
+    authCode: string
+  ): Promise<RawLoginResponseBody | null>;
+
+  authenticateWithAccessToken(args: {
+    accessToken: string;
+    refreshToken: string;
+  }): Promise<RawLoginResponseBody | null>;
 
   isConnected(): boolean;
 

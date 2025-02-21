@@ -12,6 +12,13 @@ export function throwError(msg: string): never {
   throw new Error(msg);
 }
 
+export function ensure<T>(value: T, msg: string): T {
+  if (!value) {
+    throwError(msg);
+  }
+  return value;
+}
+
 export function positionNetQuantity(position: AccountPosition): number {
   return position.longQuantity - position.shortQuantity;
 }
