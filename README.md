@@ -15,7 +15,7 @@ yarn install
 yarn build
 ```
 
-# Running the example app
+# Running the test app
 
 ```
 # if you already have an access token and refresh token
@@ -30,6 +30,21 @@ DEBUG_DEPTH=5 DEBUG=* \
   TOS_USERNAME=<username> \
   TOS_PASSWORD=<password> \
   node dist/example/testApp.js
+```
+
+## Running the proxy server
+
+```
+node dist/example/wsProxyServer.js
+```
+
+## Running the proxy client
+
+```
+node dist/example/wsProxyClient.js
+> authenticateWithAccessToken {"accessToken":"<auth_token>","refreshToken":"<refresh_token>"}
+> quotes ["ABNB", "UBER"]
+> accountPositions "1234567890"
 ```
 
 ## Authentication flow

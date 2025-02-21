@@ -42,6 +42,7 @@ export default class WsJsonServer implements Disposable {
       proxies.push(new WsJsonServerProxy(ws, wsJsonClientFactory));
     });
     server.listen(port);
+    logger(`server started and listening on port ${port}`);
   }
 
   disconnect() {
