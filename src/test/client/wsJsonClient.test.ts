@@ -15,6 +15,7 @@ import {
 } from "../../client/tdaWsJsonTypes";
 
 const accessToken = "something-secret";
+const refreshToken = "something-secret-refresh";
 const fakeConnectionResponse = {
   session: "17a7_7115011e1b4a8c9c",
   build: "27.2323.3-B0",
@@ -116,7 +117,7 @@ describe("wsJsonClientTest", () => {
     try {
       await server.connected;
       // explicitly do not await for this promise so that we can send the server replies below
-      client.authenticate(accessToken);
+      client.authenticateWithAccessToken({ accessToken, refreshToken });
       server.send(fakeConnectionResponse);
       server.send(fakeLoginResponse);
       await expect(server).toReceiveMessage(CONNECTION_REQUEST_MESSAGE);
@@ -153,7 +154,7 @@ describe("wsJsonClientTest", () => {
     try {
       await server.connected;
       // explicitly do not await for this promise so that we can send the server replies below
-      client.authenticate(accessToken);
+      client.authenticateWithAccessToken({ accessToken, refreshToken });
       server.send(fakeConnectionResponse);
       server.send(fakeLoginResponse);
       await expect(server).toReceiveMessage(CONNECTION_REQUEST_MESSAGE);
