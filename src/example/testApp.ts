@@ -6,6 +6,7 @@ import { OptionQuotesRequestParams } from "../client/services/optionQuotesMessag
 import { WsJsonClient } from "../client/wsJsonClient.js";
 import MarketDepthStateUpdater from "./marketDepthStateUpdater.js";
 import { getAuthCode } from "./browserOauth.js";
+import { MarketDepthResponse } from "src/client/services/marketDepthMessageHandler.js";
 
 const logger = debug("testapp");
 
@@ -20,38 +21,31 @@ class TestApp {
       range: "YEAR2",
       includeExtendedHours: true,
     };
-    for await (const event of this.client.chart(chartRequest)) {
-      logger("chart() " + JSON.stringify(event));
+    for await (const { body } of this.client.chart(chartRequest)) {
+      logger("quotes() %O", body);
     }
   }
 
   async accountNumber(): Promise<string> {
     logger(" --- accountNumber() requesting account number ---");
-    const { defaultAccountCode } = await this.client.userProperties();
-    return defaultAccountCode;
+    const {
+      body: { defaultAccountCode },
+    } = await this.client.userProperties();
+    return defaultAccountCode as string;
   }
 
   async accountPositions() {
     const accountNumber = await this.accountNumber();
     logger(" --- accountPositions() requesting account positions ---");
-    for await (const event of this.client.accountPositions(accountNumber)) {
-      logger("accountPositions() %O", event);
+    for await (const { body } of this.client.accountPositions(accountNumber)) {
+      logger("accountPositions() %O", body);
     }
   }
 
   async quotes(symbols: string[]) {
     logger(" --- quotes() requesting quotes ---");
-    for await (const quote of this.client.quotes(symbols)) {
-      logger(
-        "quotes() %O",
-        quote.quotes.map((q) => {
-          if (!q.symbol && q.symbolIndex) {
-            q.symbol = symbols[q.symbolIndex];
-            delete q.symbolIndex;
-          }
-          return q;
-        })
-      );
+    for await (const { body } of this.client.quotes(symbols)) {
+      logger("quotes() %O", body);
     }
   }
 
@@ -88,8 +82,8 @@ class TestApp {
   async optionChainQuotes(symbol: string) {
     logger(" --- optionChainQuotes() requesting option chain quotes ---");
     const events = this.client.optionChainQuotes(symbol);
-    for await (const event of events) {
-      logger("optionChainQuotes() " + JSON.stringify(event));
+    for await (const { body } of events) {
+      logger("optionChainQuotes() %O", body);
     }
   }
 
@@ -104,16 +98,16 @@ class TestApp {
 
   async optionQuotes(params: OptionQuotesRequestParams) {
     logger(" --- optionQuotes() requesting option quotes ---");
-    for await (const optionQuotes of this.client.optionQuotes(params)) {
-      logger("optionQuotes() %O", optionQuotes);
+    for await (const { body } of this.client.optionQuotes(params)) {
+      logger("optionQuotes() %O", body);
     }
   }
 
   async workingOrders() {
     const accountNumber = await this.accountNumber();
     logger(" --- workingOrders() requesting working orders ---");
-    for await (const event of this.client.workingOrders(accountNumber)) {
-      logger("workingOrders() %O", event);
+    for await (const { body } of this.client.workingOrders(accountNumber)) {
+      logger("workingOrders() %O", body);
     }
   }
 
@@ -140,9 +134,9 @@ class TestApp {
   async marketDepth(symbol: string) {
     const stateUpdater = new MarketDepthStateUpdater();
     logger(` --- marketDepth() requesting market depth for ${symbol} ---`);
-    for await (const message of this.client.marketDepth(symbol)) {
+    for await (const { body: message } of this.client.marketDepth(symbol)) {
       logger("message %O", message);
-      stateUpdater.handleMessage(message);
+      stateUpdater.handleMessage(message as MarketDepthResponse);
       logger("ask quotes: %O", stateUpdater.askQuotes);
       logger("bid quotes: %O", stateUpdater.bidQuotes);
     }
@@ -173,8 +167,8 @@ async function run() {
   }
   const app = new TestApp(client);
   await Promise.all([
-    // app.quotes(["ABNB", "UBER"]),
-    app.accountPositions(),
+    app.chart("TSLA"),
+    // app.accountPositions(),
     // app.optionChain("TSLA"),
     // app.optionChainQuotes("AAPL"),
   ]);

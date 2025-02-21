@@ -1,11 +1,6 @@
 import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
-import {
-  LookupAlertsResponse,
-  parseAlert,
-  RawAlertResponse,
-} from "../types/alertTypes.js";
-import { isEmpty } from "lodash-es";
+import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
+import { RawAlertResponse } from "../types/alertTypes.js";
 import { ApiService } from "./apiService.js";
 
 export type RawAlertLookupResponse = {
@@ -13,22 +8,8 @@ export type RawAlertLookupResponse = {
 };
 
 export default class AlertLookupMessageHandler
-  implements WebSocketApiMessageHandler<never, LookupAlertsResponse | null>
+  implements WebSocketApiMessageHandler<never>
 {
-  parseResponse({
-    payload: [{ body }],
-  }: RawPayloadResponse): LookupAlertsResponse | null {
-    const { alerts } = body as RawAlertLookupResponse;
-    if (!isEmpty(alerts)) {
-      const parsedAlerts = alerts.map((alert) =>
-        parseAlert({ rawAlert: alert })
-      );
-      return { alerts: parsedAlerts, service: "alerts/lookup" };
-    } else {
-      return null;
-    }
-  }
-
   buildRequest(_: never): RawPayloadRequest {
     return {
       payload: [

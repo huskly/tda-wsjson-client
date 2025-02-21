@@ -1,37 +1,12 @@
-import { WsJsonClient } from "./wsJsonClient.js";
-import { PositionsResponse } from "./services/positionsMessageHandler.js";
-import { RawLoginResponseBody } from "./services/loginMessageHandler.js";
 import { CancelOrderResponse } from "./services/cancelOrderMessageHandler.js";
-import {
-  ChartRequestParams,
-  ChartResponse,
-} from "./services/chartMessageHandler.js";
+import { ChartRequestParams } from "./services/chartMessageHandler.js";
 import { CreateAlertRequestParams } from "./services/createAlertMessageHandler.js";
-import { OptionChainResponse } from "./services/optionSeriesMessageHandler.js";
-import {
-  OptionChainDetailsRequest,
-  OptionChainDetailsResponse,
-} from "./services/optionChainDetailsMessageHandler.js";
-import { OptionSeriesQuotesResponse } from "./services/optionSeriesQuotesMessageHandler.js";
-import {
-  OptionQuotesRequestParams,
-  OptionQuotesResponse,
-} from "./services/optionQuotesMessageHandler.js";
-import {
-  PlaceLimitOrderRequestParams,
-  PlaceOrderSnapshotResponse,
-} from "./services/placeOrderMessageHandler.js";
-import { OrderEventsResponse } from "./services/orderEventsMessageHandler.js";
-import { QuotesResponse } from "./services/quotesMessageHandler.js";
-import { InstrumentSearchResponse } from "./services/instrumentSearchMessageHandler.js";
-import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler.js";
-import {
-  CancelAlertResponse,
-  CreateAlertResponse,
-  LookupAlertsResponse,
-} from "./types/alertTypes.js";
-import { MarketDepthResponse } from "./services/marketDepthMessageHandler.js";
-import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler.js";
+import { RawLoginResponseBody } from "./services/loginMessageHandler.js";
+import { OptionChainDetailsRequest } from "./services/optionChainDetailsMessageHandler.js";
+import { OptionQuotesRequestParams } from "./services/optionQuotesMessageHandler.js";
+import { PlaceLimitOrderRequestParams } from "./services/placeOrderMessageHandler.js";
+import { ParsedPayloadResponse } from "./tdaWsJsonTypes.js";
+import { WsJsonClient } from "./wsJsonClient.js";
 
 export default class MockWsJsonClient implements WsJsonClient {
   authenticateWithAuthCode(
@@ -47,17 +22,17 @@ export default class MockWsJsonClient implements WsJsonClient {
     throw new Error("Method not implemented.");
   }
 
-  async *accountPositions(_: string): AsyncIterable<PositionsResponse> {
+  async *accountPositions(_: string): AsyncIterable<ParsedPayloadResponse> {
     return yield {
       service: "positions",
-      positions: [],
+      body: { positions: [] },
     };
   }
 
-  cancelAlert(_: number): Promise<CancelAlertResponse> {
+  cancelAlert(_: number): Promise<ParsedPayloadResponse> {
     return Promise.resolve({
       service: "alerts/cancel",
-      alerts: [],
+      body: { alerts: [] },
     });
   }
 
@@ -70,18 +45,17 @@ export default class MockWsJsonClient implements WsJsonClient {
     });
   }
 
-  async *chart(_: ChartRequestParams): AsyncIterable<ChartResponse> {
+  async *chart(_: ChartRequestParams): AsyncIterable<ParsedPayloadResponse> {
     return yield {
       service: "chart",
-      symbol: "",
-      candles: [],
+      body: { symbol: "", candles: [] },
     };
   }
 
-  createAlert(_: CreateAlertRequestParams): Promise<CreateAlertResponse> {
+  createAlert(_: CreateAlertRequestParams): Promise<ParsedPayloadResponse> {
     return Promise.resolve({
       service: "alerts/create",
-      alerts: [],
+      body: { alerts: [] },
     });
   }
 
@@ -99,127 +73,129 @@ export default class MockWsJsonClient implements WsJsonClient {
     return false;
   }
 
-  async *lookupAlerts(): AsyncIterable<LookupAlertsResponse> {
+  async *lookupAlerts(): AsyncIterable<ParsedPayloadResponse> {
     return yield {
       service: "alerts/lookup",
-      alerts: [],
+      body: {},
     };
   }
 
-  optionChain(_: string): Promise<OptionChainResponse> {
+  optionChain(_: string): Promise<ParsedPayloadResponse> {
     return Promise.resolve({
-      series: [],
       service: "optionSeries",
+      body: {},
     });
   }
 
   optionChainDetails(
     _: OptionChainDetailsRequest
-  ): Promise<OptionChainDetailsResponse> {
+  ): Promise<ParsedPayloadResponse> {
     return Promise.resolve({
       service: "option_chain/get",
-      seriesDetails: [],
+      body: {},
     });
   }
 
-  async *optionChainQuotes(
-    _: string
-  ): AsyncIterable<OptionSeriesQuotesResponse> {
+  async *optionChainQuotes(_: string): AsyncIterable<ParsedPayloadResponse> {
     return yield {
-      series: [],
       service: "optionSeries/quotes",
+      body: {},
     };
   }
 
   async *optionQuotes(
     _: OptionQuotesRequestParams
-  ): AsyncIterable<OptionQuotesResponse> {
+  ): AsyncIterable<ParsedPayloadResponse> {
     return yield {
-      items: [],
       service: "quotes/options",
+      body: {},
     };
   }
 
-  placeOrder(
-    _: PlaceLimitOrderRequestParams
-  ): Promise<PlaceOrderSnapshotResponse> {
+  placeOrder(_: PlaceLimitOrderRequestParams): Promise<ParsedPayloadResponse> {
     return Promise.resolve({
       service: "place_order",
-      orders: [],
+      body: {},
     });
   }
 
-  async *quotes(_: string[]): AsyncIterable<QuotesResponse> {
+  async *quotes(_: string[]): AsyncIterable<ParsedPayloadResponse> {
     return yield {
       service: "quotes",
-      quotes: [],
+      body: {},
     };
   }
 
   replaceOrder(
     _: Required<PlaceLimitOrderRequestParams>
-  ): Promise<OrderEventsResponse> {
+  ): Promise<ParsedPayloadResponse> {
     return Promise.resolve({
       service: "order_events",
-      orders: [],
+      body: {},
     });
   }
 
-  searchInstruments(_: string): Promise<InstrumentSearchResponse> {
+  searchInstruments(_: string): Promise<ParsedPayloadResponse> {
     return Promise.resolve({
       service: "instrument_search",
-      instruments: [],
+      body: {},
     });
   }
 
-  userProperties(): Promise<UserPropertiesResponse> {
+  userProperties(): Promise<ParsedPayloadResponse> {
     return Promise.resolve({
       service: "user_properties",
-      defaultAccountCode: "foo",
-      nickname: "foo",
-      plDisplayMethod: "foo",
-      stocksOrderDefaultType: "foo",
-      stocksOrderDefaultQuantity: 0,
-      stocksOrderQuantityIncrement: 0,
-      optionsOrderDefaultType: "foo",
-      optionsOrderDefaultQuantity: 0,
-      optionsOrderQuantityIncrement: 0,
-      futuresOrderOrderDefaultType: "foo",
-      futuresOrderDefaultType: "foo",
-      futuresOrderDefaultQuantity: 0,
-      futuresOrderQuantityIncrement: 0,
-      futureOptionsOrderDefaultType: "foo",
-      futureOptionsOrderDefaultQuantity: 0,
-      futureOptionsOrderQuantityIncrement: 0,
-      forexOrderDefaultType: "foo",
-      forexOrderDefaultQuantity: 0,
-      forexOrderQuantityIncrement: 0,
+      body: {
+        defaultAccountCode: "foo",
+        nickname: "foo",
+        plDisplayMethod: "foo",
+        stocksOrderDefaultType: "foo",
+        stocksOrderDefaultQuantity: 0,
+        stocksOrderQuantityIncrement: 0,
+        optionsOrderDefaultType: "foo",
+        optionsOrderDefaultQuantity: 0,
+        optionsOrderQuantityIncrement: 0,
+        futuresOrderOrderDefaultType: "foo",
+        futuresOrderDefaultType: "foo",
+        futuresOrderDefaultQuantity: 0,
+        futuresOrderQuantityIncrement: 0,
+        futureOptionsOrderDefaultType: "foo",
+        futureOptionsOrderDefaultQuantity: 0,
+        futureOptionsOrderQuantityIncrement: 0,
+        forexOrderDefaultType: "foo",
+        forexOrderDefaultQuantity: 0,
+        forexOrderQuantityIncrement: 0,
+      },
     });
   }
 
-  async *workingOrders(_: string): AsyncIterable<OrderEventsResponse> {
+  async *workingOrders(_: string): AsyncIterable<ParsedPayloadResponse> {
     return yield {
-      orders: [],
+      body: {},
       service: "order_events",
     };
   }
 
-  async *marketDepth(_: string): AsyncIterable<MarketDepthResponse> {
+  async *marketDepth(_: string): AsyncIterable<ParsedPayloadResponse> {
     return yield {
-      bidQuotes: [],
-      askQuotes: [],
+      body: {
+        bidQuotes: [],
+        askQuotes: [],
+      },
       service: "market_depth",
     };
   }
 
-  watchlist(watchlistId: number): Promise<GetWatchlistResponse> {
+  watchlist(watchlistId: number): Promise<ParsedPayloadResponse> {
     return Promise.resolve({
       service: "watchlist/get",
-      watchlist: {
-        id: watchlistId,
-        name: "foo",
-        type: "STATIC",
-        symbols: ["AAPL", "GOOG", "MSFT"],
+      body: {
+        watchlist: {
+          id: watchlistId,
+          name: "foo",
+          type: "STATIC",
+          symbols: ["AAPL", "GOOG", "MSFT"],
+        },
       },
     });
   }

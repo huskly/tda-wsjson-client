@@ -1,7 +1,7 @@
-import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
 import { newRandomId } from "../util.js";
 import { ApiService } from "./apiService.js";
+import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
 
 export type RawPayloadResponseInstrumentSearch = {
   instruments: {
@@ -27,18 +27,8 @@ export type InstrumentSearchResponse = {
 };
 
 export default class InstrumentSearchMessageHandler
-  implements
-    WebSocketApiMessageHandler<
-      InstrumentSearchRequest,
-      InstrumentSearchResponse
-    >
+  implements WebSocketApiMessageHandler<InstrumentSearchRequest>
 {
-  parseResponse(message: RawPayloadResponse): InstrumentSearchResponse {
-    const [{ body }] = message.payload;
-    const { instruments } = body as RawPayloadResponseInstrumentSearch;
-    return { instruments, service: "instrument_search" };
-  }
-
   buildRequest({
     query,
     limit = 5,

@@ -1,6 +1,6 @@
-import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
 import { ApiService } from "./apiService.js";
+import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
 
 export type RawOptionChainDetailsResponse = {
   optionSeries: OptionChainDetailsItem[];
@@ -36,20 +36,8 @@ export type OptionChainDetailsRequest = {
 };
 
 export default class OptionChainDetailsMessageHandler
-  implements
-    WebSocketApiMessageHandler<
-      OptionChainDetailsRequest,
-      OptionChainDetailsResponse | null
-    >
+  implements WebSocketApiMessageHandler<OptionChainDetailsRequest>
 {
-  parseResponse(
-    message: RawPayloadResponse
-  ): OptionChainDetailsResponse | null {
-    const [{ body }] = message.payload;
-    const { optionSeries } = body as RawOptionChainDetailsResponse;
-    return { seriesDetails: optionSeries, service: "option_chain/get" };
-  }
-
   // param `seriesNames` as returned from `newOptionChainRequest`, eg: "16 JUN 23 100"
   buildRequest({
     symbol,

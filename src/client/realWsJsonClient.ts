@@ -1,7 +1,57 @@
+import debug from "debug";
 import WebSocket from "isomorphic-ws";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import {
-  MessageHandlerBaseResponse,
-  ParsedWebSocketResponse,
+  BufferedIterator,
+  deferredWrap,
+  MulticastIterator,
+  Observable,
+} from "obgen";
+import {
+  isConnectionResponse,
+  isLoginResponse,
+  isSchwabLoginResponse,
+} from "./messageTypeHelpers.js";
+import ResponseParser from "./responseParser.js";
+import AlertLookupMessageHandler from "./services/alertLookupMessageHandler.js";
+import CancelAlertMessageHandler from "./services/cancelAlertMessageHandler.js";
+import CancelOrderMessageHandler from "./services/cancelOrderMessageHandler.js";
+import ChartMessageHandler, {
+  ChartRequestParams,
+} from "./services/chartMessageHandler.js";
+import CreateAlertMessageHandler, {
+  CreateAlertRequestParams,
+} from "./services/createAlertMessageHandler.js";
+import GenericIncomingMessageHandler from "./services/genericIncomingMessageHandler.js";
+import GetWatchlistMessageHandler from "./services/getWatchlistMessageHandler.js";
+import InstrumentSearchMessageHandler from "./services/instrumentSearchMessageHandler.js";
+import LoginMessageHandler, {
+  RawLoginResponse,
+  RawLoginResponseBody,
+} from "./services/loginMessageHandler.js";
+import MarketDepthMessageHandler from "./services/marketDepthMessageHandler.js";
+import OptionChainDetailsMessageHandler, {
+  OptionChainDetailsRequest,
+} from "./services/optionChainDetailsMessageHandler.js";
+import OptionQuotesMessageHandler, {
+  OptionQuotesRequestParams,
+} from "./services/optionQuotesMessageHandler.js";
+import OptionSeriesMessageHandler from "./services/optionSeriesMessageHandler.js";
+import OptionSeriesQuotesMessageHandler from "./services/optionSeriesQuotesMessageHandler.js";
+import OrderEventsMessageHandler from "./services/orderEventsMessageHandler.js";
+import PlaceOrderMessageHandler, {
+  PlaceLimitOrderRequestParams,
+} from "./services/placeOrderMessageHandler.js";
+import PositionsMessageHandler from "./services/positionsMessageHandler.js";
+import QuotesMessageHandler from "./services/quotesMessageHandler.js";
+import SchwabLoginMessageHandler from "./services/schwabLoginMessageHandler.js";
+import SubmitOrderMessageHandler from "./services/submitOrderMessageHandler.js";
+import SubscribeToAlertMessageHandler from "./services/subscribeToAlertMessageHandler.js";
+import UserPropertiesMessageHandler from "./services/userPropertiesMessageHandler.js";
+import WebSocketApiMessageHandler from "./services/webSocketApiMessageHandler.js";
+import WorkingOrdersMessageHandler from "./services/workingOrdersMessageHandler.js";
+import {
+  ParsedPayloadResponse,
   RawPayloadResponse,
   WsJsonRawMessage,
 } from "./tdaWsJsonTypes.js";
@@ -12,82 +62,7 @@ import {
   findByTypeOrThrow,
   throwError,
 } from "./util.js";
-import {
-  isConnectionResponse,
-  isLoginResponse,
-  isSchwabLoginResponse,
-} from "./messageTypeHelpers.js";
-import { deferredWrap } from "obgen";
-import debug from "debug";
-import { Observable, BufferedIterator, MulticastIterator } from "obgen";
-import OptionChainDetailsMessageHandler, {
-  OptionChainDetailsRequest,
-  OptionChainDetailsResponse,
-} from "./services/optionChainDetailsMessageHandler.js";
-import CancelAlertMessageHandler from "./services/cancelAlertMessageHandler.js";
-import CreateAlertMessageHandler, {
-  CreateAlertRequestParams,
-} from "./services/createAlertMessageHandler.js";
-import AlertLookupMessageHandler from "./services/alertLookupMessageHandler.js";
-import SubscribeToAlertMessageHandler from "./services/subscribeToAlertMessageHandler.js";
-import OptionQuotesMessageHandler, {
-  OptionQuotesRequestParams,
-  OptionQuotesResponse,
-} from "./services/optionQuotesMessageHandler.js";
-import ChartMessageHandler, {
-  ChartRequestParams,
-  ChartResponse,
-} from "./services/chartMessageHandler.js";
-import InstrumentSearchMessageHandler, {
-  InstrumentSearchResponse,
-} from "./services/instrumentSearchMessageHandler.js";
-import CancelOrderMessageHandler, {
-  CancelOrderResponse,
-} from "./services/cancelOrderMessageHandler.js";
-import OptionSeriesMessageHandler, {
-  OptionChainResponse,
-} from "./services/optionSeriesMessageHandler.js";
-import OrderEventsMessageHandler, {
-  OrderEventsResponse,
-} from "./services/orderEventsMessageHandler.js";
-import PositionsMessageHandler, {
-  PositionsResponse,
-} from "./services/positionsMessageHandler.js";
-import QuotesMessageHandler, {
-  QuotesResponse,
-} from "./services/quotesMessageHandler.js";
-import UserPropertiesMessageHandler, {
-  UserPropertiesResponse,
-} from "./services/userPropertiesMessageHandler.js";
-import PlaceOrderMessageHandler, {
-  PlaceLimitOrderRequestParams,
-  PlaceOrderSnapshotResponse,
-} from "./services/placeOrderMessageHandler.js";
-import WebSocketApiMessageHandler from "./services/webSocketApiMessageHandler.js";
-import ResponseParser from "./responseParser.js";
-import LoginMessageHandler, {
-  RawLoginResponse,
-  RawLoginResponseBody,
-} from "./services/loginMessageHandler.js";
-import SubmitOrderMessageHandler from "./services/submitOrderMessageHandler.js";
-import WorkingOrdersMessageHandler from "./services/workingOrdersMessageHandler.js";
-import OptionSeriesQuotesMessageHandler, {
-  OptionSeriesQuotesResponse,
-} from "./services/optionSeriesQuotesMessageHandler.js";
 import { WsJsonClient } from "./wsJsonClient.js";
-import MarketDepthMessageHandler, {
-  MarketDepthResponse,
-} from "./services/marketDepthMessageHandler.js";
-import {
-  CancelAlertResponse,
-  CreateAlertResponse,
-  LookupAlertsResponse,
-} from "./types/alertTypes.js";
-import GetWatchlistMessageHandler, {
-  GetWatchlistResponse,
-} from "./services/getWatchlistMessageHandler.js";
-import SchwabLoginMessageHandler from "./services/schwabLoginMessageHandler.js";
-import { writeFileSync, readFileSync, existsSync } from "node:fs";
 
 export const CONNECTION_REQUEST_MESSAGE = {
   ver: "27.*.*",
@@ -104,7 +79,7 @@ export enum ChannelState {
 
 const logger = debug("realWsJsonClient");
 
-const messageHandlers: WebSocketApiMessageHandler<never, any>[] = [
+const messageHandlers: WebSocketApiMessageHandler<never>[] = [
   new CancelAlertMessageHandler(),
   new CreateAlertMessageHandler(),
   new AlertLookupMessageHandler(),
@@ -129,7 +104,8 @@ const messageHandlers: WebSocketApiMessageHandler<never, any>[] = [
 ];
 
 export default class RealWsJsonClient implements WsJsonClient {
-  private buffer = new BufferedIterator<ParsedWebSocketResponse>();
+  private readonly genericHandler = new GenericIncomingMessageHandler();
+  private buffer = new BufferedIterator<ParsedPayloadResponse>();
   private iterator = new MulticastIterator(this.buffer);
   private state = ChannelState.DISCONNECTED;
   private credentials: {
@@ -158,9 +134,7 @@ export default class RealWsJsonClient implements WsJsonClient {
         },
       }
     ),
-    private readonly responseParser = new ResponseParser(
-      messageHandlers as WebSocketApiMessageHandler<any, any>[]
-    )
+    private readonly responseParser = new ResponseParser(this.genericHandler)
   ) {}
 
   async authenticateWithAccessToken({
@@ -188,7 +162,7 @@ export default class RealWsJsonClient implements WsJsonClient {
     const { state } = this;
     switch (state) {
       case ChannelState.DISCONNECTED:
-        this.buffer = new BufferedIterator<ParsedWebSocketResponse>();
+        this.buffer = new BufferedIterator<ParsedPayloadResponse>();
         this.iterator = new MulticastIterator(this.buffer);
         this.state = ChannelState.CONNECTING;
         return await this.doConnect();
@@ -231,7 +205,7 @@ export default class RealWsJsonClient implements WsJsonClient {
     } else {
       const parsedResponse = responseParser.parseResponse(message);
       if (parsedResponse) {
-        buffer.emit(parsedResponse);
+        parsedResponse.forEach((r) => buffer.emit(r));
       }
     }
   }
@@ -272,39 +246,41 @@ export default class RealWsJsonClient implements WsJsonClient {
     }
   }
 
-  quotes(symbols: string[]): AsyncIterable<QuotesResponse> {
+  quotes(symbols: string[]): AsyncIterable<ParsedPayloadResponse> {
     return this.dispatchHandler(QuotesMessageHandler, symbols).iterable();
   }
 
-  accountPositions(accountNumber: string): AsyncIterable<PositionsResponse> {
+  accountPositions(
+    accountNumber: string
+  ): AsyncIterable<ParsedPayloadResponse> {
     return this.dispatchHandler(
       PositionsMessageHandler,
       accountNumber
     ).iterable();
   }
 
-  chart(request: ChartRequestParams): AsyncIterable<ChartResponse> {
+  chart(request: ChartRequestParams): AsyncIterable<ParsedPayloadResponse> {
     return this.dispatchHandler(ChartMessageHandler, request).iterable();
   }
 
-  searchInstruments(query: string): Promise<InstrumentSearchResponse> {
+  searchInstruments(query: string): Promise<ParsedPayloadResponse> {
     return this.dispatchHandler(InstrumentSearchMessageHandler, {
       query,
     }).promise();
   }
 
-  lookupAlerts(): AsyncIterable<LookupAlertsResponse> {
+  lookupAlerts(): AsyncIterable<ParsedPayloadResponse> {
     return this.dispatchHandler(
       AlertLookupMessageHandler,
       null as never
     ).iterable();
   }
 
-  optionChain(symbol: string): Promise<OptionChainResponse> {
+  optionChain(symbol: string): Promise<ParsedPayloadResponse> {
     return this.dispatchHandler(OptionSeriesMessageHandler, symbol).promise();
   }
 
-  optionChainQuotes(symbol: string): AsyncIterable<OptionSeriesQuotesResponse> {
+  optionChainQuotes(symbol: string): AsyncIterable<ParsedPayloadResponse> {
     return this.dispatchHandler(
       OptionSeriesQuotesMessageHandler,
       symbol
@@ -313,7 +289,7 @@ export default class RealWsJsonClient implements WsJsonClient {
 
   optionChainDetails(
     request: OptionChainDetailsRequest
-  ): Promise<OptionChainDetailsResponse> {
+  ): Promise<ParsedPayloadResponse> {
     return this.dispatchHandler(
       OptionChainDetailsMessageHandler,
       request
@@ -322,13 +298,13 @@ export default class RealWsJsonClient implements WsJsonClient {
 
   optionQuotes(
     request: OptionQuotesRequestParams
-  ): AsyncIterable<OptionQuotesResponse> {
+  ): AsyncIterable<ParsedPayloadResponse> {
     return this.dispatchHandler(OptionQuotesMessageHandler, request).iterable();
   }
 
   async placeOrder(
     request: PlaceLimitOrderRequestParams
-  ): Promise<PlaceOrderSnapshotResponse> {
+  ): Promise<ParsedPayloadResponse> {
     // 1. place order
     await this.dispatchHandler(PlaceOrderMessageHandler, request).promise();
     // 2. submit order
@@ -338,57 +314,56 @@ export default class RealWsJsonClient implements WsJsonClient {
 
   replaceOrder(
     request: Required<PlaceLimitOrderRequestParams>
-  ): Promise<OrderEventsResponse> {
+  ): Promise<ParsedPayloadResponse> {
     return this.dispatchHandler(SubmitOrderMessageHandler, request).promise();
   }
 
-  workingOrders(accountNumber: string): AsyncIterable<OrderEventsResponse> {
+  workingOrders(accountNumber: string): AsyncIterable<ParsedPayloadResponse> {
     const handler = new WorkingOrdersMessageHandler();
     return this.dispatch(handler, accountNumber).iterable();
   }
 
-  createAlert(request: CreateAlertRequestParams): Promise<CreateAlertResponse> {
+  createAlert(
+    request: CreateAlertRequestParams
+  ): Promise<ParsedPayloadResponse> {
     return this.dispatchHandler(CreateAlertMessageHandler, request).promise();
   }
 
-  cancelAlert(alertId: number): Promise<CancelAlertResponse> {
+  cancelAlert(alertId: number): Promise<ParsedPayloadResponse> {
     return this.dispatchHandler(CancelAlertMessageHandler, alertId).promise();
   }
 
-  cancelOrder(orderId: number): Promise<CancelOrderResponse> {
+  cancelOrder(orderId: number): Promise<ParsedPayloadResponse> {
     return this.dispatchHandler(CancelOrderMessageHandler, orderId).promise();
   }
 
-  watchlist(watchlistId: number): Promise<GetWatchlistResponse> {
+  watchlist(watchlistId: number): Promise<ParsedPayloadResponse> {
     return this.dispatchHandler(
       GetWatchlistMessageHandler,
       watchlistId
     ).promise();
   }
 
-  userProperties(): Promise<UserPropertiesResponse> {
+  userProperties(): Promise<ParsedPayloadResponse> {
     return this.dispatchHandler(
       UserPropertiesMessageHandler,
       null as never
     ).promise();
   }
 
-  marketDepth(symbol: string): AsyncIterable<MarketDepthResponse> {
-    return this.dispatchHandler(
-      MarketDepthMessageHandler,
-      symbol
-    ).iterable() as AsyncIterable<MarketDepthResponse>;
+  marketDepth(symbol: string): AsyncIterable<ParsedPayloadResponse> {
+    return this.dispatchHandler(MarketDepthMessageHandler, symbol).iterable();
   }
 
-  private dispatch<Req, Res extends MessageHandlerBaseResponse | null>(
-    handler: WebSocketApiMessageHandler<Req, Res>,
+  private dispatch<Req>(
+    handler: WebSocketApiMessageHandler<Req>,
     args: Req
-  ): Observable<NonNullable<Res>> {
+  ): Observable<NonNullable<ParsedPayloadResponse>> {
     this.ensureConnected();
     this.sendMessage(handler.buildRequest(args));
     return deferredWrap(() => this.iterator).filter(
-      ({ service }) => service === handler.service
-    ) as Observable<NonNullable<Res>>;
+      (msg) => msg.service === handler.service
+    ) as Observable<NonNullable<ParsedPayloadResponse>>;
   }
 
   // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -474,10 +449,10 @@ export default class RealWsJsonClient implements WsJsonClient {
     }
   }
 
-  private dispatchHandler<Req, Res extends MessageHandlerBaseResponse | null>(
-    handlerCtor: Constructor<WebSocketApiMessageHandler<Req, Res>>,
+  private dispatchHandler<Req>(
+    handlerCtor: Constructor<WebSocketApiMessageHandler<Req>>,
     arg: Req
-  ): Observable<NonNullable<Res>> {
+  ): Observable<NonNullable<ParsedPayloadResponse>> {
     const handler = findByTypeOrThrow(messageHandlers, handlerCtor);
     return this.dispatch(handler, arg);
   }

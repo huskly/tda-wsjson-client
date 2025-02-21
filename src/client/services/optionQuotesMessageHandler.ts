@@ -1,8 +1,8 @@
+import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
+import { ApiService } from "./apiService.js";
 import WebSocketApiMessageHandler, {
   newPayload,
 } from "./webSocketApiMessageHandler.js";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
-import { ApiService } from "./apiService.js";
 
 export type OptionQuotesRequestParams = {
   underlyingSymbol: string;
@@ -11,27 +11,9 @@ export type OptionQuotesRequestParams = {
   maxStrike: number;
 };
 
-type RawOptionQuotesSnapshotBodyResponse = {
-  exchanges: string[];
-  items: OptionQuoteItem[];
-};
-
 export type OptionQuoteItem = {
   symbol: string;
   values: OptionQuoteItemValue;
-};
-
-type RawOptionQuotesPatchBodyResponse = {
-  patches: {
-    op: string;
-    path: string;
-    value:
-      | {
-          exchanges: string[];
-          items: OptionQuoteItem[];
-        }
-      | number;
-  }[];
 };
 
 export type OptionQuotesResponse =
@@ -67,29 +49,8 @@ export type OptionQuoteItemValue = {
 };
 
 export default class OptionQuotesMessageHandler
-  implements
-    WebSocketApiMessageHandler<
-      OptionQuotesRequestParams,
-      OptionQuotesResponse | null
-    >
+  implements WebSocketApiMessageHandler<OptionQuotesRequestParams>
 {
-  parseResponse(message: RawPayloadResponse): OptionQuotesResponse | null {
-    const [{ header, body }] = message.payload;
-    switch (header.type) {
-      case "snapshot": {
-        const { items } = body as RawOptionQuotesSnapshotBodyResponse;
-        return { items, service: "quotes/options" };
-      }
-      case "patch": {
-        const { patches } = body as RawOptionQuotesPatchBodyResponse;
-        return { patches, service: "quotes/options" };
-      }
-      default:
-        console.warn("Unexpected quotes/options response", message);
-        return null;
-    }
-  }
-
   buildRequest({
     underlyingSymbol,
     seriesNames,

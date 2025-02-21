@@ -1,8 +1,8 @@
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
+import { ApiService } from "./apiService.js";
 import WebSocketApiMessageHandler, {
   newPayload,
 } from "./webSocketApiMessageHandler.js";
-import { ApiService } from "./apiService.js";
 
 export type UserPropertiesResponse = {
   service: "user_properties";
@@ -28,13 +28,8 @@ export type UserPropertiesResponse = {
 };
 
 export default class UserPropertiesMessageHandler
-  implements WebSocketApiMessageHandler<never, UserPropertiesResponse>
+  implements WebSocketApiMessageHandler<never>
 {
-  parseResponse(message: RawPayloadResponse): UserPropertiesResponse {
-    const body = message.payload[0].body;
-    return { ...body, service: "user_properties" } as UserPropertiesResponse;
-  }
-
   buildRequest(_: void): RawPayloadRequest {
     return newPayload({
       header: { service: "user_properties", id: "user_properties", ver: 0 },

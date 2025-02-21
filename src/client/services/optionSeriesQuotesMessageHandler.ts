@@ -1,8 +1,8 @@
+import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
+import { ApiService } from "./apiService.js";
 import WebSocketApiMessageHandler, {
   newPayload,
 } from "./webSocketApiMessageHandler.js";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
-import { ApiService } from "./apiService.js";
 
 export type OptionSeriesQuote = {
   name: string;
@@ -31,7 +31,7 @@ export type OptionSeriesQuotesResponse =
   | OptionSeriesQuotesPatchResponse;
 
 export default class OptionSeriesQuotesMessageHandler
-  implements WebSocketApiMessageHandler<string, OptionSeriesQuotesResponse>
+  implements WebSocketApiMessageHandler<string>
 {
   buildRequest(symbol: string): RawPayloadRequest {
     return newPayload({
@@ -46,22 +46,6 @@ export default class OptionSeriesQuotesMessageHandler
         fields: ["IMPLIED_VOLATILITY", "SERIES_EXPECTED_MOVE"],
       },
     });
-  }
-
-  parseResponse(message: RawPayloadResponse): OptionSeriesQuotesResponse {
-    const { payload } = message;
-    const [{ body }] = payload;
-    if ("series" in body) {
-      // snapshot response
-      const { series } = body as unknown as { series: OptionSeriesQuote[] };
-      return { series, service: "optionSeries/quotes" };
-    } else {
-      // patch response
-      const { patches } = body as unknown as {
-        patches: OptionSeriesQuotesPatchResponse["patches"];
-      };
-      return { patches, service: "optionSeries/quotes" };
-    }
   }
 
   service: ApiService = "optionSeries/quotes";

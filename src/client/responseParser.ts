@@ -1,37 +1,16 @@
-import { ParsedWebSocketResponse, WsJsonRawMessage } from "./tdaWsJsonTypes.js";
-import { debugLog } from "./util.js";
+import { ParsedPayloadResponse, WsJsonRawMessage } from "./tdaWsJsonTypes.js";
 import { isPayloadResponse } from "./messageTypeHelpers.js";
-import WebSocketApiMessageHandler from "./services/webSocketApiMessageHandler.js";
-import { ApiService } from "./services/apiService.js";
-import { keyBy } from "lodash-es";
+import GenericIncomingMessageHandler from "./services/genericIncomingMessageHandler.js";
 
 export default class ResponseParser {
-  private readonly messageHandlerRegistry: Record<
-    ApiService,
-    WebSocketApiMessageHandler<any, any>
-  >;
+  constructor(private readonly genericHandler: GenericIncomingMessageHandler) {}
 
-  constructor(services: WebSocketApiMessageHandler<any, any>[]) {
-    this.messageHandlerRegistry = keyBy(services, (s) => s.service) as Record<
-      ApiService,
-      WebSocketApiMessageHandler<any, any>
-    >;
-  }
-
-  /** Parses a raw TDA json websocket message into a more usable format */
-  parseResponse(message: WsJsonRawMessage): ParsedWebSocketResponse | null {
+  /** Parses and returns a list of records from a raw TOS wsjson websocket response using json-patch */
+  parseResponse(message: WsJsonRawMessage): ParsedPayloadResponse[] {
     if (isPayloadResponse(message)) {
-      const [{ header }] = message.payload;
-      const { service } = header;
-      const handler = this.messageHandlerRegistry[service];
-      if (handler) {
-        return handler.parseResponse(message);
-      } else {
-        debugLog(`Don't know how to handle message with service=${service}`);
-        return null;
-      }
+      return this.genericHandler.parseResponse(message);
     } else {
-      return null;
+      return [];
     }
   }
 }

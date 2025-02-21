@@ -1,37 +1,11 @@
-import { RawLoginResponseBody } from "./services/loginMessageHandler.js";
-import { QuotesResponse } from "./services/quotesMessageHandler.js";
-import { PositionsResponse } from "./services/positionsMessageHandler.js";
-import {
-  ChartRequestParams,
-  ChartResponse,
-} from "./services/chartMessageHandler.js";
-import { InstrumentSearchResponse } from "./services/instrumentSearchMessageHandler.js";
-import { OptionChainResponse } from "./services/optionSeriesMessageHandler.js";
-import { OptionSeriesQuotesResponse } from "./services/optionSeriesQuotesMessageHandler.js";
-import {
-  OptionChainDetailsRequest,
-  OptionChainDetailsResponse,
-} from "./services/optionChainDetailsMessageHandler.js";
-import {
-  OptionQuotesRequestParams,
-  OptionQuotesResponse,
-} from "./services/optionQuotesMessageHandler.js";
-import {
-  PlaceLimitOrderRequestParams,
-  PlaceOrderSnapshotResponse,
-} from "./services/placeOrderMessageHandler.js";
-import { OrderEventsResponse } from "./services/orderEventsMessageHandler.js";
-import { CreateAlertRequestParams } from "./services/createAlertMessageHandler.js";
-import { CancelOrderResponse } from "./services/cancelOrderMessageHandler.js";
-import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler.js";
-import {
-  CancelAlertResponse,
-  CreateAlertResponse,
-  LookupAlertsResponse,
-} from "./types/alertTypes.js";
-import { MarketDepthResponse } from "./services/marketDepthMessageHandler.js";
-import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler.js";
 import { Disposable } from "../server/disposable.js";
+import { ChartRequestParams } from "./services/chartMessageHandler.js";
+import { CreateAlertRequestParams } from "./services/createAlertMessageHandler.js";
+import { RawLoginResponseBody } from "./services/loginMessageHandler.js";
+import { OptionChainDetailsRequest } from "./services/optionChainDetailsMessageHandler.js";
+import { OptionQuotesRequestParams } from "./services/optionQuotesMessageHandler.js";
+import { PlaceLimitOrderRequestParams } from "./services/placeOrderMessageHandler.js";
+import { ParsedPayloadResponse } from "./tdaWsJsonTypes.js";
 
 export interface WsJsonClient extends Disposable {
   authenticateWithAuthCode(
@@ -49,47 +23,49 @@ export interface WsJsonClient extends Disposable {
 
   ensureConnected(): void;
 
-  quotes(symbols: string[]): AsyncIterable<QuotesResponse>;
+  quotes(symbols: string[]): AsyncIterable<ParsedPayloadResponse>;
 
-  accountPositions(accountNumber: string): AsyncIterable<PositionsResponse>;
+  accountPositions(accountNumber: string): AsyncIterable<ParsedPayloadResponse>;
 
-  chart(request: ChartRequestParams): AsyncIterable<ChartResponse>;
+  chart(request: ChartRequestParams): AsyncIterable<ParsedPayloadResponse>;
 
-  searchInstruments(query: string): Promise<InstrumentSearchResponse>;
+  searchInstruments(query: string): Promise<ParsedPayloadResponse>;
 
-  lookupAlerts(): AsyncIterable<LookupAlertsResponse>;
+  lookupAlerts(): AsyncIterable<ParsedPayloadResponse>;
 
-  optionChain(symbol: string): Promise<OptionChainResponse>;
+  optionChain(symbol: string): Promise<ParsedPayloadResponse>;
 
-  optionChainQuotes(symbol: string): AsyncIterable<OptionSeriesQuotesResponse>;
+  optionChainQuotes(symbol: string): AsyncIterable<ParsedPayloadResponse>;
 
   optionChainDetails(
     request: OptionChainDetailsRequest
-  ): Promise<OptionChainDetailsResponse>;
+  ): Promise<ParsedPayloadResponse>;
 
   optionQuotes(
     request: OptionQuotesRequestParams
-  ): AsyncIterable<OptionQuotesResponse>;
+  ): AsyncIterable<ParsedPayloadResponse>;
 
   placeOrder(
     request: PlaceLimitOrderRequestParams
-  ): Promise<PlaceOrderSnapshotResponse>;
+  ): Promise<ParsedPayloadResponse>;
 
   replaceOrder(
     request: Required<PlaceLimitOrderRequestParams>
-  ): Promise<OrderEventsResponse>;
+  ): Promise<ParsedPayloadResponse>;
 
-  workingOrders(accountNumber: string): AsyncIterable<OrderEventsResponse>;
+  workingOrders(accountNumber: string): AsyncIterable<ParsedPayloadResponse>;
 
-  createAlert(request: CreateAlertRequestParams): Promise<CreateAlertResponse>;
+  createAlert(
+    request: CreateAlertRequestParams
+  ): Promise<ParsedPayloadResponse>;
 
-  cancelAlert(alertId: number): Promise<CancelAlertResponse>;
+  cancelAlert(alertId: number): Promise<ParsedPayloadResponse>;
 
-  cancelOrder(orderId: number): Promise<CancelOrderResponse>;
+  cancelOrder(orderId: number): Promise<ParsedPayloadResponse>;
 
-  userProperties(): Promise<UserPropertiesResponse>;
+  userProperties(): Promise<ParsedPayloadResponse>;
 
-  marketDepth(symbol: string): AsyncIterable<MarketDepthResponse>;
+  marketDepth(symbol: string): AsyncIterable<ParsedPayloadResponse>;
 
-  watchlist(watchlistId: number): Promise<GetWatchlistResponse>;
+  watchlist(watchlistId: number): Promise<ParsedPayloadResponse>;
 }

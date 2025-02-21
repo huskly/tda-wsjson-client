@@ -1,8 +1,8 @@
+import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
+import { ApiService } from "./apiService.js";
 import WebSocketApiMessageHandler, {
   newPayload,
 } from "./webSocketApiMessageHandler.js";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
-import { ApiService } from "./apiService.js";
 
 type MarketDepthQuote = {
   name?: string;
@@ -10,8 +10,6 @@ type MarketDepthQuote = {
   size?: number;
   index?: number;
 };
-
-type MarketDepthPatch = { op: string; path: string; value?: any };
 
 export type RawPayloadMarketDepthResponse = {
   askQuotes: MarketDepthQuote[];
@@ -25,7 +23,7 @@ export type MarketDepthResponse = {
 };
 
 export default class MarketDepthMessageHandler
-  implements WebSocketApiMessageHandler<string, MarketDepthResponse | null>
+  implements WebSocketApiMessageHandler<string>
 {
   buildRequest(symbol: string): RawPayloadRequest {
     return newPayload({
@@ -38,75 +36,5 @@ export default class MarketDepthMessageHandler
     });
   }
 
-  parseResponse(message: RawPayloadResponse): MarketDepthResponse | null {
-    const [payload] = message.payload;
-    const type = payload.header.type;
-    if (type === "snapshot") {
-      const body = payload.body as RawPayloadMarketDepthResponse;
-      const { askQuotes, bidQuotes } = body;
-      return { service: "market_depth", askQuotes, bidQuotes };
-    } else if (type === "patch" && "patches" in payload.body) {
-      return this.parsePatchResponse(payload.body.patches);
-    } else {
-      console.warn(
-        `Don't know how to handle market depth message with type ${type}`
-      );
-      return null;
-    }
-  }
-
-  private parsePatchResponse(
-    patches?: MarketDepthPatch[]
-  ): MarketDepthResponse | null {
-    const patch = patches?.[0];
-    if (patch?.op === "replace" && patch?.path === "") {
-      const { askQuotes, bidQuotes } =
-        patch.value as RawPayloadMarketDepthResponse;
-      // if path is an empty string, then this patch behaves just like a snapshot response
-      return { service: "market_depth", askQuotes, bidQuotes };
-    }
-    const bidQuotes: MarketDepthQuote[] = [];
-    const askQuotes: MarketDepthQuote[] = [];
-    patches
-      ?.filter(({ op }) => op === "replace")
-      .forEach((patch) => {
-        const quote = parseQuote(patch);
-        if (patch.path.includes("bidQuotes")) {
-          bidQuotes.push(quote);
-        } else if (patch.path.includes("askQuotes")) {
-          askQuotes.push(quote);
-        } else {
-          console.warn("Don't know how to handle market depth patch", patch);
-        }
-      });
-    return { service: "market_depth", askQuotes, bidQuotes };
-  }
-
   service: ApiService = "market_depth";
-}
-
-function parseQuote(patch: MarketDepthPatch): MarketDepthQuote {
-  const { path, value } = patch;
-  const pathParts = path.split("/");
-  const index = +pathParts[2];
-  const prop = pathParts[3];
-  const quote: MarketDepthQuote = { index };
-  switch (prop) {
-    case "size": {
-      quote.size = value;
-      break;
-    }
-    case "price": {
-      quote.price = value;
-      break;
-    }
-    case "name": {
-      quote.name = value;
-      break;
-    }
-    default:
-      console.warn("Don't know how to handle market depth patch", patch);
-      break;
-  }
-  return quote;
 }

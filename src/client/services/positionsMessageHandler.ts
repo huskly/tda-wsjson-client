@@ -1,9 +1,9 @@
+import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
+import { DeepPartial } from "../util.js";
+import { ApiService } from "./apiService.js";
 import WebSocketApiMessageHandler, {
   newPayload,
 } from "./webSocketApiMessageHandler.js";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
-import { debugLog, DeepPartial, positionNetQuantity } from "../util.js";
-import { ApiService } from "./apiService.js";
 
 export type RawPositionsResponse = {
   items: {
@@ -76,55 +76,8 @@ export type PositionsResponse = {
 };
 
 export default class PositionsMessageHandler
-  implements WebSocketApiMessageHandler<string, PositionsResponse | null>
+  implements WebSocketApiMessageHandler<string>
 {
-  parseResponse(message: RawPayloadResponse): PositionsResponse | null {
-    const [{ header, body }] = message.payload;
-    switch (header.type) {
-      case "snapshot": {
-        const { items } = body as RawPositionsResponse;
-        const positions = items.map(({ values, instrument }) => {
-          const averagePrice = values.OPEN_PRICE;
-          const quantity = values.QUANTITY || 0;
-          const lastPrice = values.MARK;
-          const longQuantity = quantity > 0 ? quantity : 0;
-          const shortQuantity = quantity < 0 ? quantity : 0;
-          const marketValue = values.NET_LIQ || 0;
-          const currentDayProfitLoss = values.PL_DAY;
-          return {
-            averagePrice,
-            lastPrice,
-            currentDayProfitLoss,
-            marketValue,
-            longQuantity,
-            shortQuantity,
-            instrument: {
-              symbol: instrument.symbol,
-              underlyingSymbol: instrument.rootSymbol,
-              assetType: instrument.instrumentType,
-            },
-          } as AccountPosition;
-        });
-        return {
-          // Ignore positions with zero quantity (we don't care about it since
-          // it's already been closed)
-          positions: positions.filter((p) => positionNetQuantity(p) > 0),
-          service: "positions",
-        };
-      }
-      case "patch":
-        // TODO: not yet implemented
-        debugLog(
-          "Not implemented positions patch message received, ignoring",
-          body
-        );
-        return null;
-      default:
-        console.warn("Unexpected positions response", message);
-        return null;
-    }
-  }
-
   buildRequest(accountNumber: string): RawPayloadRequest {
     return newPayload({
       header: { service: "positions", ver: 0, id: "positions" },

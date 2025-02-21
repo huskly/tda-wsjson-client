@@ -1,12 +1,7 @@
-import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
-import { CreateAlertResponse, RawAlertResponse } from "../types/alertTypes.js";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
-import { ApiService } from "./apiService.js";
+import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
 import { newRandomId } from "../util.js";
-
-type RawAlertCreateResponse = {
-  alert: RawAlertResponse;
-};
+import { ApiService } from "./apiService.js";
+import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
 
 export type CreateAlertRequestParams = {
   symbol: string;
@@ -15,26 +10,8 @@ export type CreateAlertRequestParams = {
 };
 
 export default class CreateAlertMessageHandler
-  implements
-    WebSocketApiMessageHandler<
-      CreateAlertRequestParams,
-      CreateAlertResponse | null
-    >
+  implements WebSocketApiMessageHandler<CreateAlertRequestParams>
 {
-  parseResponse(message: RawPayloadResponse): CreateAlertResponse | null {
-    const [{ body }] = message.payload;
-    const { alert } = body as RawAlertCreateResponse;
-    if (alert) {
-      const symbol = alert.market.components[0].symbol;
-      const triggerPrice = alert.market.threshold;
-      const { id, status } = alert;
-      const description = `Alert for ${symbol} ${alert.market.operator} ${triggerPrice}`;
-      const alerts = [{ id, symbol, triggerPrice, status, description }];
-      return { alerts, service: "alerts/create" };
-    }
-    return null;
-  }
-
   buildRequest({
     symbol,
     triggerPrice,

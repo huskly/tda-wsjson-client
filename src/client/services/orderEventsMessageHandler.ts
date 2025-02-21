@@ -1,8 +1,6 @@
-import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
 import { ApiService } from "./apiService.js";
-import { compact, isEmpty, isObject } from "lodash-es";
-import { throwError } from "../util.js";
+import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
 
 export type OrderPatch = {
   op: string;
@@ -96,76 +94,11 @@ export type OrderEventsResponse =
   | OrderEventsPatchResponse;
 
 export default class OrderEventsMessageHandler
-  implements WebSocketApiMessageHandler<never, OrderEventsResponse | null>
+  implements WebSocketApiMessageHandler<never>
 {
-  parseResponse(message: RawPayloadResponse): OrderEventsResponse | null {
-    const [{ header, body }] = message.payload;
-    switch (header.type) {
-      case "snapshot": {
-        const { orders } = body as RawOrderEventsResponse;
-        const parsedOrders = compact(
-          orders?.map((order) => parseOrderEvent(order))
-        );
-        return { orders: parsedOrders || [], service: "order_events" };
-      }
-      case "patch": {
-        const { patches } = body as RawOrderEventsResponse;
-        const parsedPatches = patches?.map(({ value, ...rest }) => ({
-          value: parsePatchValue(value),
-          ...rest,
-        }));
-        return {
-          patches: parsedPatches,
-          service: "order_events",
-        } as OrderEventsPatchResponse;
-      }
-      default:
-        console.warn("Unexpected positions response", message);
-        return null;
-    }
-  }
-
   buildRequest(_: never): RawPayloadRequest {
     throw new Error("Should never be called, this message is inbound only");
   }
 
   service: ApiService = "order_events";
-}
-
-function parsePatchValue(value: any) {
-  if (Array.isArray(value)) {
-    return value.map(parseOrderEvent);
-  }
-  if (isObject(value)) {
-    if ("orders" in value) {
-      const orders = value.orders as RawOrderEvent[];
-      return orders.map(parseOrderEvent);
-    } else {
-      return parseOrderEvent(value as RawOrderEvent);
-    }
-  } else {
-    return value;
-  }
-}
-
-function parseOrderEvent(order?: RawOrderEvent): OrderEvent | null {
-  if (!order) {
-    return null;
-  }
-  if (isEmpty(order)) {
-    return {} as OrderEvent;
-  }
-  return {
-    id: order.orderId ?? throwError("missing orderId"),
-    symbol: order.compositeSymbol ?? throwError("missing compositeSymbol"),
-    status: order.status,
-    quantity: order.quantity ?? throwError("missing quantity"),
-    price: order.price ?? throwError("missing price"),
-    orderType: order.orderType ?? throwError("missing orderType"),
-    side: order.side ?? throwError("missing side"),
-    description: order?.description,
-    orderDateTime: order?.orderTime ? new Date(order.orderTime) : new Date(),
-    cancelable: order?.cancelable,
-    underlyingType: order?.underlyingType,
-  };
 }

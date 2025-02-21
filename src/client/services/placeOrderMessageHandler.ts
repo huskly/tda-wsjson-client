@@ -1,9 +1,9 @@
+import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
+import { ApiService } from "./apiService.js";
+import { OrderEvent, OrderPatch } from "./orderEventsMessageHandler.js";
 import WebSocketApiMessageHandler, {
   newPayload,
 } from "./webSocketApiMessageHandler.js";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
-import { ApiService } from "./apiService.js";
-import { OrderEvent, OrderPatch } from "./orderEventsMessageHandler.js";
 
 export type PlaceLimitOrderRequestParams = {
   accountNumber: string;
@@ -89,31 +89,8 @@ export type PlaceOrderResponse =
   | PlaceOrderPatchResponse;
 
 export default class PlaceOrderMessageHandler
-  implements
-    WebSocketApiMessageHandler<
-      PlaceLimitOrderRequestParams,
-      PlaceOrderResponse | null
-    >
+  implements WebSocketApiMessageHandler<PlaceLimitOrderRequestParams>
 {
-  parseResponse(
-    message: RawPayloadResponse
-  ): PlaceOrderSnapshotResponse | null {
-    const [{ header, body }] = message.payload;
-    switch (header.type) {
-      case "snapshot":
-        return this.parsePlaceOrderSnapshotResponse(
-          body as RawPlaceOrderSnapshotResponse
-        );
-      case "patch":
-        return this.parsePlaceOrderPatchResponse(
-          body as RawPlaceOrderPatchResponse
-        );
-      default:
-        console.warn("Unexpected place_order response", message);
-        return null;
-    }
-  }
-
   // quantity > 0 => buy
   // quantity < 0 => sell
   buildRequest({
@@ -142,64 +119,6 @@ export default class PlaceOrderMessageHandler
         ],
       },
     });
-  }
-
-  private parsePlaceOrderSnapshotResponse({
-    orders,
-  }: RawPlaceOrderSnapshotResponse): PlaceOrderSnapshotResponse {
-    const parsedOrders = orders.map((order) => ({
-      id: order.orderId,
-      symbol: order.compositeDisplaySymbol,
-      quantity: order.quantity,
-      price: +order.priceType.substring(1).replace(" LMT", ""),
-      orderType: "LIMIT", // TODO: unclear if this is always the case
-      side: order.actionDescription.startsWith("BUY")
-        ? "BUY"
-        : ("SELL" as "BUY" | "SELL"),
-      cancelable: true,
-      orderDateTime: new Date(),
-      description: order.actionDescription,
-      status: "",
-      underlyingType: "unknown",
-    }));
-    return { orders: parsedOrders, service: "place_order" };
-  }
-
-  private parsePlaceOrderPatchResponse({
-    patches,
-  }: RawPlaceOrderPatchResponse): PlaceOrderSnapshotResponse | null {
-    // this is pretty annoying - unlike snapshot, the patch API doesn't send
-    // the raw order data, so instead we need to parse the order details out
-    // of the description string
-    // TODO: This payload may include multiple orders? If so parse all of them
-    const descriptionPatch = patches.find(
-      ({ op, path }) =>
-        op === "replace" && path.match(/\/orders\/\d\/confirmation/)
-    );
-    const idPatch = patches.find(
-      ({ op, path }) => op === "replace" && path.match(/\/orders\/\d\/orderId/)
-    );
-    if (descriptionPatch) {
-      const value = descriptionPatch.value as string;
-      // eg.: "TOSWeb BUY +1 ABNB @138.00 LMT"
-      const parts = value.split(" ").slice(1);
-      const parsedOrder = {
-        id: idPatch?.value as number,
-        symbol: parts[2],
-        quantity: +parts[1],
-        price: +parts[3].substring(1),
-        orderType: parts[4],
-        side: parts[0] as "BUY" | "SELL",
-        cancelable: true,
-        orderDateTime: new Date(),
-        description: value,
-        status: "",
-        underlyingType: "unknown",
-      };
-      return { orders: [parsedOrder], service: "place_order" };
-    } else {
-      return null;
-    }
   }
 
   service: ApiService = "place_order";

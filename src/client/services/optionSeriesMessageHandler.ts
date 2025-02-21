@@ -1,7 +1,7 @@
-import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
+import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
 import { newRandomId } from "../util.js";
 import { ApiService } from "./apiService.js";
+import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
 
 export type RawOptionSeriesResponse = {
   series: {
@@ -37,29 +37,8 @@ export type OptionChainItem = {
 };
 
 export default class OptionSeriesMessageHandler
-  implements WebSocketApiMessageHandler<string, OptionChainResponse>
+  implements WebSocketApiMessageHandler<string>
 {
-  parseResponse(message: RawPayloadResponse): OptionChainResponse {
-    const [{ body }] = message.payload;
-    const { series } = body as RawOptionSeriesResponse;
-    if (series) {
-      return {
-        service: "optionSeries",
-        series: series.map((s) => ({
-          underlying: s.underlying,
-          name: s.name,
-          multiplier: s.multiplier,
-          isEuropean: s.isEuropean,
-          lastTradeDate: new Date(s.lastTradeDate),
-          expiration: new Date(s.expiration),
-          settlementType: s.settlementType,
-        })),
-      };
-    } else {
-      return { series: [], service: "optionSeries" };
-    }
-  }
-
   buildRequest(symbol: string): RawPayloadRequest {
     const id = newRandomId();
     return {

@@ -17,25 +17,29 @@ yarn build
 
 # Running the test app
 
-```
-# if you already have an access token and refresh token
-DEBUG_DEPTH=5 DEBUG=* \
-  TOS_ACCESS_TOKEN=<access_token> \
-  TOS_REFRESH_TOKEN=<refresh_token> \
-  node dist/example/testApp.js
+Create a `.env` file with the following:
 
+```
+DEBUG=*
+DEBUG_DEPTH=5
+# either the following
+TOS_ACCESS_TOKEN=<access_token>
+TOS_REFRESH_TOKEN=<refresh_token>
+# or the following
 # if you don't have an access token and refresh token, you can use your username and password
 # this will launch a browser to authenticate and then save the access token and refresh token to .env
-DEBUG_DEPTH=5 DEBUG=* \
-  TOS_USERNAME=<username> \
-  TOS_PASSWORD=<password> \
-  node dist/example/testApp.js
+TOS_USERNAME=<username>
+TOS_PASSWORD=<password>
+```
+
+```
+node --env-file=.env dist/example/testApp.js
 ```
 
 ## Running the proxy server
 
 ```
-node dist/example/wsProxyServer.js
+node --env-file=.env dist/example/wsProxyServer.js
 ```
 
 ## Running the proxy client

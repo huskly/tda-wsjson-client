@@ -1,9 +1,8 @@
+import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
+import { ApiService } from "./apiService.js";
 import WebSocketApiMessageHandler, {
   newPayload,
 } from "./webSocketApiMessageHandler.js";
-import { RawPayloadRequest, RawPayloadResponse } from "../tdaWsJsonTypes.js";
-import { compact, isEmpty, isNil, isNumber, omitBy } from "lodash-es";
-import { ApiService } from "./apiService.js";
 
 const ALL_FIELDS = [
   "MARK",
@@ -80,25 +79,8 @@ export type QuotesResponseItem = {
 };
 
 export default class QuotesMessageHandler
-  implements WebSocketApiMessageHandler<string[], QuotesResponse | null>
+  implements WebSocketApiMessageHandler<string[]>
 {
-  parseResponse({
-    payload: [{ header, body }],
-  }: RawPayloadResponse): QuotesResponse | null {
-    switch (header.type) {
-      case "snapshot":
-        return parseSnapshotDataMessage(
-          body as RawPayloadResponseQuotesSnapshot
-        );
-      case "patch":
-        return parsePatchQuotesDataMessage(
-          body as RawPayloadResponseQuotesPatch
-        );
-      default:
-        return null;
-    }
-  }
-
   buildRequest(symbols: string[]): RawPayloadRequest {
     return newPayload({
       header: { service: "quotes", id: "generalQuotes", ver: 0 },
@@ -112,64 +94,4 @@ export default class QuotesMessageHandler
   }
 
   service: ApiService = "quotes";
-}
-
-function parseSnapshotDataMessage({
-  items,
-}: RawPayloadResponseQuotesSnapshot): QuotesResponse {
-  const quotes = items.map(parseQuoteItem);
-  return { quotes, service: "quotes" };
-}
-
-function parseQuoteItem({
-  symbol,
-  values,
-}: RawPayloadResponseQuotesItem): QuotesResponseItem {
-  return {
-    last: values.LAST,
-    lastSize: values.LAST_SIZE,
-    ask: values.ASK,
-    askSize: values.ASK_SIZE,
-    bid: values.BID,
-    bidSize: values.BID_SIZE,
-    high: values.HIGH,
-    low: values.LOW,
-    open: values.OPEN,
-    close: values.CLOSE,
-    mark: values.MARK,
-    markChange: values.MARK_CHANGE,
-    markChangePercent: values.MARK_PERCENT_CHANGE,
-    netChange: values.NET_CHANGE,
-    netChangePercent: values.NET_CHANGE_PERCENT,
-    volume: values.VOLUME,
-    symbol,
-  };
-}
-
-function parsePatchQuotesDataMessage({
-  patches,
-}: RawPayloadResponseQuotesPatch): QuotesResponse | null {
-  const valueIfPath = (value: number, path: string, suffix: string) =>
-    path.endsWith(suffix) ? value : undefined;
-  const quotes = patches.flatMap(({ path, value }) => {
-    if (path && isNumber(value)) {
-      const fieldValues = Object.fromEntries(
-        ALL_FIELDS.map((f) => [f, valueIfPath(value, path, `/${f}`)])
-      );
-      const symbolIndex = +path.split("/")[2];
-      const quote = parseQuoteItem({ values: fieldValues });
-      return [{ ...quote, symbolIndex }];
-    } else if (typeof value === "object" && "items" in value) {
-      const { items } = value;
-      return items.map(parseQuoteItem);
-    } else if (typeof value === "object" && "values" in value) {
-      return [parseQuoteItem(value)];
-    } else {
-      return [];
-    }
-  });
-  const finalQuotes = compact(quotes);
-  return !isEmpty(finalQuotes)
-    ? { quotes: finalQuotes.map((q) => omitBy(q, isNil)), service: "quotes" }
-    : null;
 }

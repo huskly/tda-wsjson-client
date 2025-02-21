@@ -1,43 +1,21 @@
-import { WsJsonClient } from "./wsJsonClient.js";
-import { PositionsResponse } from "./services/positionsMessageHandler.js";
-import { RawLoginResponseBody } from "./services/loginMessageHandler.js";
-import {
-  CancelAlertResponse,
-  CreateAlertResponse,
-  LookupAlertsResponse,
-} from "./types/alertTypes.js";
-import { CancelOrderResponse } from "./services/cancelOrderMessageHandler.js";
-import {
-  ChartRequestParams,
-  ChartResponse,
-} from "./services/chartMessageHandler.js";
-import { CreateAlertRequestParams } from "./services/createAlertMessageHandler.js";
-import { MarketDepthResponse } from "./services/marketDepthMessageHandler.js";
-import { OptionChainResponse } from "./services/optionSeriesMessageHandler.js";
-import {
-  OptionChainDetailsRequest,
-  OptionChainDetailsResponse,
-} from "./services/optionChainDetailsMessageHandler.js";
-import { OptionSeriesQuotesResponse } from "./services/optionSeriesQuotesMessageHandler.js";
-import {
-  OptionQuotesRequestParams,
-  OptionQuotesResponse,
-} from "./services/optionQuotesMessageHandler.js";
-import {
-  PlaceLimitOrderRequestParams,
-  PlaceOrderSnapshotResponse,
-} from "./services/placeOrderMessageHandler.js";
-import { QuotesResponse } from "./services/quotesMessageHandler.js";
-import { OrderEventsResponse } from "./services/orderEventsMessageHandler.js";
-import { InstrumentSearchResponse } from "./services/instrumentSearchMessageHandler.js";
-import { UserPropertiesResponse } from "./services/userPropertiesMessageHandler.js";
-import { GetWatchlistResponse } from "./services/getWatchlistMessageHandler.js";
-import WebSocket from "isomorphic-ws";
-import { deferredWrap } from "obgen";
 import debug from "debug";
-import { ChannelState } from "./realWsJsonClient.js";
+import WebSocket from "isomorphic-ws";
 import { isString } from "lodash-es";
-import { Observable, BufferedIterator, MulticastIterator } from "obgen";
+import {
+  BufferedIterator,
+  deferredWrap,
+  MulticastIterator,
+  Observable,
+} from "obgen";
+import { ChannelState } from "./realWsJsonClient.js";
+import { ChartRequestParams } from "./services/chartMessageHandler.js";
+import { CreateAlertRequestParams } from "./services/createAlertMessageHandler.js";
+import { RawLoginResponseBody } from "./services/loginMessageHandler.js";
+import { OptionChainDetailsRequest } from "./services/optionChainDetailsMessageHandler.js";
+import { OptionQuotesRequestParams } from "./services/optionQuotesMessageHandler.js";
+import { PlaceLimitOrderRequestParams } from "./services/placeOrderMessageHandler.js";
+import { ParsedPayloadResponse } from "./tdaWsJsonTypes.js";
+import { WsJsonClient } from "./wsJsonClient.js";
 
 const logger = debug("wsClientProxy");
 
@@ -147,27 +125,40 @@ export default class WsJsonClientProxy implements WsJsonClient {
     return this.dispatch<RawLoginResponseBody | null>(method, args).promise();
   }
 
-  accountPositions(accountNumber: string): AsyncIterable<PositionsResponse> {
-    return this.dispatch<PositionsResponse>(
+  accountPositions(
+    accountNumber: string
+  ): AsyncIterable<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>(
       "accountPositions",
       accountNumber
     ).iterable();
   }
 
-  cancelAlert(alertId: number): Promise<CancelAlertResponse> {
-    return this.dispatch<CancelAlertResponse>("cancelAlert", alertId).promise();
+  cancelAlert(alertId: number): Promise<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>(
+      "cancelAlert",
+      alertId
+    ).promise();
   }
 
-  cancelOrder(orderId: number): Promise<CancelOrderResponse> {
-    return this.dispatch<CancelOrderResponse>("cancelOrder", orderId).promise();
+  cancelOrder(orderId: number): Promise<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>(
+      "cancelOrder",
+      orderId
+    ).promise();
   }
 
-  chart(request: ChartRequestParams): AsyncIterable<ChartResponse> {
-    return this.dispatch<ChartResponse>("chart", request).iterable();
+  chart(request: ChartRequestParams): AsyncIterable<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>("chart", request).iterable();
   }
 
-  createAlert(request: CreateAlertRequestParams): Promise<CreateAlertResponse> {
-    return this.dispatch<CreateAlertResponse>("createAlert", request).promise();
+  createAlert(
+    request: CreateAlertRequestParams
+  ): Promise<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>(
+      "createAlert",
+      request
+    ).promise();
   }
 
   disconnect(): void {
@@ -188,29 +179,35 @@ export default class WsJsonClientProxy implements WsJsonClient {
     return this.state === ChannelState.CONNECTING;
   }
 
-  lookupAlerts(): AsyncIterable<LookupAlertsResponse> {
-    return this.dispatch<LookupAlertsResponse>("lookupAlerts").iterable();
+  lookupAlerts(): AsyncIterable<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>("lookupAlerts").iterable();
   }
 
-  marketDepth(symbol: string): AsyncIterable<MarketDepthResponse> {
-    return this.dispatch<MarketDepthResponse>("marketDepth", symbol).iterable();
+  marketDepth(symbol: string): AsyncIterable<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>(
+      "marketDepth",
+      symbol
+    ).iterable();
   }
 
-  optionChain(symbol: string): Promise<OptionChainResponse> {
-    return this.dispatch<OptionChainResponse>("optionChain", symbol).promise();
+  optionChain(symbol: string): Promise<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>(
+      "optionChain",
+      symbol
+    ).promise();
   }
 
   optionChainDetails(
     request: OptionChainDetailsRequest
-  ): Promise<OptionChainDetailsResponse> {
-    return this.dispatch<OptionChainDetailsResponse>(
+  ): Promise<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>(
       "optionChainDetails",
       request
     ).promise();
   }
 
-  optionChainQuotes(symbol: string): AsyncIterable<OptionSeriesQuotesResponse> {
-    return this.dispatch<OptionSeriesQuotesResponse>(
+  optionChainQuotes(symbol: string): AsyncIterable<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>(
       "optionChainQuotes",
       symbol
     ).iterable();
@@ -218,8 +215,8 @@ export default class WsJsonClientProxy implements WsJsonClient {
 
   optionQuotes(
     request: OptionQuotesRequestParams
-  ): AsyncIterable<OptionQuotesResponse> {
-    return this.dispatch<OptionQuotesResponse>(
+  ): AsyncIterable<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>(
       "optionQuotes",
       request
     ).iterable();
@@ -227,46 +224,46 @@ export default class WsJsonClientProxy implements WsJsonClient {
 
   placeOrder(
     request: PlaceLimitOrderRequestParams
-  ): Promise<PlaceOrderSnapshotResponse> {
-    return this.dispatch<PlaceOrderSnapshotResponse>(
+  ): Promise<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>(
       "placeOrder",
       request
     ).promise();
   }
 
-  quotes(symbols: string[]): AsyncIterable<QuotesResponse> {
-    return this.dispatch<QuotesResponse>("quotes", symbols).iterable();
+  quotes(symbols: string[]): AsyncIterable<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>("quotes", symbols).iterable();
   }
 
   replaceOrder(
     request: Required<PlaceLimitOrderRequestParams>
-  ): Promise<OrderEventsResponse> {
-    return this.dispatch<OrderEventsResponse>(
+  ): Promise<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>(
       "replaceOrder",
       request
     ).promise();
   }
 
-  searchInstruments(query: string): Promise<InstrumentSearchResponse> {
-    return this.dispatch<InstrumentSearchResponse>(
+  searchInstruments(query: string): Promise<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>(
       "searchInstruments",
       query
     ).promise();
   }
 
-  userProperties(): Promise<UserPropertiesResponse> {
-    return this.dispatch<UserPropertiesResponse>("userProperties").promise();
+  userProperties(): Promise<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>("userProperties").promise();
   }
 
-  watchlist(watchlistId: number): Promise<GetWatchlistResponse> {
-    return this.dispatch<GetWatchlistResponse>(
+  watchlist(watchlistId: number): Promise<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>(
       "watchlist",
       watchlistId
     ).promise();
   }
 
-  workingOrders(accountNumber: string): AsyncIterable<OrderEventsResponse> {
-    return this.dispatch<OrderEventsResponse>(
+  workingOrders(accountNumber: string): AsyncIterable<ParsedPayloadResponse> {
+    return this.dispatch<ParsedPayloadResponse>(
       "workingOrders",
       accountNumber
     ).iterable();

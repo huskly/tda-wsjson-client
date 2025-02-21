@@ -52,7 +52,7 @@ export type LoginResponse = {
 };
 
 export default class LoginMessageHandler
-  implements WebSocketApiMessageHandler<string, LoginResponse>
+  implements WebSocketApiMessageHandler<string>
 {
   parseResponse(message: RawPayloadResponse): LoginResponse {
     const [{ body }] = message.payload;
