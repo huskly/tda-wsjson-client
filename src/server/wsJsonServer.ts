@@ -23,7 +23,7 @@ type DefaultHttpServer = HttpServer<
  * a "request" property that matches a method on the WsJsonClient interface and an "args" property that is an array of
  * arguments to pass to the method. The response is then forwarded back to the client as a JSON string.
  */
-export default class WsJsonServer implements Disposable {
+export class WsJsonServer implements Disposable {
   private readonly wss: WebSocketServer;
   private proxies: WsJsonServerProxy[] = [];
 

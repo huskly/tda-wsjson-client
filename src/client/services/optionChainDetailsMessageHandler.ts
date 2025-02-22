@@ -6,11 +6,6 @@ export type RawOptionChainDetailsResponse = {
   optionSeries: OptionChainDetailsItem[];
 };
 
-export type OptionChainDetailsResponse = {
-  seriesDetails: OptionChainDetailsItem[];
-  service: "option_chain/get";
-};
-
 export type OptionChainDetailsItem = {
   expiration: string; // eg "16 JUN 23"
   expirationString: string; // eg "16 JUN 23 (100)"

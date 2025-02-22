@@ -1,6 +1,5 @@
 import debug from "debug";
 import WebSocket from "isomorphic-ws";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import {
   BufferedIterator,
   deferredWrap,
@@ -103,7 +102,7 @@ const messageHandlers: WebSocketApiMessageHandler<never>[] = [
   new GetWatchlistMessageHandler(),
 ];
 
-export default class RealWsJsonClient implements WsJsonClient {
+export class RealWsJsonClient implements WsJsonClient {
   private readonly genericHandler = new GenericIncomingMessageHandler();
   private buffer = new BufferedIterator<ParsedPayloadResponse>();
   private iterator = new MulticastIterator(this.buffer);
@@ -132,6 +131,14 @@ export default class RealWsJsonClient implements WsJsonClient {
     ),
     private readonly responseParser = new ResponseParser(this.genericHandler)
   ) {}
+
+  get accessToken() {
+    return this.credentials.accessToken;
+  }
+
+  get refreshToken() {
+    return this.credentials.refreshToken;
+  }
 
   async authenticateWithAccessToken({
     accessToken,
@@ -369,37 +376,6 @@ export default class RealWsJsonClient implements WsJsonClient {
     this.socket?.send(msg);
   }
 
-  private updateDotEnvCredentials() {
-    const {
-      credentials: { accessToken, refreshToken },
-    } = this;
-    const suffix = process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : "";
-    const envPath = `.env${suffix}`;
-    let envContent = "";
-    if (existsSync(envPath)) {
-      envContent = readFileSync(envPath, "utf-8");
-      // Remove any existing token lines
-      envContent = envContent
-        .split("\n")
-        .filter(
-          (line) =>
-            !line.startsWith("TOS_ACCESS_TOKEN=") &&
-            !line.startsWith("TOS_REFRESH_TOKEN=")
-        )
-        .join("\n");
-    }
-
-    // Append the new token values
-    const tokenLines = [
-      `TOS_ACCESS_TOKEN=${accessToken}`,
-      `TOS_REFRESH_TOKEN=${refreshToken}`,
-    ].join("\n");
-
-    // Ensure there's a newline between existing content and new tokens
-    const newContent = envContent.trim() + "\n" + tokenLines + "\n";
-    writeFileSync(envPath, newContent);
-  }
-
   private handleSchwabLoginResponse(
     message: RawLoginResponse,
     resolve: (value: RawLoginResponseBody) => void,
@@ -418,7 +394,6 @@ export default class RealWsJsonClient implements WsJsonClient {
       if (loginResponse.refreshToken) {
         this.credentials.refreshToken = loginResponse.refreshToken;
       }
-      this.updateDotEnvCredentials();
       resolve(body);
     } else {
       this.state = ChannelState.ERROR;
@@ -437,7 +412,6 @@ export default class RealWsJsonClient implements WsJsonClient {
     const [{ body }] = message.payload;
     if (loginResponse.successful) {
       this.state = ChannelState.CONNECTED;
-      this.updateDotEnvCredentials();
       resolve(body);
     } else {
       this.state = ChannelState.ERROR;

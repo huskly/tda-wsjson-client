@@ -12,23 +12,9 @@ export type OptionSeriesQuote = {
   };
 };
 
-export type OptionSeriesQuotesPatchResponse = {
-  patches: {
-    op: string;
-    path: string;
-    value: number | { series: OptionSeriesQuote[] };
-  }[];
-  service: "optionSeries/quotes";
-};
-
 export type OptionSeriesQuotesSnapshotResponse = {
   series: OptionSeriesQuote[];
-  service: "optionSeries/quotes";
 };
-
-export type OptionSeriesQuotesResponse =
-  | OptionSeriesQuotesSnapshotResponse
-  | OptionSeriesQuotesPatchResponse;
 
 export default class OptionSeriesQuotesMessageHandler
   implements WebSocketApiMessageHandler<string>

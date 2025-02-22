@@ -1,5 +1,3 @@
-import { AccountPosition } from "./services/positionsMessageHandler.js";
-
 export declare type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends (infer U)[]
     ? DeepPartial<U>[]
@@ -17,10 +15,6 @@ export function ensure<T>(value: T, msg: string): T {
     throwError(msg);
   }
   return value;
-}
-
-export function positionNetQuantity(position: AccountPosition): number {
-  return position.longQuantity - position.shortQuantity;
 }
 
 // eslint-disable-line @typescript-eslint/no-explicit-any

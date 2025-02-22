@@ -1,5 +1,4 @@
 import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
-import { DeepPartial } from "../util.js";
 import { ApiService } from "./apiService.js";
 import WebSocketApiMessageHandler, {
   newPayload,
@@ -51,29 +50,6 @@ export interface Instrument {
   underlyingSymbol?: string;
   underlyingLastPrice?: number;
 }
-
-export interface AccountPosition {
-  shortQuantity: number;
-  averagePrice: number;
-  currentDayProfitLoss: number;
-  currentDayProfitLossPercentage: number;
-  longQuantity: number;
-  settledLongQuantity: number;
-  settledShortQuantity: number;
-  instrument: Instrument;
-  marketValue: number;
-  maintenanceRequirement?: number;
-  lastPrice: number;
-  // this is a purely presentation related field that was added here so we can keep track of the
-  // previous last price and determine whether the price is going up or down. That way we can color
-  // animate price updates similarly to how TOS works.
-  previousPrice?: number;
-}
-
-export type PositionsResponse = {
-  positions: DeepPartial<AccountPosition>[];
-  service: "positions";
-};
 
 export default class PositionsMessageHandler
   implements WebSocketApiMessageHandler<string>

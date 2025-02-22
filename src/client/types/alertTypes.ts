@@ -67,20 +67,3 @@ export type RawAlertCancelResponse = {
   alertId: number;
   result: string;
 };
-
-export function parseAlert({
-  rawAlert,
-  description,
-}: {
-  rawAlert: RawAlertResponse;
-  description?: string;
-}): PriceAlert {
-  const { market, status, id } = rawAlert;
-  return {
-    symbol: market.components[0].symbol,
-    triggerPrice: market.threshold,
-    description,
-    status,
-    id,
-  };
-}

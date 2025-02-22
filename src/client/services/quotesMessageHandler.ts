@@ -37,47 +37,6 @@ export type RawPayloadResponseQuotesSnapshot = {
   items: RawPayloadResponseQuotesItem[];
 };
 
-type RawPayloadResponseQuotesPatchValue = {
-  items: RawPayloadResponseQuotesItem[];
-};
-
-export type RawPayloadResponseQuotesPatch = {
-  patches: {
-    op: string;
-    path: string;
-    value:
-      | number
-      | RawPayloadResponseQuotesPatchValue
-      | RawPayloadResponseQuotesItem;
-  }[];
-};
-
-export type QuotesResponse = {
-  quotes: Partial<QuotesResponseItem>[];
-  service: "quotes";
-};
-
-export type QuotesResponseItem = {
-  symbol?: string;
-  symbolIndex?: number;
-  last?: number;
-  lastSize?: number;
-  open?: number;
-  close?: number;
-  ask?: number;
-  bid?: number;
-  high?: number;
-  low?: number;
-  askSize?: number;
-  bidSize?: number;
-  netChange?: number;
-  netChangePercent?: number;
-  mark?: number;
-  markChange?: number;
-  markChangePercent?: number;
-  volume?: number;
-};
-
 export default class QuotesMessageHandler
   implements WebSocketApiMessageHandler<string[]>
 {

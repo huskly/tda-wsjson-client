@@ -54,7 +54,7 @@ export type ProxiedRequest = {
 export type ProxiedResponse = ProxiedRequest & { response: unknown };
 
 // A WsJsonClient proxy implementation that proxies requests to a WebSocket server using the provided `proxyUrl`.
-export default class WsJsonClientProxy implements WsJsonClient {
+export class WsJsonClientProxy implements WsJsonClient {
   private state = ChannelState.DISCONNECTED;
   private buffer = new BufferedIterator<ProxiedResponse>();
   private iterator = new MulticastIterator(this.buffer);

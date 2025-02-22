@@ -1,12 +1,13 @@
 import debug from "debug";
 import "dotenv/config";
-import RealWsJsonClient from "../client/realWsJsonClient.js";
+import { RealWsJsonClient } from "../client/realWsJsonClient.js";
 import { CreateAlertRequestParams } from "../client/services/createAlertMessageHandler.js";
 import { OptionQuotesRequestParams } from "../client/services/optionQuotesMessageHandler.js";
 import { WsJsonClient } from "../client/wsJsonClient.js";
 import MarketDepthStateUpdater from "./marketDepthStateUpdater.js";
 import { getAuthCode } from "./browserOauth.js";
 import { MarketDepthResponse } from "src/client/services/marketDepthMessageHandler.js";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 
 const logger = debug("testapp");
 
@@ -160,6 +161,7 @@ async function run() {
   } else if (username && password) {
     const authCode = await getAuthCode(username, password);
     await client.authenticateWithAuthCode(authCode);
+    storeTokenInDotEnvFile(client.accessToken!, client.refreshToken!);
   } else {
     throw new Error(
       "TOS_ACCESS_TOKEN or TOS_USERNAME and TOS_PASSWORD env vars must be set"
@@ -172,6 +174,34 @@ async function run() {
     // app.optionChain("TSLA"),
     // app.optionChainQuotes("AAPL"),
   ]);
+}
+
+function storeTokenInDotEnvFile(accessToken: string, refreshToken: string) {
+  const suffix = process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : "";
+  const envPath = `.env${suffix}`;
+  let envContent = "";
+  if (existsSync(envPath)) {
+    envContent = readFileSync(envPath, "utf-8");
+    // Remove any existing token lines
+    envContent = envContent
+      .split("\n")
+      .filter(
+        (line) =>
+          !line.startsWith("TOS_ACCESS_TOKEN=") &&
+          !line.startsWith("TOS_REFRESH_TOKEN=")
+      )
+      .join("\n");
+  }
+
+  // Append the new token values
+  const tokenLines = [
+    `TOS_ACCESS_TOKEN=${accessToken}`,
+    `TOS_REFRESH_TOKEN=${refreshToken}`,
+  ].join("\n");
+
+  // Ensure there's a newline between existing content and new tokens
+  const newContent = envContent.trim() + "\n" + tokenLines + "\n";
+  writeFileSync(envPath, newContent);
 }
 
 run().catch(console.error);

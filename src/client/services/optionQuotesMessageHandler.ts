@@ -4,39 +4,14 @@ import WebSocketApiMessageHandler, {
   newPayload,
 } from "./webSocketApiMessageHandler.js";
 
-export type OptionQuotesRequestParams = {
-  underlyingSymbol: string;
-  seriesNames: string[];
-  minStrike: number;
-  maxStrike: number;
+export type RawOptionQuotesSnapshotBodyResponse = {
+  exchanges: string[];
+  items: OptionQuoteItem[];
 };
 
 export type OptionQuoteItem = {
   symbol: string;
   values: OptionQuoteItemValue;
-};
-
-export type OptionQuotesResponse =
-  | OptionQuotesSnapshotResponse
-  | OptionQuotesPatchResponse;
-
-export type OptionQuotesSnapshotResponse = {
-  items: OptionQuoteItem[];
-  service: "quotes/options";
-};
-
-export type OptionQuotesPatchResponse = {
-  patches: {
-    op: string;
-    path: string;
-    value:
-      | {
-          exchanges: string[];
-          items: OptionQuoteItem[];
-        }
-      | number;
-  }[];
-  service: "quotes/options";
 };
 
 export type OptionQuoteItemValue = {
@@ -46,6 +21,13 @@ export type OptionQuoteItemValue = {
   OPEN_INT?: number;
   PROBABILITY_ITM?: number;
   VOLUME?: number;
+};
+
+export type OptionQuotesRequestParams = {
+  underlyingSymbol: string;
+  seriesNames: string[];
+  minStrike: number;
+  maxStrike: number;
 };
 
 export default class OptionQuotesMessageHandler

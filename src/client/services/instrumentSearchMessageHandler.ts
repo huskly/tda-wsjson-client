@@ -4,26 +4,18 @@ import { ApiService } from "./apiService.js";
 import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
 
 export type RawPayloadResponseInstrumentSearch = {
-  instruments: {
-    symbol: string;
-    displaySymbol: string;
-    description: string;
-  }[];
+  instruments: InstrumentSearchMatch[];
 };
 
 export type InstrumentSearchMatch = {
   symbol: string;
+  displaySymbol: string;
   description: string;
 };
 
 type InstrumentSearchRequest = {
   query: string;
   limit?: number;
-};
-
-export type InstrumentSearchResponse = {
-  instruments: InstrumentSearchMatch[];
-  service: "instrument_search";
 };
 
 export default class InstrumentSearchMessageHandler
