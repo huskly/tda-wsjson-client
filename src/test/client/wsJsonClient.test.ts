@@ -1,4 +1,5 @@
-import RealWsJsonClient, {
+import {
+  RealWsJsonClient,
   CONNECTION_REQUEST_MESSAGE,
 } from "../../client/realWsJsonClient";
 import "dotenv/config";
