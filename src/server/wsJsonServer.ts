@@ -1,11 +1,9 @@
-import { WebSocketServer } from "ws";
-import { Server as HttpsServer } from "https";
-import { IncomingMessage, Server as HttpServer, ServerResponse } from "http";
-import { WsJsonClient } from "../client/wsJsonClient.js";
 import debug from "debug";
+import { Server as HttpServer, IncomingMessage, ServerResponse } from "http";
+import { Server as HttpsServer } from "https";
+import { WebSocket, WebSocketServer } from "ws";
+import { WsJsonClient } from "../client/wsJsonClient.js";
 import WsJsonServerProxy from "./wsJsonServerProxy.js";
-import { isEmpty } from "lodash-es";
-import { Disposable } from "./disposable.js";
 
 const logger = debug("wsJsonServer");
 const DEFAULT_PORT = 8080;
@@ -23,9 +21,9 @@ type DefaultHttpServer = HttpServer<
  * a "request" property that matches a method on the WsJsonClient interface and an "args" property that is an array of
  * arguments to pass to the method. The response is then forwarded back to the client as a JSON string.
  */
-export class WsJsonServer implements Disposable {
+export class WsJsonServer {
   private readonly wss: WebSocketServer;
-  private proxies: WsJsonServerProxy[] = [];
+  private readonly activeClients: Map<WebSocket, WsJsonServerProxy> = new Map();
 
   constructor(
     private readonly wsJsonClientFactory: () => WsJsonClient,
@@ -36,19 +34,30 @@ export class WsJsonServer implements Disposable {
   }
 
   start() {
-    const { wss, server, port, wsJsonClientFactory, proxies } = this;
+    const { wss, server, port, wsJsonClientFactory, activeClients } = this;
+
     wss.on("connection", (ws) => {
       logger("client connected");
-      proxies.push(new WsJsonServerProxy(ws, wsJsonClientFactory));
+      ws.on("error", console.error);
+      ws.on("close", () => {
+        logger("client disconnected");
+        const client = activeClients.get(ws);
+        if (client) {
+          client.disconnect();
+          activeClients.delete(ws);
+        } else {
+          logger("[warn] client disconnected but no client found");
+        }
+      });
+      activeClients.set(ws, new WsJsonServerProxy(ws, wsJsonClientFactory));
     });
+
+    wss.on("close", function close() {
+      logger("server closed");
+      activeClients.forEach((proxy) => proxy.disconnect());
+    });
+
     server.listen(port);
     logger(`server started and listening on port ${port}`);
-  }
-
-  disconnect() {
-    const { proxies } = this;
-    while (!isEmpty(proxies)) {
-      proxies.pop()?.disconnect();
-    }
   }
 }
