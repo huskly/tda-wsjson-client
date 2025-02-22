@@ -121,10 +121,6 @@ export default class RealWsJsonClient implements WsJsonClient {
         headers: {
           Pragma: "no-cache",
           Origin: "https://trade.thinkorswim.com",
-          "Accept-Language": "en-US,en;q=0.9,pt-BR;q=0.8,pt;q=0.7,es;q=0.6",
-          "Sec-WebSocket-Key": "MlZmMN1jaOpKsmb/eJSHCg==",
-          "User-Agent":
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36",
           Upgrade: "websocket",
           "Cache-Control": "no-cache",
           Connection: "Upgrade",
@@ -377,7 +373,8 @@ export default class RealWsJsonClient implements WsJsonClient {
     const {
       credentials: { accessToken, refreshToken },
     } = this;
-    const envPath = ".env";
+    const suffix = process.env.NODE_ENV ? `.${process.env.NODE_ENV}` : "";
+    const envPath = `.env${suffix}`;
     let envContent = "";
     if (existsSync(envPath)) {
       envContent = readFileSync(envPath, "utf-8");
