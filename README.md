@@ -20,6 +20,7 @@ yarn build
 Create a `.env` file with the following:
 
 ```
+NODE_ENV=development
 DEBUG=*
 DEBUG_DEPTH=5
 # either the following
@@ -27,7 +28,8 @@ TOS_ACCESS_TOKEN=<access_token>
 TOS_REFRESH_TOKEN=<refresh_token>
 # or the following
 # if you don't have an access token and refresh token, you can use your username and password
-# this will launch a browser to authenticate and then save the access token and refresh token to .env
+# this will launch a browser to authenticate and then save the access token and refresh token
+to the .env.development file.
 TOS_USERNAME=<username>
 TOS_PASSWORD=<password>
 ```
@@ -100,19 +102,22 @@ There seems to be currently two ways to authenticate:
 
 # Usage
 
+```
+yarn add tos-wsjson-client
+```
+
 ```typescript
-import WsJsonClient from "tda-wsjson-client/wsJsonClient";
+import { WsJsonClient } from "toa-wsjson-client";
 
 const client = new WsJsonClient();
-await client.authenticate(accessToken);
-console.log(loginResponse);
+await client.authenticateWithAccessToken(accessToken, refreshToken);
 const chartRequest = {
   symbol: "UBER",
   timeAggregation: "DAY",
   range: "YEAR2",
   includeExtendedHours: true,
 };
-for await (const event of client.chart(chartRequest)) {
+for await (const { body: event } of client.chart(chartRequest)) {
   console.log(event);
 }
 ```
