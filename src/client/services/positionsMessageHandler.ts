@@ -4,41 +4,46 @@ import WebSocketApiMessageHandler, {
   newPayload,
 } from "./webSocketApiMessageHandler.js";
 
-export type RawPositionsResponse = {
-  items: {
-    account: string;
-    instrument: {
-      symbol: string;
-      rootSymbol: string;
-      description: string;
-      instrumentType: "STOCK" | "OPTION" | "ETF" | "FUTURE" | "PRODUCT";
-    };
+export type RawPositionsItem = {
+  account: string;
+  instrument: {
     symbol: string;
     rootSymbol: string;
-    values: {
-      OPEN_PRICE?: number;
-      BP_EFFECT?: number;
-      DELTA?: number;
-      GAMMA?: number;
-      MARGIN?: number;
-      MARK?: number;
-      MARK_CHANGE?: number;
-      NET_LIQ?: number;
-      OPEN_COST?: number;
-      PL_DAY?: number;
-      PL_OPEN?: number;
-      PL_YTD?: number;
-      RHO?: number;
-      THETA?: number;
-      VEGA?: number;
-      QUANTITY?: number;
-    };
-    betaWeightings: [{ symbol: string; deltaBetaWeighting: number }];
-    aggregated: true;
-    closable: false;
-    exercisable: false;
-    rollable: false;
+    description: string;
+    instrumentType: "STOCK" | "OPTION" | "ETF" | "FUTURE" | "PRODUCT";
+  };
+  symbol: string;
+  rootSymbol: string;
+  values: {
+    OPEN_PRICE?: number;
+    BP_EFFECT?: number;
+    DELTA?: number;
+    GAMMA?: number;
+    MARGIN?: number;
+    MARK?: number;
+    MARK_CHANGE?: number;
+    NET_LIQ?: number;
+    OPEN_COST?: number;
+    PL_DAY?: number;
+    PL_OPEN?: number;
+    PL_YTD?: number;
+    RHO?: number;
+    THETA?: number;
+    VEGA?: number;
+    QUANTITY?: number;
+  };
+  betaWeightings: {
+    symbol: string;
+    deltaBetaWeighting: number;
   }[];
+  aggregated: true;
+  closable: false;
+  exercisable: false;
+  rollable: false;
+};
+
+export type RawPositionsResponse = {
+  items: RawPositionsItem[];
 };
 
 export interface Instrument {

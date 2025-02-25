@@ -2,12 +2,6 @@ import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
 import { ApiService } from "./apiService.js";
 import WebSocketApiMessageHandler from "./webSocketApiMessageHandler.js";
 
-export type OrderPatch = {
-  op: string;
-  path: string;
-  value?: OrderEvent | OrderEvent[] | string | number;
-};
-
 export type OrderEvent = {
   id: number;
   symbol: string;
@@ -70,28 +64,10 @@ export type RawOrderEvent = {
   legsDescriptionDisplay: string;
 };
 
-export type RawOrderEventsResponse = {
-  patches?: {
-    op: string;
-    path: string;
-    value?: Partial<RawOrderEvent> | { orders: RawOrderEvent[] };
-  }[];
-  orders?: RawOrderEvent[];
-};
-
 export type OrderEventsSnapshotResponse = {
   orders: OrderEvent[];
   service: "order_events";
 };
-
-export type OrderEventsPatchResponse = {
-  patches: OrderPatch[];
-  service: "order_events";
-};
-
-export type OrderEventsResponse =
-  | OrderEventsSnapshotResponse
-  | OrderEventsPatchResponse;
 
 export default class OrderEventsMessageHandler
   implements WebSocketApiMessageHandler<never>
