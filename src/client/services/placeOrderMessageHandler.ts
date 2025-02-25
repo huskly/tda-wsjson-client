@@ -1,6 +1,6 @@
 import { RawPayloadRequest } from "../tdaWsJsonTypes.js";
 import { ApiService } from "./apiService.js";
-import { OrderEvent, OrderPatch } from "./orderEventsMessageHandler.js";
+import { OrderEvent } from "./orderEventsMessageHandler.js";
 import WebSocketApiMessageHandler, {
   newPayload,
 } from "./webSocketApiMessageHandler.js";
@@ -78,15 +78,6 @@ export type PlaceOrderSnapshotResponse = {
   orders: OrderEvent[];
   service: "place_order";
 };
-
-export type PlaceOrderPatchResponse = {
-  patches: OrderPatch[];
-  service: "place_order";
-};
-
-export type PlaceOrderResponse =
-  | PlaceOrderSnapshotResponse
-  | PlaceOrderPatchResponse;
 
 export default class PlaceOrderMessageHandler
   implements WebSocketApiMessageHandler<PlaceLimitOrderRequestParams>
